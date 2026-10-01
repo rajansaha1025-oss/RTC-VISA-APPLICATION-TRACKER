@@ -3,696 +3,641 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RTC Visa File Manager</title>
+  <title>RTC Visa File Manager Pro</title>
   <link id="dynamicFavicon" rel="icon" href="logo.png" type="image/png">
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@600;700;800&display=swap" rel="stylesheet">
   <style>
-    body {
-      font-family: 'Plus Jakarta Sans', 'Hind Siliguri', sans-serif;
-      background: linear-gradient(135deg, #dbeafe 0%, #ede9fe 50%, #fce7f3 100%);
-      background-attachment: fixed;
-    }
-    .mono-type {
-      font-family: 'JetBrains Mono', monospace;
-      letter-spacing: 0.5px;
-    }
-    .header-gradient {
-      background: linear-gradient(-45deg, #0f172a, #1e3a8a, #312e81, #0f766e);
-      background-size: 300% 300%;
-      animation: gradientMove 12s ease infinite;
-    }
-    @keyframes gradientMove {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-    @keyframes fadeInSlide {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .animate-card {
-      animation: fadeInSlide 0.3s ease-out forwards;
-    }
-    .pulse-dot {
-      animation: pulseGlow 2s infinite;
-    }
-    @keyframes pulseGlow {
-      0%, 100% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.25); opacity: 0.6; }
-    }
-    .glass-card {
-      background: rgba(255, 255, 255, 0.96);
-      backdrop-filter: blur(12px);
-    }
-    .modal-bg {
-      background-color: rgba(15, 23, 42, 0.75);
-      backdrop-filter: blur(5px);
-    }
-    ::-webkit-scrollbar { width: 8px; height: 8px; }
-    ::-webkit-scrollbar-thumb { background: #64748b; border-radius: 6px; }
+    body { font-family: 'Plus Jakarta Sans', 'Hind Siliguri', sans-serif; background: #f4f7fa; }
+    .mono-type { font-family: 'JetBrains Mono', monospace; }
+    .sidebar-gradient { background: linear-gradient(180deg, #0b132b 0%, #1c2541 100%); }
+    .topbar-gradient { background: linear-gradient(90deg, #0b132b 0%, #111827 100%); }
+    .btn-primary-rtc { background: linear-gradient(135deg, #00b4d8 0%, #0077b6 100%); }
+    .btn-accent-rtc { background: linear-gradient(135deg, #ff7b00 0%, #d90429 100%); }
+    .pulse-dot { animation: pulseGlow 2s infinite; }
+    @keyframes pulseGlow { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.3); opacity: 0.5; } }
+    .blink-alert { animation: blinkRed 1.5s infinite; }
+    @keyframes blinkRed { 0%, 100% { opacity: 1; } 50% { opacity: 0.65; } }
+    .modal-bg { background-color: rgba(11, 19, 43, 0.85); backdrop-filter: blur(8px); }
+    .visa-border-Medical { border-left: 6px solid #00b4d8; }
+    .visa-border-Tourist { border-left: 6px solid #10b981; }
+    .visa-border-DoubleEntry { border-left: 6px solid #ff7b00; }
+    .visa-border-Business { border-left: 6px solid #8b5cf6; }
+    .visa-border-Entry { border-left: 6px solid #ec4899; }
+    .visa-border-Student { border-left: 6px solid #6366f1; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
   </style>
 </head>
-<body class="min-h-screen pb-16">
+<body class="min-h-screen text-slate-800 flex flex-col">
 
-  <!-- Top Navbar -->
-  <header class="header-gradient text-white shadow-xl sticky top-0 z-30 border-b border-white/15">
-    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-4">
-      <!-- Custom Logo + Title -->
-      <div class="flex items-center gap-3.5">
-        <label class="relative group cursor-pointer" title="ক্লিক করে আপনার দোকানের লোগো বসান">
-          <img id="appLogoImg" src="logo.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3135/3135715.png'" class="w-14 h-14 rounded-2xl object-cover bg-white p-1 shadow-lg border-2 border-amber-300 transition transform group-hover:scale-105">
-          <span class="absolute -bottom-1 -right-1 bg-blue-600 text-white text-[10px] p-1 rounded-full shadow"><i class="fa-solid fa-camera"></i></span>
-          <input type="file" accept="image/*" onchange="uploadCustomLogo(event)" class="hidden">
-        </label>
-        <div>
-          <h1 class="text-xl md:text-2xl font-extrabold tracking-tight flex items-center gap-2">
-            RTC VISA MANAGER
-            <span class="bg-amber-400 text-slate-950 text-xs font-extrabold px-2.5 py-0.5 rounded-full uppercase shadow">SHOP PRO</span>
-          </h1>
-          <div class="flex items-center gap-2 text-xs text-blue-100 mt-0.5">
-            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 pulse-dot inline-block"></span>
-            <span id="syncStatusText">সব পিসি ও মোবাইলের জন্য রেডি</span>
+  <!-- SECURITY PIN LOCK SCREEN -->
+  <div id="lockScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-[#0b132b] p-4">
+    <div class="bg-white p-10 rounded-[2rem] shadow-2xl max-w-sm w-full text-center border-t-4 border-[#00b4d8]">
+      <div class="w-20 h-20 bg-slate-50 rounded-full mx-auto flex items-center justify-center text-4xl shadow-inner mb-5 border-2 border-slate-100">
+        <img id="lockLogoImg" src="logo.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3135/3135715.png'" class="w-16 h-16 rounded-full object-cover">
+      </div>
+      <h2 class="text-2xl font-extrabold tracking-tight text-[#0b132b]">RTC VISA</h2>
+      <p class="text-xs text-slate-500 mt-1 mb-8 font-bold uppercase tracking-wider">Enterprise Management</p>
+      <input type="password" id="inputPin" maxlength="4" placeholder="••••" class="w-full text-center tracking-[16px] text-4xl font-bold py-4 px-4 rounded-2xl bg-slate-50 border-2 border-slate-200 focus:border-[#00b4d8] focus:bg-white focus:outline-none mb-6 mono-type text-[#0077b6] transition">
+      <button onclick="checkAppPin()" class="w-full btn-primary-rtc text-white font-extrabold py-3.5 rounded-2xl shadow-lg hover:shadow-xl transition active:scale-95 text-sm uppercase tracking-wide">
+        <i class="fa-solid fa-unlock-keyhole mr-2"></i> সিস্টেম আনলক করুন
+      </button>
+      <p class="text-[11px] text-slate-400 mt-5 font-medium">ডিফল্ট পিন: <b>1234</b></p>
+    </div>
+  </div>
+
+  <!-- MAIN APP LAYOUT -->
+  <div id="mainAppContent" class="flex-1 flex flex-col md:flex-row hidden h-screen overflow-hidden">
+    <aside class="sidebar-gradient text-white md:w-64 flex-shrink-0 flex flex-col justify-between shadow-xl z-20">
+      <div class="overflow-y-auto">
+        <div class="p-6 flex items-center gap-3.5 border-b border-white/10">
+          <label class="relative group cursor-pointer" title="লোগো পরিবর্তন করুন">
+            <img id="appLogoImg" src="logo.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3135/3135715.png'" class="w-12 h-12 rounded-xl object-cover bg-white shadow-lg border-2 border-white/20">
+            <span class="absolute -bottom-1.5 -right-1.5 bg-[#d90429] text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full shadow-md"><i class="fa-solid fa-camera"></i></span>
+            <input type="file" accept="image/*" onchange="uploadCustomLogo(event)" class="hidden">
+          </label>
+          <div>
+            <h1 class="text-lg font-extrabold tracking-wide leading-none">RTC VISA</h1>
+            <p class="text-[10px] text-[#00b4d8] uppercase tracking-widest mt-1 font-bold">Workspace Pro</p>
           </div>
         </div>
+
+        <nav class="p-4 space-y-2 text-xs font-bold">
+          <button onclick="switchTab('RUNNING')" id="tab_RUNNING" class="w-full flex items-center justify-between px-4 py-3 rounded-2xl btn-primary-rtc text-white shadow-md transition"><span class="flex items-center gap-3"><i class="fa-solid fa-folder-open text-white/90 text-sm"></i> রানিং ফাইল</span><span class="bg-white/25 px-2 py-0.5 rounded-full text-[11px]" id="badgeRunning">0</span></button>
+          <button onclick="switchTab('EXPIRING')" id="tab_EXPIRING" class="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-white/10 text-slate-300 transition"><span class="flex items-center gap-3"><i class="fa-solid fa-triangle-exclamation text-rose-400 text-sm"></i> মেয়াদ সতর্কতা</span><span class="bg-rose-500 text-white px-2 py-0.5 rounded-full text-[11px]" id="badgeExpiring">0</span></button>
+          <button onclick="switchTab('SIGNED_UP')" id="tab_SIGNED_UP" class="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-white/10 text-slate-300 transition"><span class="flex items-center gap-3"><i class="fa-solid fa-user-check text-purple-400 text-sm"></i> সাইন-আপ সম্পন্ন</span><span class="bg-white/10 px-2 py-0.5 rounded-full text-[11px]" id="badgeSignedUp">0</span></button>
+          <button onclick="switchTab('APPOINTMENT')" id="tab_APPOINTMENT" class="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-white/10 text-slate-300 transition"><span class="flex items-center gap-3"><i class="fa-solid fa-calendar-check text-emerald-400 text-sm"></i> অ্যাপয়েন্টমেন্ট</span><span class="bg-white/10 px-2 py-0.5 rounded-full text-[11px]" id="badgeAppointment">0</span></button>
+          <button onclick="switchTab('DELIVERED')" id="tab_DELIVERED" class="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-white/10 text-slate-300 transition"><span class="flex items-center gap-3"><i class="fa-solid fa-box-archive text-amber-400 text-sm"></i> ডেলিভারি আর্কাইভ</span><span class="bg-white/10 px-2 py-0.5 rounded-full text-[11px]" id="badgeDelivered">0</span></button>
+          <button onclick="switchTab('RETURNED')" id="tab_RETURNED" class="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-white/10 text-slate-300 transition"><span class="flex items-center gap-3"><i class="fa-solid fa-rotate-left text-orange-400 text-sm"></i> ক্যানসেল/ফেরত</span><span class="bg-white/10 px-2 py-0.5 rounded-full text-[11px]" id="badgeReturned">0</span></button>
+          <button onclick="switchTab('ALL')" id="tab_ALL" class="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-white/10 text-slate-300 transition"><span class="flex items-center gap-3"><i class="fa-solid fa-layer-group text-cyan-400 text-sm"></i> সব ফাইল</span><span class="bg-white/10 px-2 py-0.5 rounded-full text-[11px]" id="badgeAll">0</span></button>
+        </nav>
+      </div>
+      <div class="p-5 border-t border-white/10 text-xs">
+        <div class="bg-white/5 p-3.5 rounded-2xl mb-3 flex items-center gap-2.5 text-slate-300 border border-white/10">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 pulse-dot shadow-[0_0_8px_rgba(52,211,153,0.8)]"></span>
+          <span id="syncStatusText" class="truncate text-[11px] font-bold tracking-wide">Live Sync Ready</span>
+        </div>
+        <button onclick="lockApp()" class="w-full bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 transition border border-rose-500/20"><i class="fa-solid fa-lock"></i> সিস্টেম লক করুন</button>
+      </div>
+    </aside>
+
+    <div class="flex-1 flex flex-col min-w-0 bg-[#f4f7fa]">
+      <header class="bg-white px-6 py-4 flex flex-wrap justify-between items-center gap-4 shadow-sm border-b border-slate-200 z-10">
+        <div class="flex items-center gap-3">
+          <span class="text-sm bg-slate-100 px-4 py-2 rounded-xl text-[#0b132b] font-extrabold uppercase tracking-wide border border-slate-200" id="currentViewTitle">📂 রানিং ফাইল</span>
+          <div class="bg-slate-100 p-1 rounded-xl flex border border-slate-200 shadow-inner">
+            <button onclick="setViewMode('CARD')" id="btnViewCard" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-[#0077b6] shadow-sm transition"><i class="fa-solid fa-table-cells-large mr-1"></i> Card</button>
+            <button onclick="setViewMode('TABLE')" id="btnViewTable" class="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-500 hover:text-[#0077b6] transition"><i class="fa-solid fa-table-list mr-1"></i> Table</button>
+          </div>
+        </div>
+        <div class="flex flex-wrap items-center gap-2.5">
+          <button onclick="fetchFromCloud(false)" class="bg-white hover:bg-slate-50 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 border border-slate-200 shadow-sm transition"><i class="fa-solid fa-arrows-rotate text-[#00b4d8]"></i> রিফ্রেশ</button>
+          <button onclick="openSettingsModal()" class="bg-white hover:bg-slate-50 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 border border-slate-200 shadow-sm transition"><i class="fa-solid fa-gear text-[#1c2541]"></i> সেটিংস</button>
+          <button onclick="openFileModal()" class="btn-accent-rtc text-white px-5 py-2 rounded-xl text-sm font-extrabold shadow-md hover:shadow-lg flex items-center gap-2 transition transform hover:-translate-y-0.5"><i class="fa-solid fa-plus text-base"></i> নতুন ভিসা ফাইল</button>
+        </div>
+      </header>
+
+      <div class="px-6 py-4 bg-white/50 backdrop-blur-md border-b border-slate-200 flex flex-wrap gap-3 items-center justify-between">
+        <div class="relative flex-1 min-w-[260px]">
+          <i class="fa-solid fa-magnifying-glass absolute left-4 top-3.5 text-slate-400"></i>
+          <input type="text" id="searchInput" oninput="renderFiles()" placeholder="কাস্টমারের নাম, ফোন, Temp ID, BGD বা পাসপোর্ট দিয়ে খুঁজুন..." class="w-full pl-11 pr-4 py-2.5 rounded-xl border border-slate-300 text-sm font-bold focus:border-[#00b4d8] focus:ring-2 focus:ring-[#00b4d8]/20 focus:outline-none transition shadow-sm">
+        </div>
+        <div class="flex flex-wrap gap-2.5">
+          <select id="filterVisaType" onchange="renderFiles()" class="px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-700 bg-white shadow-sm focus:outline-none"><option value="ALL">সব ক্যাটাগরি</option><option value="Medical">🏥 Medical Visa</option><option value="Tourist">🏖️ Tourist Visa</option><option value="Double Entry">🔄 Double Entry</option><option value="Business">💼 Business Visa</option><option value="Entry">🚪 Entry Visa</option><option value="Student">🎓 Student Visa</option></select>
+          <select id="filterWorker" onchange="renderFiles()" class="px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-700 bg-white shadow-sm focus:outline-none"><option value="ALL">সব ওয়ার্কার</option></select>
+        </div>
       </div>
 
-      <!-- Action Buttons -->
-      <div class="flex flex-wrap items-center gap-2.5">
-        <button onclick="fetchFromCloud(false)" class="bg-white/15 hover:bg-white/25 px-3.5 py-2.5 rounded-xl text-xs md:text-sm font-bold flex items-center gap-2 transition">
-          <i class="fa-solid fa-arrows-rotate text-cyan-300"></i> রিলোড (Sync)
-        </button>
-        <button onclick="openSettingsModal()" class="bg-white/15 hover:bg-white/25 px-3.5 py-2.5 rounded-xl text-xs md:text-sm font-bold flex items-center gap-2 transition">
-          <i class="fa-solid fa-gear text-amber-300"></i> কমন পাসওয়ার্ড ও ক্লাউড
-        </button>
-        <button onclick="exportBackup()" class="bg-white/15 hover:bg-white/25 px-3.5 py-2.5 rounded-xl text-xs md:text-sm font-bold flex items-center gap-2 transition">
-          <i class="fa-solid fa-download text-emerald-300"></i> ব্যাকআপ
-        </button>
-        <button onclick="openFileModal()" class="bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-slate-950 px-5 py-2.5 rounded-xl text-sm font-extrabold shadow-lg flex items-center gap-2 transition transform hover:scale-105">
-          <i class="fa-solid fa-circle-plus text-lg"></i> নতুন ভিসা ফাইল খুলুন
-        </button>
-      </div>
+      <main class="flex-1 p-6 overflow-y-auto" id="mainScrollArea"><div id="fileListContainer" class="space-y-5"></div></main>
     </div>
-  </header>
+  </div>
 
-  <main class="max-w-7xl mx-auto px-4 mt-6">
-    <!-- Summary Filter Cards -->
-    <div class="grid grid-cols-2 md:grid-cols-5 gap-3.5 mb-6">
-      <div onclick="setQuickFilter('ALL')" class="cursor-pointer bg-gradient-to-br from-blue-600 to-indigo-700 text-white p-4 rounded-2xl shadow-md hover:shadow-xl transition transform hover:-translate-y-1">
-        <div class="flex justify-between items-center">
-          <span class="text-xs font-bold uppercase">মোট ফাইল সেট (Total)</span>
-          <i class="fa-solid fa-folder-tree text-xl opacity-80"></i>
-        </div>
-        <p class="text-3xl font-extrabold mt-1.5" id="statTotalSets">0</p>
-      </div>
-
-      <div onclick="setQuickFilter('SIGNED_UP')" class="cursor-pointer bg-gradient-to-br from-purple-600 to-fuchsia-700 text-white p-4 rounded-2xl shadow-md hover:shadow-xl transition transform hover:-translate-y-1">
-        <div class="flex justify-between items-center">
-          <span class="text-xs font-bold uppercase">সাইন-আপ সম্পন্ন (Slot)</span>
-          <i class="fa-solid fa-user-check text-xl opacity-80"></i>
-        </div>
-        <p class="text-3xl font-extrabold mt-1.5" id="statSignedUp">0</p>
-      </div>
-
-      <div onclick="setQuickFilter('TEMP')" class="cursor-pointer bg-gradient-to-br from-amber-500 to-orange-600 text-white p-4 rounded-2xl shadow-md hover:shadow-xl transition transform hover:-translate-y-1">
-        <div class="flex justify-between items-center">
-          <span class="text-xs font-bold uppercase">কাজ চলছে (Temp ID)</span>
-          <i class="fa-solid fa-hourglass-half text-xl opacity-80"></i>
-        </div>
-        <p class="text-3xl font-extrabold mt-1.5" id="statTemp">0</p>
-      </div>
-
-      <div onclick="setQuickFilter('PARTIAL')" class="cursor-pointer bg-gradient-to-br from-cyan-600 to-blue-600 text-white p-4 rounded-2xl shadow-md hover:shadow-xl transition transform hover:-translate-y-1">
-        <div class="flex justify-between items-center">
-          <span class="text-xs font-bold uppercase">আংশিক সাবমিট (Partial)</span>
-          <i class="fa-solid fa-user-clock text-xl opacity-80"></i>
-        </div>
-        <p class="text-3xl font-extrabold mt-1.5" id="statPartial">0</p>
-      </div>
-
-      <div onclick="setQuickFilter('FULL')" class="cursor-pointer bg-gradient-to-br from-emerald-600 to-teal-700 text-white p-4 rounded-2xl shadow-md hover:shadow-xl transition transform hover:-translate-y-1 col-span-2 md:col-span-1">
-        <div class="flex justify-between items-center">
-          <span class="text-xs font-bold uppercase">ফুল সেট সাবমিট (BGD)</span>
-          <i class="fa-solid fa-circle-check text-xl opacity-80"></i>
-        </div>
-        <p class="text-3xl font-extrabold mt-1.5" id="statFull">0</p>
-      </div>
-    </div>
-
-    <!-- Search & Filter Bar -->
-    <div class="glass-card p-4 rounded-2xl shadow-md mb-6 border-2 border-white flex flex-wrap gap-3 items-center justify-between">
-      <div class="relative flex-1 min-w-[260px]">
-        <i class="fa-solid fa-magnifying-glass absolute left-4 top-3.5 text-blue-600 text-base"></i>
-        <input type="text" id="searchInput" oninput="renderFiles()" placeholder="মেইন ফাইলের নাম, মোবাইল নাম্বার, জিমেইল, Temp ID বা BGD নাম্বার লিখে খুঁজুন..." class="w-full pl-11 pr-4 py-2.5 rounded-xl border-2 border-slate-200 focus:border-blue-600 focus:outline-none text-sm font-bold bg-white">
-      </div>
-
-      <div class="flex flex-wrap gap-2.5">
-        <select id="filterVisaType" onchange="renderFiles()" class="px-3.5 py-2.5 rounded-xl border-2 border-slate-200 text-sm font-extrabold text-slate-700 bg-white focus:border-blue-600 focus:outline-none cursor-pointer">
-          <option value="ALL">🌍 সব ভিসা ক্যাটাগরি</option>
-          <option value="Medical">🏥 Medical Visa</option>
-          <option value="Tourist">🏖️ Tourist Visa</option>
-          <option value="Double Entry">🔄 Double Entry</option>
-          <option value="Business">💼 Business Visa</option>
-          <option value="Entry">🚪 Entry Visa</option>
-          <option value="Student">🎓 Student Visa</option>
-        </select>
-
-        <select id="filterStatus" onchange="renderFiles()" class="px-3.5 py-2.5 rounded-xl border-2 border-slate-200 text-sm font-extrabold text-slate-700 bg-white focus:border-blue-600 focus:outline-none cursor-pointer">
-          <option value="ALL">📋 সব ফাইল দেখুন</option>
-          <option value="SIGNED_UP">🟣 সাইন-আপ করা (Signed Up)</option>
-          <option value="NOT_SIGNED">⚪ সাইন-আপ বাকি আছে (Not Signed Up)</option>
-          <option value="TEMP">🟠 কাজ চলছে (Temp Saved)</option>
-          <option value="PARTIAL">🔵 আংশিক সাবমিট (Partial Submit)</option>
-          <option value="FULL">🟢 ফুল সেট সাবমিট (All BGD Done)</option>
-        </select>
-      </div>
-    </div>
-
-    <!-- Main File Sets Container -->
-    <div id="fileListContainer" class="space-y-6"></div>
-  </main>
-
-  <!-- Add / Edit Visa File Set Modal -->
-  <div id="fileModal" class="fixed inset-0 modal-bg hidden z-40 flex items-center justify-center p-3 overflow-y-auto">
-    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-5xl max-h-[92vh] flex flex-col overflow-hidden border-2 border-blue-200 animate-card">
-      <div class="header-gradient text-white px-6 py-4 flex justify-between items-center">
-        <h2 class="text-lg md:text-xl font-extrabold flex items-center gap-2.5" id="modalTitle">
-          <i class="fa-solid fa-folder-plus text-amber-300"></i> নতুন ভিসা ফাইল সেট খুলুন
+  <!-- ADD / EDIT VISA FILE MODAL (RTC Theme) -->
+  <div id="fileModal" class="fixed inset-0 modal-bg hidden z-50 flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden border border-slate-200">
+      
+      <div class="bg-[#0b132b] text-white px-7 py-4 flex justify-between items-center">
+        <h2 class="text-lg font-extrabold flex items-center gap-2.5 tracking-wide" id="modalTitle">
+          <i class="fa-solid fa-folder-plus text-[#00b4d8]"></i> ভিসা ফাইল প্রসেসিং
         </h2>
-        <button onclick="closeFileModal()" class="bg-white/10 hover:bg-red-500 text-white w-9 h-9 rounded-full flex items-center justify-center text-xl transition">&times;</button>
+        <button onclick="closeFileModal()" class="bg-white/10 hover:bg-rose-500 text-white w-8 h-8 rounded-full flex items-center justify-center transition">&times;</button>
       </div>
 
-      <div class="p-5 md:p-6 overflow-y-auto space-y-6 flex-1 bg-slate-50">
+      <div class="p-6 md:p-8 overflow-y-auto space-y-6 flex-1 bg-[#f8fafc]">
         <input type="hidden" id="editFileId">
 
-        <!-- Section 1: Sign-up & Main File Account Details -->
-        <div class="bg-purple-50 p-5 rounded-2xl border-2 border-purple-300 shadow-sm">
-          <div class="flex flex-wrap justify-between items-center mb-4 gap-2">
-            <div>
-              <h3 class="text-sm md:text-base font-extrabold text-purple-950 flex items-center gap-2">
-                <span class="bg-purple-700 text-white w-6 h-6 rounded-full inline-flex items-center justify-center text-xs">1</span>
-                সাইন-আপ ও একাউন্ট তথ্য (মেইন ফাইল অনুযায়ী)
-              </h3>
-              <p class="text-xs text-purple-800 mt-0.5">ফোন নাম্বার ও জিমেইল সঠিকভাবে লিখুন যাতে স্লট নেওয়ার সময় দেখে টাইপ করা যায়।</p>
-            </div>
+        <!-- Top Status Bar -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm grid grid-cols-1 md:grid-cols-5 gap-4">
+          <div>
+            <label class="block text-[11px] font-extrabold text-slate-500 uppercase mb-1.5">ভিসা ক্যাটাগরি *</label>
+            <select id="visaType" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-extrabold text-[#0b132b] bg-slate-50 focus:border-[#00b4d8] focus:bg-white focus:outline-none">
+              <option value="Medical">🏥 Medical Visa</option>
+              <option value="Tourist">🏖️ Tourist Visa</option>
+              <option value="Double Entry">🔄 Double Entry</option>
+              <option value="Business">💼 Business Visa</option>
+              <option value="Entry">🚪 Entry Visa</option>
+              <option value="Student">🎓 Student Visa</option>
+            </select>
+          </div>
 
-            <label class="inline-flex items-center cursor-pointer bg-white px-4 py-2 rounded-xl border-2 border-purple-500 shadow-sm hover:bg-purple-100 transition">
-              <input type="checkbox" id="isSignedUp" class="w-5 h-5 accent-purple-700 rounded cursor-pointer">
-              <span class="ml-2.5 text-xs md:text-sm font-extrabold text-purple-900">🟣 একাউন্ট Signed Up সম্পন্ন</span>
+          <div>
+            <label class="block text-[11px] font-extrabold text-slate-500 uppercase mb-1.5">ওয়ার্কারের নাম</label>
+            <input type="text" id="workerName" placeholder="যেমন: Worker 1" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold bg-slate-50 focus:border-[#00b4d8] focus:bg-white focus:outline-none">
+          </div>
+
+          <div class="flex items-end">
+            <label class="inline-flex items-center cursor-pointer bg-purple-50 px-4 py-2.5 rounded-xl border border-purple-200 w-full hover:bg-purple-100 transition">
+              <input type="checkbox" id="isSignedUp" class="w-4 h-4 accent-purple-600">
+              <span class="ml-2.5 text-xs font-extrabold text-purple-900">🟣 Signed Up</span>
             </label>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-4 gap-3.5">
-            <div>
-              <label class="block text-xs font-extrabold text-slate-700 mb-1">ভিসা ক্যাটাগরি (Visa Type) *</label>
-              <select id="visaType" class="w-full px-3.5 py-2.5 rounded-xl border-2 border-purple-300 text-sm bg-white font-extrabold text-blue-950 focus:border-purple-700 focus:outline-none">
-                <option value="Medical">🏥 Medical Visa</option>
-                <option value="Tourist">🏖️ Tourist Visa</option>
-                <option value="Double Entry">🔄 Double Entry</option>
-                <option value="Entry">🚪 Entry Visa</option>
-                <option value="Business">💼 Business Visa</option>
-                <option value="Student">🎓 Student Visa</option>
-              </select>
-            </div>
-
-            <div>
-              <label class="block text-xs font-extrabold text-slate-700 mb-1">সাইন-আপ ফোন নাম্বার (Phone) *</label>
-              <input type="text" id="accountPhone" placeholder="017XXXXXXXX" class="w-full px-3.5 py-2.5 rounded-xl border-2 border-purple-300 text-sm mono-type font-bold bg-white focus:border-purple-700 focus:outline-none">
-            </div>
-
-            <div>
-              <label class="block text-xs font-extrabold text-slate-700 mb-1">সাইন-আপ জিমেইল (Gmail) *</label>
-              <input type="email" id="accountGmail" placeholder="example@gmail.com" class="w-full px-3.5 py-2.5 rounded-xl border-2 border-purple-300 text-sm mono-type font-bold bg-white focus:border-purple-700 focus:outline-none">
-            </div>
-
-            <div>
-              <label class="block text-xs font-extrabold text-slate-700 mb-1">পাসওয়ার্ড (Password)</label>
-              <div class="flex">
-                <input type="text" id="accountPassword" placeholder="Password" class="w-full px-3.5 py-2.5 rounded-l-xl border-2 border-purple-300 text-sm mono-type font-bold bg-white focus:border-purple-700 focus:outline-none">
-                <button type="button" onclick="fillDefaultPass()" class="bg-purple-700 hover:bg-purple-800 text-white px-3 rounded-r-xl text-xs font-bold transition">কমন</button>
-              </div>
-            </div>
+          <div class="flex items-end">
+            <label class="inline-flex items-center cursor-pointer bg-emerald-50 px-4 py-2.5 rounded-xl border border-emerald-200 w-full hover:bg-emerald-100 transition">
+              <input type="checkbox" id="isDelivered" onchange="if(this.checked) document.getElementById('isReturned').checked=false; toggleRefundBox();" class="w-4 h-4 accent-emerald-600">
+              <span class="ml-2.5 text-xs font-extrabold text-emerald-900">📦 ডেলিভারি সম্পন্ন</span>
+            </label>
           </div>
 
-          <div class="mt-3.5">
-            <label class="block text-xs font-bold text-slate-700 mb-1">নোট / ওয়ার্কারের নাম (ঐচ্ছিক)</label>
-            <input type="text" id="fileNote" placeholder="যেমন: পাসওয়ার্ড আলাদা দেওয়া হয়েছে / জরুরি স্লট..." class="w-full px-3.5 py-2 rounded-xl border-2 border-purple-200 text-sm bg-white focus:border-purple-600 focus:outline-none">
+          <div class="flex items-end">
+            <label class="inline-flex items-center cursor-pointer bg-rose-50 px-4 py-2.5 rounded-xl border border-rose-200 w-full hover:bg-rose-100 transition">
+              <input type="checkbox" id="isReturned" onchange="if(this.checked) document.getElementById('isDelivered').checked=false; toggleRefundBox();" class="w-4 h-4 accent-rose-600">
+              <span class="ml-2.5 text-xs font-extrabold text-rose-900">🔙 ফাইল ফেরত</span>
+            </label>
           </div>
         </div>
 
-        <!-- Section 2: Main Person + Max 3 Co-Applicants -->
-        <div>
-          <div class="flex flex-wrap justify-between items-center mb-3 gap-2">
+        <!-- Section 1: Sign-up Account -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
+          <div class="absolute top-0 left-0 w-1.5 h-full bg-[#8b5cf6]"></div>
+          <h3 class="text-xs font-extrabold text-slate-800 uppercase tracking-wide mb-3 pl-2">
+            ১. সাইন-আপ ও লগইন তথ্য
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pl-2">
             <div>
-              <h3 class="text-sm md:text-base font-extrabold text-slate-800 flex items-center gap-2">
-                <span class="bg-blue-700 text-white w-6 h-6 rounded-full inline-flex items-center justify-center text-xs">2</span>
-                মেইন ফাইল ও কো-অ্যাপ্লিক্যান্ট তালিকা (সর্বোচ্চ ৩ জন কো-অ্যাপ্লিক্যান্ট)
-              </h3>
-              <p class="text-xs text-slate-500 mt-0.5">প্রত্যেকের আলাদা Temp ID কপি করা যাবে এবং আলাদাভাবে সাবমিট ও BGD ফাইল রাখা যাবে।</p>
+              <label class="block text-[11px] font-bold text-slate-500 mb-1">ফোন নাম্বার *</label>
+              <input type="text" id="accountPhone" placeholder="017XXXXXXXX" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm mono-type font-bold bg-slate-50 focus:bg-white focus:outline-none focus:border-[#8b5cf6]">
             </div>
-            <button type="button" id="btnAddCoApplicant" onclick="addApplicantForm()" class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-4 py-2.5 rounded-xl text-xs md:text-sm font-extrabold flex items-center gap-2 shadow-md transition transform hover:scale-105">
-              <i class="fa-solid fa-user-plus"></i> + কো-অ্যাপ্লিক্যান্ট যোগ করুন (Max 3)
-            </button>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-500 mb-1">জিমেইল *</label>
+              <input type="email" id="accountGmail" placeholder="example@gmail.com" class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm mono-type font-bold bg-slate-50 focus:bg-white focus:outline-none focus:border-[#8b5cf6]">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-500 mb-1">পাসওয়ার্ড</label>
+              <div class="flex shadow-sm rounded-xl">
+                <input type="text" id="accountPassword" placeholder="Password" class="w-full px-3.5 py-2 rounded-l-xl border border-slate-300 text-sm mono-type font-bold bg-slate-50 focus:bg-white focus:outline-none focus:border-[#8b5cf6]">
+                <button type="button" onclick="fillDefaultPass()" class="bg-[#8b5cf6] hover:bg-[#7c3aed] text-white px-4 rounded-r-xl text-xs font-bold transition">কমন</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: Document Checklist -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
+          <div class="absolute top-0 left-0 w-1.5 h-full bg-[#00b4d8]"></div>
+          <h3 class="text-xs font-extrabold text-slate-800 uppercase tracking-wide mb-3 pl-2">২. ডকুমেন্ট চেকলিস্ট</h3>
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 pl-2">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-500 mb-1">Trade License</label>
+              <select id="docTrade" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold bg-slate-50">
+                <option value="NONE">⚪ লাগবে না (N/A)</option>
+                <option value="CUSTOMER">👤 কাস্টমার নিজে দিবে</option>
+                <option value="SHOP">🛠️ আমরা (RTC) করে দিব</option>
+                <option value="READY">✅ ফাইলে দেওয়া আছে</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-500 mb-1">NOC / চাকরি</label>
+              <select id="docNoc" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold bg-slate-50">
+                <option value="NONE">⚪ লাগবে না (N/A)</option>
+                <option value="CUSTOMER">👤 কাস্টমার নিজে দিবে</option>
+                <option value="SHOP">🛠️ আমরা (RTC) করে দিব</option>
+                <option value="READY">✅ ফাইলে দেওয়া আছে</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-500 mb-1">Bank / Dollar</label>
+              <select id="docBank" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold bg-slate-50">
+                <option value="CUSTOMER">👤 কাস্টমার নিজে দিবে</option>
+                <option value="SHOP">🛠️ আমরা (RTC) করে দিব</option>
+                <option value="READY">✅ রেডি / জমা আছে</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-500 mb-1">অরিজিনাল পাসপোর্ট</label>
+              <select id="docPassportHeld" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold bg-slate-50">
+                <option value="CUSTOMER">👤 কাস্টমারের কাছে</option>
+                <option value="SHOP">📕 দোকানে জমা আছে</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3: Billing -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
+          <div class="absolute top-0 left-0 w-1.5 h-full bg-[#10b981]"></div>
+          <h3 class="text-xs font-extrabold text-slate-800 uppercase tracking-wide mb-3 pl-2">৩. পেমেন্ট ও অ্যাপয়েন্টমেন্ট</h3>
+          <div class="grid grid-cols-2 md:grid-cols-5 gap-4 pl-2">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-500 mb-1">ভিসা ফি স্ট্যাটাস</label>
+              <select id="feeStatus" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold bg-slate-50">
+                <option value="UNPAID">⏳ Pending</option>
+                <option value="PAID">💳 Paid সম্পন্ন</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-500 mb-1">অ্যাপয়েন্টমেন্ট ডেট</label>
+              <input type="date" id="appointmentDate" class="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs font-bold bg-slate-50">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-500 mb-1">মোট বিল (Tk)</label>
+              <input type="number" id="billTotal" oninput="calcDue()" placeholder="0" class="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs font-bold bg-slate-50">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-500 mb-1">জমা (Advance)</label>
+              <input type="number" id="billAdvance" oninput="calcDue(); calcRefund();" placeholder="0" class="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs font-bold bg-slate-50">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-500 mb-1">বাকি (Due)</label>
+              <input type="number" id="billDue" readonly placeholder="0" class="w-full px-3 py-1.5 rounded-xl border border-rose-200 text-xs font-extrabold bg-rose-50 text-rose-600">
+            </div>
           </div>
 
+          <div id="refundCalcBox" class="mt-4 p-4 rounded-xl bg-rose-50 border border-rose-200 hidden ml-2">
+            <p class="text-[11px] font-extrabold text-rose-800 uppercase mb-2"><i class="fa-solid fa-rotate-left mr-1"></i> পেমেন্ট রিফান্ড হিসাব</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div><label class="block text-[11px] font-bold text-slate-600 mb-1">চার্জ রাখা হলো (Tk)</label><input type="number" id="keptCharge" oninput="calcRefund()" placeholder="200" class="w-full px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-bold"></div>
+              <div><label class="block text-[11px] font-bold text-slate-600 mb-1">ফেরত দেওয়া হলো</label><input type="number" id="refundAmount" placeholder="0" class="w-full px-3 py-1.5 rounded-lg border border-rose-300 text-xs font-extrabold bg-white text-rose-600"></div>
+              <div><label class="block text-[11px] font-bold text-slate-600 mb-1">নোট / কারণ</label><input type="text" id="returnReason" placeholder="স্লট না পাওয়ায় ফেরত" class="w-full px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-bold"></div>
+            </div>
+          </div>
+          <div class="mt-3 pl-2"><input type="text" id="fileNote" placeholder="বিশেষ কোনো নোট বা রেফারেন্স থাকলে লিখুন..." class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-bold bg-slate-50"></div>
+        </div>
+
+        <!-- Section 4: Applicants Grid -->
+        <div>
+          <div class="flex justify-between items-end mb-3">
+            <div>
+              <h3 class="text-xs font-extrabold text-slate-800 uppercase tracking-wide">৪. আবেদনকারী তালিকা (মেইন + কো-অ্যাপ্লিক্যান্ট)</h3>
+            </div>
+            <button type="button" id="btnAddCoApplicant" onclick="addApplicantForm()" class="btn-primary-rtc text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md hover:shadow-lg transition">
+              <i class="fa-solid fa-user-plus"></i> + কো-অ্যাপ্লিক্যান্ট যোগ (Max 3)
+            </button>
+          </div>
           <div id="applicantsContainer" class="space-y-4"></div>
         </div>
       </div>
 
-      <div class="bg-white px-6 py-4 flex justify-end gap-3 border-t-2 border-slate-200">
-        <button onclick="closeFileModal()" class="px-5 py-2.5 rounded-xl border-2 border-slate-300 text-slate-700 text-sm font-bold hover:bg-slate-100">বাতিল (Cancel)</button>
-        <button onclick="saveVisaFileSet()" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white px-7 py-2.5 rounded-xl text-sm font-extrabold shadow-lg flex items-center gap-2 transition transform hover:scale-105">
-          <i class="fa-solid fa-floppy-disk"></i> ফাইল সেভ করুন (Save All)
+      <div class="bg-white px-7 py-4 flex justify-end gap-3 border-t border-slate-200">
+        <button onclick="closeFileModal()" class="px-5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold text-slate-600 hover:bg-slate-50 transition">বাতিল</button>
+        <button onclick="saveVisaFileSet()" class="btn-accent-rtc text-white px-8 py-2.5 rounded-xl text-sm font-extrabold shadow-lg hover:shadow-xl transition flex items-center gap-2">
+          <i class="fa-solid fa-floppy-disk"></i> ফাইল সেভ করুন
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Settings Modal -->
-  <div id="settingsModal" class="fixed inset-0 modal-bg hidden z-50 flex items-center justify-center p-3">
-    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden border-2 border-blue-200 animate-card">
-      <div class="header-gradient text-white px-6 py-4 flex justify-between items-center">
-        <h3 class="font-extrabold text-base flex items-center gap-2"><i class="fa-solid fa-sliders text-amber-300"></i> কমন পাসওয়ার্ড ও সব পিসি লাইভ সিঙ্ক</h3>
-        <button onclick="closeSettingsModal()" class="text-white text-xl">&times;</button>
-      </div>
-      <div class="p-6 space-y-5">
-        <div class="bg-amber-50 p-4 rounded-2xl border-2 border-amber-200">
-          <label class="block text-xs font-extrabold text-amber-950 uppercase mb-1">১. দোকানের কমন সাইন-আপ পাসওয়ার্ড (Default Password)</label>
-          <input type="text" id="settingDefaultPass" placeholder="যেমন: Rtc@12345" class="w-full px-3.5 py-2 rounded-xl border-2 border-amber-300 text-sm mono-type font-bold bg-white">
-          <p class="text-xs text-amber-800 mt-1">সব ফাইলে এই পাসওয়ার্ডটি অটোমেটিক থাকবে। কোনো ফাইলে আলাদা পাসওয়ার্ড দিলে সফটওয়্যার নিজে থেকেই সেটি হাইলাইট করে দেখাবে।</p>
-        </div>
+  <!-- OTHER MODALS (Transfer, Settings, Return) - Structure Kept Compact for Code Length -->
+  <div id="quickReturnModal" class="fixed inset-0 modal-bg hidden z-50 flex items-center justify-center p-3"><div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-md overflow-hidden border border-slate-200"><div class="bg-[#d90429] text-white px-6 py-4 flex justify-between items-center"><h3 class="font-extrabold text-sm flex items-center gap-2"><i class="fa-solid fa-rotate-left"></i> ফাইল ফেরত</h3><button onclick="closeQuickReturnModal()" class="text-white text-xl">&times;</button></div><div class="p-6 space-y-4 text-xs"><input type="hidden" id="returnTargetFileId"><div class="bg-slate-50 p-3 rounded-xl border font-bold text-slate-700" id="returnCustomerSummary"></div><div><label class="block font-bold text-slate-500 mb-1">মোট জমা (Advance Tk):</label><input type="number" id="qRetAdvance" oninput="calcQuickReturn()" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-extrabold bg-white"></div><div><label class="block font-bold text-slate-500 mb-1">✂️ চার্জ রাখা হলো (Tk):</label><input type="number" id="qRetKept" oninput="calcQuickReturn()" class="w-full px-3 py-2 rounded-xl border-2 border-amber-400 font-extrabold bg-amber-50"></div><div><label class="block font-bold text-slate-500 mb-1">💸 ফেরত দেওয়া হলো (Tk):</label><input type="number" id="qRetRefund" class="w-full px-3 py-2 rounded-xl border-2 border-[#d90429] font-extrabold bg-rose-50 text-[#d90429]"></div><div><label class="block font-bold text-slate-500 mb-1">নোট:</label><input type="text" id="qRetNote" value="স্লট না পাওয়ায় ফেরত" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold bg-white"></div></div><div class="bg-slate-50 px-6 py-3.5 flex justify-end gap-2 border-t border-slate-200"><button onclick="closeQuickReturnModal()" class="px-4 py-2 rounded-xl border bg-white font-bold">বাতিল</button><button onclick="confirmQuickReturn()" class="bg-[#d90429] text-white px-5 py-2 rounded-xl font-extrabold shadow">🔙 কনফার্ম</button></div></div></div>
 
-        <div class="bg-blue-50 p-4 rounded-2xl border-2 border-blue-200">
-          <label class="block text-xs font-extrabold text-blue-950 uppercase mb-1">২. Firebase Cloud URL (দোকানের সব পিসি ও মোবাইল সিঙ্ক)</label>
-          <input type="url" id="settingCloudUrl" placeholder="https://your-project-default-rtdb.firebaseio.com" class="w-full px-3.5 py-2 rounded-xl border-2 border-blue-300 text-sm bg-white">
-          <p class="text-xs text-blue-800 mt-1">এখানে Firebase লিংক দিয়ে সেভ করলে দোকানের ৩-৪টি পিসি ও আপনার মোবাইলে সব ফাইল সাথে সাথে লাইভ আপডেট হবে।</p>
-        </div>
+  <div id="moveApplicantModal" class="fixed inset-0 modal-bg hidden z-50 flex items-center justify-center p-3"><div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-md overflow-hidden border border-slate-200"><div class="bg-[#0077b6] text-white px-6 py-4 flex justify-between items-center"><h3 class="font-extrabold text-sm flex items-center gap-2"><i class="fa-solid fa-arrow-right-arrow-left"></i> ট্রান্সফার</h3><button onclick="closeMoveModal()" class="text-white text-xl">&times;</button></div><div class="p-6 space-y-4 text-xs"><input type="hidden" id="moveSourceFileId"><input type="hidden" id="moveAppIdx"><div class="bg-slate-50 p-4 rounded-xl border border-slate-200"><p class="font-bold text-slate-500 mb-1">যাকে সরাতে চান:</p><p class="text-base font-extrabold text-slate-900" id="moveApplicantName"></p></div><div><label class="block font-bold text-slate-500 mb-2">কোথায় পাঠাতে চান?</label><select id="moveTargetSet" class="w-full px-3 py-2.5 rounded-xl border-2 border-[#00b4d8] font-bold bg-white focus:outline-none"></select></div></div><div class="bg-slate-50 px-6 py-3.5 flex justify-end gap-2 border-t border-slate-200"><button onclick="closeMoveModal()" class="px-4 py-2 rounded-xl border bg-white font-bold">বাতিল</button><button onclick="confirmMoveApplicant()" class="btn-primary-rtc text-white px-5 py-2 rounded-xl font-extrabold shadow"><i class="fa-solid fa-check mr-1"></i> কনফার্ম</button></div></div></div>
 
-        <div class="bg-slate-100 p-4 rounded-2xl border border-slate-200 flex items-center justify-between">
-          <div>
-            <p class="text-xs font-extrabold text-slate-800 uppercase">৩. ব্যাকআপ রিস্টোর (.json)</p>
-            <p class="text-xs text-slate-500">ডাউনলোড করা ব্যাকআপ ফাইল আপলোড করুন</p>
-          </div>
-          <label class="cursor-pointer bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-xl text-xs font-bold">
-            ফাইল নিন <input type="file" accept=".json" onchange="importBackup(event)" class="hidden">
-          </label>
-        </div>
-      </div>
-      <div class="bg-slate-100 px-6 py-3.5 flex justify-end gap-2 border-t">
-        <button onclick="closeSettingsModal()" class="px-4 py-2 rounded-xl border bg-white text-sm font-bold">বন্ধ করুন</button>
-        <button onclick="saveSettings()" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-xl text-sm font-extrabold shadow">সেভ করুন</button>
-      </div>
+  <div id="settingsModal" class="fixed inset-0 modal-bg hidden z-50 flex items-center justify-center p-3"><div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-lg overflow-hidden border border-slate-200"><div class="bg-[#0b132b] text-white px-6 py-4 flex justify-between items-center"><h3 class="font-extrabold text-sm flex items-center gap-2"><i class="fa-solid fa-sliders text-[#00b4d8]"></i> সেটিংস</h3><button onclick="closeSettingsModal()" class="text-white text-xl">&times;</button></div><div class="p-6 space-y-4 text-xs">
+    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-center mb-2">
+      <p class="text-xs text-slate-500 font-bold mb-1">💡 নোট:</p>
+      <p class="text-[11px] text-slate-400">এই পিসিতে কোনো সেটিং বদলালে তা লোকালি সেভ থাকবে। পারমানেন্ট করতে HTML কোডের ভেতর লিংক বসিয়ে দিন।</p>
     </div>
-  </div>
+    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200"><label class="block font-bold text-slate-600 mb-1">🔐 আনলক পিন</label><input type="text" id="settingAppPin" maxlength="4" class="w-full px-3 py-2 rounded-lg border border-slate-300 font-bold mono-type"></div><div class="bg-slate-50 p-4 rounded-xl border border-slate-200"><label class="block font-bold text-slate-600 mb-1">🔑 কমন পাসওয়ার্ড</label><input type="text" id="settingDefaultPass" class="w-full px-3 py-2 rounded-lg border border-slate-300 font-bold mono-type"></div><div class="bg-slate-50 p-4 rounded-xl border border-slate-200"><label class="block font-bold text-slate-600 mb-1">🌐 Firebase Cloud URL (লাইভ সিঙ্ক)</label><input type="url" id="settingCloudUrl" class="w-full px-3 py-2 rounded-lg border border-slate-300"></div><div class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex justify-between items-center"><div><p class="font-bold text-slate-700">📂 রিস্টোর</p></div><label class="cursor-pointer bg-slate-800 text-white px-3 py-1.5 rounded-lg font-bold">ফাইল দিন <input type="file" accept=".json" onchange="importBackup(event)" class="hidden"></label></div></div><div class="bg-slate-50 px-6 py-3.5 flex justify-end gap-2 border-t border-slate-200"><button onclick="closeSettingsModal()" class="px-4 py-2 rounded-xl border bg-white font-bold">বন্ধ</button><button onclick="saveSettings()" class="btn-primary-rtc text-white px-5 py-2 rounded-xl font-bold shadow">সেভ করুন</button></div></div></div>
 
-  <!-- Toast Notification -->
-  <div id="toast" class="fixed bottom-6 right-6 bg-slate-900 text-white px-5 py-3.5 rounded-2xl shadow-2xl text-sm font-extrabold hidden z-50 flex items-center gap-2.5 border-2 border-emerald-400 animate-card">
-    <i class="fa-solid fa-circle-check text-emerald-400 text-lg"></i> <span id="toastMsg">Copied!</span>
-  </div>
+  <div id="toast" class="fixed bottom-6 right-6 bg-[#0b132b] text-white px-5 py-3.5 rounded-2xl shadow-2xl text-xs font-bold hidden z-50 flex items-center gap-3 border-l-4 border-[#00b4d8] animate-[fadeInSlide_0.3s_ease-out_forwards]"><i class="fa-solid fa-circle-check text-[#00b4d8] text-base"></i> <span id="toastMsg" class="tracking-wide">Action Done!</span></div>
 
   <script>
+    // ==========================================
+    // ⚙️ অটোমেটিক সেটিংস (স্থায়ীভাবে সেভ করা)
+    // ==========================================
+    const AUTO_FIREBASE_URL = "https://rtcvisa-fdbb5-default-rtdb.firebaseio.com";
+    const AUTO_LOGO_NAME = "logo.png";
+    const AUTO_PIN = "1234";
+    const AUTO_PASS = "Prachi2019@";
+    // ==========================================
+
     let visaFiles = JSON.parse(localStorage.getItem('rtc_visa_files') || '[]');
-    let defaultPass = localStorage.getItem('rtc_default_pass') || 'Rtc@2026';
-    let cloudUrl = localStorage.getItem('rtc_cloud_url') || '';
-    let customLogo = localStorage.getItem('rtc_custom_logo') || '';
-    let tempApplicants = [];
+    let defaultPass = localStorage.getItem('rtc_default_pass') || AUTO_PASS;
+    let appPin = localStorage.getItem('rtc_app_pin') || AUTO_PIN;
+    let cloudUrl = localStorage.getItem('rtc_cloud_url') || (AUTO_FIREBASE_URL.includes('firebaseio.com') ? AUTO_FIREBASE_URL : '');
+    let customLogo = localStorage.getItem('rtc_custom_logo') || AUTO_LOGO_NAME;
+    
+    let activeTab = 'RUNNING'; let viewMode = localStorage.getItem('rtc_view_mode') || 'CARD'; let tempApplicants = [];
 
     window.onload = () => {
+      const isAuth = sessionStorage.getItem('rtc_authenticated');
+      if (isAuth === 'true') unlockAppUI();
+      else { document.getElementById('lockScreen').classList.remove('hidden'); document.getElementById('inputPin').focus(); }
+      
       if (customLogo) applyCustomLogo(customLogo);
-      if (cloudUrl) fetchFromCloud();
-      renderFiles();
+      if (cloudUrl) fetchFromCloud(true);
+      populateWorkerDropdown(); renderFiles();
       setInterval(() => {
-        if (cloudUrl && document.getElementById('fileModal').classList.contains('hidden')) {
-          const activeTag = document.activeElement ? document.activeElement.tagName : '';
-          if (activeTag !== 'INPUT') fetchFromCloud(true);
+        if (cloudUrl && document.getElementById('fileModal').classList.contains('hidden') && document.getElementById('quickReturnModal').classList.contains('hidden') && document.getElementById('moveApplicantModal').classList.contains('hidden')) {
+          const tag = document.activeElement ? document.activeElement.tagName : '';
+          if (tag !== 'INPUT') fetchFromCloud(true);
         }
       }, 9000);
     };
 
-    function applyCustomLogo(dataUrl) {
-      document.getElementById('appLogoImg').src = dataUrl;
-      document.getElementById('dynamicFavicon').href = dataUrl;
+    function getTodayStr() { return new Date().toISOString().slice(0, 10); }
+
+    function getBgdExpiryInfo(applicant, fileSet) {
+      if (!applicant.isSubmitted || !applicant.subDate) return { status: 'NONE', badgeHtml: '' };
+      if (fileSet.appointmentDate || fileSet.isDelivered || fileSet.isReturned) return { status: 'SLOT_TAKEN', badgeHtml: `<span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded text-[10px] font-extrabold"><i class="fa-solid fa-check mr-1"></i>স্লট/কাজ সম্পন্ন</span>` };
+      const diffDays = Math.floor((new Date(getTodayStr() + 'T00:00:00').getTime() - new Date(applicant.subDate + 'T00:00:00').getTime()) / (1000 * 60 * 60 * 24));
+      const daysLeft = 30 - diffDays;
+      if (daysLeft <= 0) return { status: 'EXPIRED', badgeHtml: `<span class="bg-red-100 border border-red-300 text-red-700 px-2 py-0.5 rounded text-[10px] font-extrabold blink-alert"><i class="fa-solid fa-triangle-exclamation mr-1"></i>মেয়াদ শেষ (${Math.abs(daysLeft)} দিন ওভার)</span>` };
+      if (daysLeft <= 5) return { status: 'WARNING', badgeHtml: `<span class="bg-amber-100 border border-amber-300 text-amber-800 px-2 py-0.5 rounded text-[10px] font-extrabold"><i class="fa-solid fa-clock mr-1"></i>মাত্র ${daysLeft} দিন মেয়াদ!</span>` };
+      return { status: 'VALID', badgeHtml: `<span class="bg-blue-50 border border-blue-200 text-blue-700 px-2 py-0.5 rounded text-[10px] font-extrabold"><i class="fa-regular fa-hourglass-half mr-1"></i>মেয়াদ: ${daysLeft} দিন বাকি</span>` };
     }
 
-    function uploadCustomLogo(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        customLogo = e.target.result;
-        localStorage.setItem('rtc_custom_logo', customLogo);
-        applyCustomLogo(customLogo);
-        showToast('দোকানের লোগো সফলভাবে সেট হয়েছে!');
-      };
-      reader.readAsDataURL(file);
+    function getDocChecklistBadges(f) {
+      const badges = [];
+      if (f.docTrade === 'SHOP') badges.push(`<span class="bg-[#ff7b00]/10 text-[#d90429] px-2 py-1 rounded text-[10px] font-bold border border-[#ff7b00]/30"><i class="fa-solid fa-screwdriver-wrench mr-1"></i>Trade Lic: আমরা দিব!</span>`);
+      else if (f.docTrade === 'READY') badges.push(`<span class="bg-emerald-50 text-emerald-700 px-2 py-1 rounded text-[10px] font-bold border border-emerald-200">✅ Trade Lic রেডি</span>`);
+      if (f.docNoc === 'SHOP') badges.push(`<span class="bg-[#ff7b00]/10 text-[#d90429] px-2 py-1 rounded text-[10px] font-bold border border-[#ff7b00]/30"><i class="fa-solid fa-screwdriver-wrench mr-1"></i>NOC: আমরা দিব!</span>`);
+      else if (f.docNoc === 'READY') badges.push(`<span class="bg-emerald-50 text-emerald-700 px-2 py-1 rounded text-[10px] font-bold border border-emerald-200">✅ NOC রেডি</span>`);
+      if (f.docBank === 'SHOP') badges.push(`<span class="bg-[#ff7b00]/10 text-[#d90429] px-2 py-1 rounded text-[10px] font-bold border border-[#ff7b00]/30"><i class="fa-solid fa-building-columns mr-1"></i>Bank: আমরা দিব!</span>`);
+      else if (f.docBank === 'READY') badges.push(`<span class="bg-emerald-50 text-emerald-700 px-2 py-1 rounded text-[10px] font-bold border border-emerald-200">🏦 Bank রেডি</span>`);
+      if (f.docPassportHeld === 'SHOP') badges.push(`<span class="bg-[#0b132b]/5 text-[#0b132b] px-2 py-1 rounded text-[10px] font-bold border border-[#0b132b]/20">📕 পাসপোর্ট জমা আছে</span>`);
+      return badges.join('');
     }
 
-    function showToast(msg) {
-      const t = document.getElementById('toast');
-      document.getElementById('toastMsg').innerText = msg;
-      t.classList.remove('hidden');
-      setTimeout(() => t.classList.add('hidden'), 2500);
+    function makeMainApplicant(fileId, appIdx) {
+      const f = visaFiles.find(x => x.id === fileId); if (!f || !f.applicants[appIdx]) return;
+      if (!confirm(`"${f.applicants[appIdx].name}"-কে মেইন ফাইল করতে চান?`)) return;
+      f.applicants.unshift(f.applicants.splice(appIdx, 1)[0]);
+      f.updatedAt = new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+      renderFiles(); syncToCloud(); showToast('⭐ মেইন ফাইল পরিবর্তন হয়েছে!');
     }
+    function makeMainForm(idx) { syncTempInputs(); tempApplicants.unshift(tempApplicants.splice(idx, 1)[0]); renderApplicantForms(); }
 
-    // Person-wise Copy Function (For Temp ID, BGD, Passport)
-    function copyPersonData(txt, personName, label) {
-      if (!txt || txt.trim() === '') {
-        alert(`${personName}-এর ${label} এখনো লেখা হয়নি!`);
-        return;
+    function openMoveModal(fileId, appIdx) {
+      const f = visaFiles.find(x => x.id === fileId);
+      document.getElementById('moveSourceFileId').value = fileId; document.getElementById('moveAppIdx').value = appIdx;
+      document.getElementById('moveApplicantName').innerText = f.applicants[appIdx].name || 'Unnamed';
+      const select = document.getElementById('moveTargetSet');
+      select.innerHTML = '<option value="NEW">✨ আলাদা নতুন ফাইল তৈরি করুন</option>';
+      visaFiles.forEach(t => { if (t.id !== fileId && !t.isDelivered && !t.isReturned) select.innerHTML += `<option value="${t.id}">📂 যুক্ত করুন: ${t.applicants[0]?.name} (${t.accountPhone}) - ${t.applicants.length} জন</option>`; });
+      document.getElementById('moveApplicantModal').classList.remove('hidden');
+    }
+    function closeMoveModal() { document.getElementById('moveApplicantModal').classList.add('hidden'); }
+    function confirmMoveApplicant() {
+      const sId = document.getElementById('moveSourceFileId').value; const aIdx = parseInt(document.getElementById('moveAppIdx').value); const tId = document.getElementById('moveTargetSet').value;
+      const sFile = visaFiles.find(x => x.id === sId); if(!sFile) return;
+      const appToMove = sFile.applicants.splice(aIdx, 1)[0];
+      const now = new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+
+      if (tId === 'NEW') {
+        const newF = JSON.parse(JSON.stringify(sFile)); newF.id = 'SET_' + Date.now(); newF.applicants = [appToMove]; newF.appointmentDate = ''; newF.feeStatus = 'UNPAID'; newF.billTotal = 0; newF.billAdvance = 0; newF.billDue = 0; newF.updatedAt = now; visaFiles.unshift(newF);
+      } else {
+        const tFile = visaFiles.find(x => x.id === tId); if (tFile.applicants.length >= 4) { sFile.applicants.splice(aIdx, 0, appToMove); alert('ফাইলে ৪ জন পূর্ণ!'); return; }
+        tFile.applicants.push(appToMove); tFile.updatedAt = now;
       }
-      navigator.clipboard.writeText(txt.trim());
-      showToast(`📋 ${personName}-এর ${label} কপি হয়েছে: ${txt.trim()}`);
+      if (sFile.applicants.length === 0) visaFiles = visaFiles.filter(x => x.id !== sId); else sFile.updatedAt = now;
+      closeMoveModal(); renderFiles(); syncToCloud(); showToast('🔄 ট্রান্সফার সম্পন্ন!');
     }
 
-    function setQuickFilter(statusVal) {
-      document.getElementById('filterStatus').value = statusVal;
+    function reApplyApplicant(fileId, appIdx) {
+      const f = visaFiles.find(x => x.id === fileId); const a = f.applicants[appIdx];
+      if (!confirm(`🔄 "${a.name}"-এর ফাইল রিসেট করবেন?`)) return;
+      if (a.bgdNo) a.prevBgd = a.bgdNo;
+      a.tempId = ''; a.bgdNo = ''; a.pdfName = ''; a.pdfData = ''; a.isSubmitted = false; a.subDate = '';
+      f.updatedAt = new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+      renderFiles(); syncToCloud(); showToast('Re-Apply রেডি!');
+    }
+
+    function openQuickReturnModal(fileId) {
+      const f = visaFiles.find(x => x.id === fileId);
+      if (f.isReturned) { if (confirm('রানিং ফাইলে আনবেন?')) { f.isReturned = false; renderFiles(); syncToCloud(); showToast('রানিং বোর্ডে ফিরেছে!'); } return; }
+      document.getElementById('returnTargetFileId').value = f.id; document.getElementById('returnCustomerSummary').innerText = `মেইন: ${f.applicants[0]?.name} | ফোন: ${f.accountPhone || 'N/A'}`;
+      document.getElementById('qRetAdvance').value = f.billAdvance || 0; document.getElementById('qRetKept').value = f.keptCharge || 0; calcQuickReturn(); document.getElementById('quickReturnModal').classList.remove('hidden');
+    }
+    function closeQuickReturnModal() { document.getElementById('quickReturnModal').classList.add('hidden'); }
+    function calcQuickReturn() { document.getElementById('qRetRefund').value = Math.max(0, (parseFloat(document.getElementById('qRetAdvance').value)||0) - (parseFloat(document.getElementById('qRetKept').value)||0)); }
+    function confirmQuickReturn() {
+      const f = visaFiles.find(x => x.id === document.getElementById('returnTargetFileId').value);
+      f.isReturned = true; f.isDelivered = false; f.billAdvance = parseFloat(document.getElementById('qRetAdvance').value)||0; f.keptCharge = parseFloat(document.getElementById('qRetKept').value)||0; f.refundAmount = parseFloat(document.getElementById('qRetRefund').value)||0; f.returnReason = document.getElementById('qRetNote').value.trim(); f.billDue = 0; f.updatedAt = new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+      closeQuickReturnModal(); renderFiles(); syncToCloud(); showToast('🔙 ফাইল ফেরত সম্পন্ন!');
+    }
+
+    function checkAppPin() {
+      if (document.getElementById('inputPin').value === appPin) { sessionStorage.setItem('rtc_authenticated', 'true'); unlockAppUI(); }
+      else { alert('❌ ভুল পিন!'); document.getElementById('inputPin').value = ''; document.getElementById('inputPin').focus(); }
+    }
+    function unlockAppUI() { document.getElementById('lockScreen').classList.add('hidden'); document.getElementById('mainAppContent').classList.remove('hidden'); renderFiles(); }
+    function lockApp() { sessionStorage.removeItem('rtc_authenticated'); document.getElementById('inputPin').value = ''; document.getElementById('mainAppContent').classList.add('hidden'); document.getElementById('lockScreen').classList.remove('hidden'); document.getElementById('inputPin').focus(); }
+
+    function applyCustomLogo(dataUrl) {
+      // Apply logic if image exists, otherwise fallback to default
+      const imgs = ['appLogoImg', 'lockLogoImg'];
+      imgs.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.src = dataUrl; }
+      });
+      document.getElementById('dynamicFavicon').href = dataUrl; 
+    }
+    
+    function uploadCustomLogo(event) {
+      const file = event.target.files[0]; if (!file) return;
+      const reader = new FileReader(); reader.onload = (e) => { customLogo = e.target.result; localStorage.setItem('rtc_custom_logo', customLogo); applyCustomLogo(customLogo); showToast('লোগো আপডেট হয়েছে!'); }; reader.readAsDataURL(file);
+    }
+
+    function showToast(msg) { document.getElementById('toastMsg').innerText = msg; const t = document.getElementById('toast'); t.classList.remove('hidden'); setTimeout(() => t.classList.add('hidden'), 2500); }
+    function copyPersonData(txt, pName, label) { if (!txt) { alert(`${label} নেই!`); return; } navigator.clipboard.writeText(txt.trim()); showToast(`📋 ${pName}-এর ${label} কপি হয়েছে!`); }
+
+    function switchTab(tabName) {
+      activeTab = tabName;
+      ['RUNNING', 'EXPIRING', 'SIGNED_UP', 'APPOINTMENT', 'DELIVERED', 'RETURNED', 'ALL'].forEach(t => {
+        const btn = document.getElementById(`tab_${t}`);
+        if (t === tabName) btn.className = 'w-full flex items-center justify-between px-4 py-3 rounded-2xl btn-primary-rtc text-white shadow-md transition';
+        else btn.className = 'w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-white/10 text-slate-300 transition';
+      });
+      const titles = { 'RUNNING': '📂 রানিং ফাইল', 'EXPIRING': '⚠️ মেয়াদ সতর্কতা', 'SIGNED_UP': '🟣 সাইন-আপ সম্পন্ন', 'APPOINTMENT': '📅 অ্যাপয়েন্টমেন্ট', 'DELIVERED': '📦 ডেলিভারি', 'RETURNED': '🔙 ফেরত ফাইল', 'ALL': '📋 সব ফাইল' };
+      document.getElementById('currentViewTitle').innerText = titles[tabName];
       renderFiles();
     }
+    function setViewMode(mode) {
+      viewMode = mode; localStorage.setItem('rtc_view_mode', mode);
+      if (mode === 'CARD') { document.getElementById('btnViewCard').className = 'px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-[#0077b6] shadow-sm transition'; document.getElementById('btnViewTable').className = 'px-3 py-1.5 rounded-lg text-xs font-bold text-slate-500 hover:text-[#0077b6] transition'; }
+      else { document.getElementById('btnViewTable').className = 'px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-[#0077b6] shadow-sm transition'; document.getElementById('btnViewCard').className = 'px-3 py-1.5 rounded-lg text-xs font-bold text-slate-500 hover:text-[#0077b6] transition'; }
+      renderFiles();
+    }
+
+    function populateWorkerDropdown() {
+      const select = document.getElementById('filterWorker'); const workers = new Set(); visaFiles.forEach(f => { if (f.worker) workers.add(f.worker.trim()); });
+      select.innerHTML = '<option value="ALL">সব ওয়ার্কার</option>'; workers.forEach(w => { select.innerHTML += `<option value="${w}">${w}</option>`; });
+    }
+    function calcDue() { document.getElementById('billDue').value = Math.max(0, (parseFloat(document.getElementById('billTotal').value)||0) - (parseFloat(document.getElementById('billAdvance').value)||0)); }
+    function toggleRefundBox() { document.getElementById('refundCalcBox').classList.toggle('hidden', !document.getElementById('isReturned').checked); }
+    function calcRefund() { document.getElementById('refundAmount').value = Math.max(0, (parseFloat(document.getElementById('billAdvance').value)||0) - (parseFloat(document.getElementById('keptCharge').value)||0)); }
 
     async function syncToCloud() {
-      localStorage.setItem('rtc_visa_files', JSON.stringify(visaFiles));
+      localStorage.setItem('rtc_visa_files', JSON.stringify(visaFiles)); populateWorkerDropdown();
       if (!cloudUrl) return;
-      try {
-        document.getElementById('syncStatusText').innerText = 'ক্লাউডে সেভ হচ্ছে...';
-        const cleanUrl = cloudUrl.replace(/\/$/, '') + '/rtc_visa_files.json';
-        await fetch(cleanUrl, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(visaFiles)
-        });
-        document.getElementById('syncStatusText').innerText = 'লাইভ সিঙ্ক চালু আছে (সব পিসিতে আপডেট সম্পন্ন)';
-      } catch (e) {
-        document.getElementById('syncStatusText').innerText = 'অফলাইনে পিসিতে সেভ হয়েছে';
-      }
+      try { document.getElementById('syncStatusText').innerText = 'Syncing...'; await fetch(cloudUrl.replace(/\/$/, '') + '/rtc_visa_files.json', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(visaFiles) }); document.getElementById('syncStatusText').innerText = 'Live Sync Ready'; }
+      catch (e) { document.getElementById('syncStatusText').innerText = 'Offline Mode'; }
     }
-
     async function fetchFromCloud(silent = false) {
-      if (!cloudUrl) {
-        if (!silent) showToast('ডাটা রিফ্রেশ হয়েছে!');
-        renderFiles();
-        return;
-      }
-      try {
-        const cleanUrl = cloudUrl.replace(/\/$/, '') + '/rtc_visa_files.json';
-        const res = await fetch(cleanUrl);
-        if (res.ok) {
-          const data = await res.json();
-          if (Array.isArray(data)) {
-            visaFiles = data;
-            localStorage.setItem('rtc_visa_files', JSON.stringify(visaFiles));
-            renderFiles();
-          }
-          document.getElementById('syncStatusText').innerText = 'লাইভ সিঙ্ক চালু আছে (সব পিসিতে আপডেট সম্পন্ন)';
-          if (!silent) showToast('সব পিসির সর্বশেষ ডাটা লোড হয়েছে!');
-        }
-      } catch (e) {
-        if (!silent) document.getElementById('syncStatusText').innerText = 'ক্লাউড লিংক চেক করুন';
-      }
+      if (!cloudUrl) { if (!silent) showToast('রিফ্রেশ সম্পন্ন!'); renderFiles(); return; }
+      try { const res = await fetch(cloudUrl.replace(/\/$/, '') + '/rtc_visa_files.json'); if (res.ok) { const data = await res.json(); if (Array.isArray(data)) { visaFiles = data; localStorage.setItem('rtc_visa_files', JSON.stringify(visaFiles)); populateWorkerDropdown(); renderFiles(); } document.getElementById('syncStatusText').innerText = 'Live Sync Ready'; if (!silent) showToast('ক্লাউড ডাটা লোড হয়েছে!'); } }
+      catch (e) { if (!silent) document.getElementById('syncStatusText').innerText = 'Sync Error'; }
     }
 
-    function getSetStatus(applicants) {
-      const total = applicants.length;
-      const submittedCount = applicants.filter(a => a.isSubmitted).length;
-      if (submittedCount === 0) return 'TEMP';
-      if (submittedCount === total) return 'FULL';
-      return 'PARTIAL';
-    }
-
-    // Per-Person Direct Save on Card
-    function quickSavePersonData(fileId, appIdx, alsoCopyTemp = false) {
-      const f = visaFiles.find(x => x.id === fileId);
-      if (!f || !f.applicants[appIdx]) return;
-
-      const tempInput = document.getElementById(`quick_temp_${fileId}_${appIdx}`);
-      const bgdInput = document.getElementById(`quick_bgd_${fileId}_${appIdx}`);
-      const subCheck = document.getElementById(`quick_sub_${fileId}_${appIdx}`);
-
-      if (tempInput) f.applicants[appIdx].tempId = tempInput.value.trim();
-      if (bgdInput) f.applicants[appIdx].bgdNo = bgdInput.value.trim();
-      if (subCheck) f.applicants[appIdx].isSubmitted = subCheck.checked;
-
-      if (f.applicants[appIdx].bgdNo && !subCheck.checked) {
-        f.applicants[appIdx].isSubmitted = true;
-      }
-
+    function toggleDelivery(fileId) {
+      const f = visaFiles.find(x => x.id === fileId); f.isDelivered = !f.isDelivered; if (f.isDelivered) f.isReturned = false;
       f.updatedAt = new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
-      renderFiles();
-      syncToCloud();
+      renderFiles(); syncToCloud(); showToast(f.isDelivered ? '📦 ডেলিভারি সম্পন্ন!' : '📂 রানিং বোর্ডে রিস্টোর হয়েছে');
+    }
+    function toggleCardSignUp(fileId) {
+      const f = visaFiles.find(x => x.id === fileId); f.isSignedUp = !f.isSignedUp;
+      f.updatedAt = new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+      renderFiles(); syncToCloud(); showToast('স্ট্যাটাস আপডেট হয়েছে!');
+    }
 
-      const personName = f.applicants[appIdx].name || `Applicant #${appIdx + 1}`;
-      if (alsoCopyTemp) {
-        copyPersonData(f.applicants[appIdx].tempId, personName, 'Temp ID');
-      } else {
-        showToast(`✅ ${personName}-এর তথ্য সেভ হয়েছে!`);
-      }
+    function quickSavePersonData(fileId, appIdx, alsoCopyTemp = false) {
+      const f = visaFiles.find(x => x.id === fileId); const a = f.applicants[appIdx];
+      const tIn = document.getElementById(`quick_temp_${fileId}_${appIdx}`); const bIn = document.getElementById(`quick_bgd_${fileId}_${appIdx}`); const sCk = document.getElementById(`quick_sub_${fileId}_${appIdx}`);
+      if (tIn) a.tempId = tIn.value.trim(); if (bIn) a.bgdNo = bIn.value.trim(); if (sCk) a.isSubmitted = sCk.checked;
+      if (a.bgdNo && !sCk.checked) a.isSubmitted = true;
+      if (a.isSubmitted && !a.subDate) a.subDate = getTodayStr(); else if (!a.isSubmitted) a.subDate = '';
+      f.updatedAt = new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+      renderFiles(); syncToCloud();
+      if (alsoCopyTemp) copyPersonData(a.tempId, a.name, 'Temp ID'); else showToast('✅ সেভ হয়েছে!');
     }
 
     function quickUploadCardPdf(fileId, appIdx, event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      if (file.size > 5 * 1024 * 1024) {
-        alert('PDF ফাইল ৫ মেগাবাইটের (5MB) নিচে হতে হবে!');
-        return;
-      }
-      const f = visaFiles.find(x => x.id === fileId);
-      if (!f || !f.applicants[appIdx]) return;
-
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        f.applicants[appIdx].pdfName = file.name;
-        f.applicants[appIdx].pdfData = e.target.result;
-        f.applicants[appIdx].isSubmitted = true;
-        f.updatedAt = new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
-        renderFiles();
-        syncToCloud();
-        showToast(`📄 ${f.applicants[appIdx].name || 'Applicant'}-এর BGD PDF ফাইল সেভ হয়েছে!`);
-      };
+      const file = event.target.files[0]; if (!file) return;
+      if (file.size > 5 * 1024 * 1024) { alert('PDF ৫ মেগাবাইটের নিচে হতে হবে!'); return; }
+      const f = visaFiles.find(x => x.id === fileId); const reader = new FileReader();
+      reader.onload = (e) => { const a = f.applicants[appIdx]; a.pdfName = file.name; a.pdfData = e.target.result; a.isSubmitted = true; if (!a.subDate) a.subDate = getTodayStr(); f.updatedAt = new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }); renderFiles(); syncToCloud(); showToast('📄 PDF সেভ হয়েছে!'); };
       reader.readAsDataURL(file);
     }
 
-    function toggleCardSignUp(fileId) {
-      const f = visaFiles.find(x => x.id === fileId);
-      if (!f) return;
-      f.isSignedUp = !f.isSignedUp;
-      renderFiles();
-      syncToCloud();
-      showToast(f.isSignedUp ? '🟣 একাউন্ট Signed Up সম্পন্ন!' : '⚪ Not Signed Up হিসেবে মার্ক করা হয়েছে');
+    function hasExpiringOrExpiredBgd(fileSet) {
+      if (fileSet.isDelivered || fileSet.isReturned || fileSet.appointmentDate) return false;
+      return fileSet.applicants.some(a => { const i = getBgdExpiryInfo(a, fileSet); return i.status === 'EXPIRED' || i.status === 'WARNING'; });
     }
 
     function renderFiles() {
       const container = document.getElementById('fileListContainer');
       const search = document.getElementById('searchInput').value.toLowerCase().trim();
-      const vType = document.getElementById('filterVisaType').value;
-      const fStatus = document.getElementById('filterStatus').value;
+      const vType = document.getElementById('filterVisaType').value; const workerVal = document.getElementById('filterWorker').value;
 
-      let statTotal = visaFiles.length, statSigned = 0, statTemp = 0, statPartial = 0, statFull = 0;
-
+      let cntR = 0, cntE = 0, cntS = 0, cntA = 0, cntD = 0, cntRet = 0;
       visaFiles.forEach(f => {
-        if (f.isSignedUp) statSigned++;
-        const st = getSetStatus(f.applicants);
-        if (st === 'TEMP') statTemp++;
-        else if (st === 'PARTIAL') statPartial++;
-        else if (st === 'FULL') statFull++;
+        const isClosed = f.isDelivered || f.isReturned;
+        if (!isClosed) cntR++; if (hasExpiringOrExpiredBgd(f)) cntE++; if (f.isSignedUp && !isClosed) cntS++; if (f.appointmentDate && !isClosed) cntA++; if (f.isDelivered) cntD++; if (f.isReturned) cntRet++;
       });
-
-      document.getElementById('statTotalSets').innerText = statTotal;
-      document.getElementById('statSignedUp').innerText = statSigned;
-      document.getElementById('statTemp').innerText = statTemp;
-      document.getElementById('statPartial').innerText = statPartial;
-      document.getElementById('statFull').innerText = statFull;
+      document.getElementById('badgeRunning').innerText = cntR; document.getElementById('badgeExpiring').innerText = cntE; document.getElementById('badgeSignedUp').innerText = cntS; document.getElementById('badgeAppointment').innerText = cntA; document.getElementById('badgeDelivered').innerText = cntD; document.getElementById('badgeReturned').innerText = cntRet; document.getElementById('badgeAll').innerText = visaFiles.length;
 
       const filtered = visaFiles.filter(f => {
-        const st = getSetStatus(f.applicants);
-        if (vType !== 'ALL' && f.visaType !== vType) return false;
-        if (fStatus === 'TEMP' && st !== 'TEMP') return false;
-        if (fStatus === 'PARTIAL' && st !== 'PARTIAL') return false;
-        if (fStatus === 'FULL' && st !== 'FULL') return false;
-        if (fStatus === 'SIGNED_UP' && !f.isSignedUp) return false;
-        if (fStatus === 'NOT_SIGNED' && f.isSignedUp) return false;
-
+        const isClosed = f.isDelivered || f.isReturned;
+        if (activeTab === 'RUNNING' && isClosed) return false; if (activeTab === 'EXPIRING' && !hasExpiringOrExpiredBgd(f)) return false; if (activeTab === 'SIGNED_UP' && (!f.isSignedUp || isClosed)) return false; if (activeTab === 'APPOINTMENT' && (!f.appointmentDate || isClosed)) return false; if (activeTab === 'DELIVERED' && !f.isDelivered) return false; if (activeTab === 'RETURNED' && !f.isReturned) return false;
+        if (vType !== 'ALL' && f.visaType !== vType) return false; if (workerVal !== 'ALL' && (f.worker || '').trim() !== workerVal) return false;
         if (!search) return true;
-        const matchMain = (f.accountPhone || '').toLowerCase().includes(search) ||
-                          (f.accountGmail || '').toLowerCase().includes(search) ||
-                          (f.note || '').toLowerCase().includes(search);
-        const matchApp = f.applicants.some(a =>
-          (a.name || '').toLowerCase().includes(search) ||
-          (a.tempId || '').toLowerCase().includes(search) ||
-          (a.bgdNo || '').toLowerCase().includes(search) ||
-          (a.passport || '').toLowerCase().includes(search)
-        );
-        return matchMain || matchApp;
+        return (f.accountPhone || '').toLowerCase().includes(search) || (f.accountGmail || '').toLowerCase().includes(search) || (f.worker || '').toLowerCase().includes(search) || f.applicants.some(a => (a.name || '').toLowerCase().includes(search) || (a.tempId || '').toLowerCase().includes(search) || (a.bgdNo || '').toLowerCase().includes(search) || (a.passport || '').toLowerCase().includes(search));
       });
 
       if (filtered.length === 0) {
-        container.innerHTML = `
-          <div class="glass-card rounded-3xl p-12 text-center shadow-md border-2 border-dashed border-slate-300 animate-card">
-            <div class="bg-blue-100 text-blue-600 w-16 h-16 rounded-2xl inline-flex items-center justify-center text-3xl mb-3">
-              <i class="fa-solid fa-folder-open"></i>
-            </div>
-            <h3 class="text-lg font-extrabold text-slate-800">কোনো ভিসা ফাইল পাওয়া যায়নি!</h3>
-            <p class="text-xs text-slate-500 mt-1">ওপরে ডান কোণায় <b>"নতুন ভিসা ফাইল খুলুন"</b> বাটনে ক্লিক করে নতুন ফাইল যোগ করুন।</p>
-          </div>`;
-        return;
+        container.innerHTML = `<div class="bg-white rounded-3xl p-12 text-center border border-slate-200 shadow-sm"><div class="w-16 h-16 bg-[#f4f7fa] text-[#00b4d8] rounded-2xl mx-auto flex items-center justify-center text-3xl mb-4 border border-slate-100"><i class="fa-solid fa-folder-open"></i></div><h4 class="font-extrabold text-slate-700 text-base">কোনো ভিসা ফাইল পাওয়া যায়নি!</h4></div>`; return;
       }
+      if (viewMode === 'TABLE') renderTableView(container, filtered); else renderCardView(container, filtered);
+    }
 
-      container.innerHTML = filtered.map(f => {
-        const st = getSetStatus(f.applicants);
-        const subCount = f.applicants.filter(a => a.isSubmitted).length;
-        let statusBadge = '';
-        if (st === 'FULL') {
-          statusBadge = `<span class="bg-emerald-600 text-white px-3.5 py-1 rounded-full text-xs font-extrabold shadow">🟢 ফুল সেট সাবমিট (${subCount}/${f.applicants.length} জন)</span>`;
-        } else if (st === 'PARTIAL') {
-          statusBadge = `<span class="bg-cyan-600 text-white px-3.5 py-1 rounded-full text-xs font-extrabold shadow">🔵 আংশিক সাবমিট (${subCount}/${f.applicants.length} জন)</span>`;
-        } else {
-          statusBadge = `<span class="bg-amber-500 text-slate-950 px-3.5 py-1 rounded-full text-xs font-extrabold shadow">🟠 কাজ চলছে / Temp (${subCount}/${f.applicants.length} জন)</span>`;
-        }
+    function renderTableView(container, files) {
+      container.innerHTML = `<div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-x-auto"><table class="w-full text-left text-xs border-collapse">
+          <thead><tr class="bg-slate-50 text-slate-500 font-extrabold border-b border-slate-200 uppercase tracking-wide"><th class="p-3.5">মেইন আবেদনকারী</th><th class="p-3.5">ভিসা ও ডকুমেন্টস</th><th class="p-3.5">সাইন-আপ তথ্য</th><th class="p-3.5">আবেদনকারী ও Temp/BGD</th><th class="p-3.5">অ্যাকশন</th></tr></thead>
+          <tbody class="divide-y divide-slate-100 font-medium">
+            ${files.map(f => {
+              return `<tr class="hover:bg-[#f4f7fa] transition">
+                <td class="p-3.5"><div class="font-extrabold text-[#0b132b] text-sm">${f.applicants[0]?.name || 'Unnamed'}</div><div class="text-[10px] text-slate-500 font-bold uppercase mt-0.5">মোট ${f.applicants.length} জন</div></td>
+                <td class="p-3.5 space-y-1.5"><span class="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-slate-100 text-slate-600">${f.visaType}</span><div class="flex flex-wrap gap-1 mt-1">${getDocChecklistBadges(f)}</div></td>
+                <td class="p-3.5"><div class="mono-type font-extrabold text-[#0b132b]">${f.accountPhone || 'N/A'}</div></td>
+                <td class="p-3.5 space-y-1">${f.applicants.map((a, i) => `<div class="flex flex-wrap items-center gap-1.5 text-[11px]"><span class="font-bold text-slate-600">${a.name}:</span><span class="mono-type font-bold text-[#00b4d8] bg-[#00b4d8]/10 px-1.5 rounded">${a.tempId || 'No-Temp'}</span></div>`).join('')}</td>
+                <td class="p-3.5 space-x-1"><button onclick="openFileModal('${f.id}')" class="bg-white text-[#0077b6] px-3 py-1 rounded-lg border border-slate-200 font-bold shadow-sm hover:bg-slate-50">এডিট</button></td>
+              </tr>`;
+            }).join('')}
+          </tbody></table></div>`;
+    }
 
-        const mainName = f.applicants[0]?.name || 'নাম লেখা হয়নি';
-        const coCount = f.applicants.length - 1;
-        const isDifferentPass = f.accountPassword && f.accountPassword !== defaultPass;
-
+    function renderCardView(container, files) {
+      container.innerHTML = files.map(f => {
+        const isDiffPass = f.accountPassword && f.accountPassword !== defaultPass;
         return `
-        <div class="glass-card rounded-3xl shadow-lg border-2 border-white overflow-hidden hover:shadow-xl transition animate-card">
-          
-          <!-- Top Bar: Main File Identification & Set Status -->
-          <div class="bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 text-white px-5 py-3.5 flex flex-wrap justify-between items-center gap-3">
-            <div class="flex flex-wrap items-center gap-2.5">
-              <span class="bg-amber-400 text-slate-950 px-3 py-1 rounded-xl text-xs font-extrabold uppercase shadow">${f.visaType}</span>
-              <div class="flex items-center gap-2 bg-white/10 px-3 py-1 rounded-xl border border-white/15">
-                <span class="text-amber-300 text-xs font-extrabold uppercase">⭐ মেইন ফাইল:</span>
-                <span class="text-base md:text-lg font-extrabold text-white tracking-wide">${mainName}</span>
-                <span class="bg-blue-600 text-white px-2 py-0.5 rounded-lg text-[11px] font-bold">
-                  ${coCount > 0 ? `+ সাথে ${coCount} জন (মোট ${f.applicants.length})` : 'সিঙ্গেল (১ জন)'}
-                </span>
-              </div>
-              ${statusBadge}
-            </div>
-
-            <div class="flex items-center gap-2">
-              <span class="text-[11px] text-slate-300 mr-1"><i class="fa-regular fa-clock mr-1"></i>${f.updatedAt || ''}</span>
-              <button onclick="openFileModal('${f.id}')" class="bg-blue-600 hover:bg-blue-500 text-white px-3.5 py-1.5 rounded-xl text-xs font-extrabold shadow transition flex items-center gap-1.5">
-                <i class="fa-solid fa-pen-to-square"></i> এডিট / মেম্বার যোগ
-              </button>
-              <button onclick="deleteFileSet('${f.id}')" class="bg-red-500/20 hover:bg-red-600 text-red-200 hover:text-white px-3 py-1.5 rounded-xl text-xs font-bold transition">
-                <i class="fa-solid fa-trash"></i>
-              </button>
-            </div>
-          </div>
-
-          <!-- Sign-Up & Login Visual Bar (NO Copy Buttons - Large Clear Text for Typing on Website) -->
-          <div class="px-5 py-3.5 ${f.isSignedUp ? 'bg-purple-50 border-b-2 border-purple-200' : 'bg-rose-50/70 border-b-2 border-rose-200'} flex flex-wrap items-center justify-between gap-4">
-            
-            <!-- Left: Signed Up Status Toggle + Main Person Match -->
+        <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-lg transition visa-border-${f.visaType.replace(/\s+/g, '')}">
+          <div class="bg-white px-5 py-4 flex flex-wrap justify-between items-center gap-3 border-b border-slate-100">
             <div class="flex flex-wrap items-center gap-3">
-              <button onclick="toggleCardSignUp('${f.id}')" title="ক্লিক করে সাইন-আপ স্ট্যাটাস পরিবর্তন করুন" class="px-4 py-2 rounded-xl text-xs md:text-sm font-extrabold shadow-sm transition flex items-center gap-2 ${f.isSignedUp ? 'bg-purple-700 hover:bg-purple-800 text-white' : 'bg-rose-600 hover:bg-rose-700 text-white'}">
-                <i class="fa-solid ${f.isSignedUp ? 'fa-circle-check' : 'fa-circle-exclamation'} text-base"></i>
-                ${f.isSignedUp ? 'SIGNED UP (একাউন্ট খোলা আছে)' : 'NOT SIGNED UP (সাইন-আপ বাকি)'}
-              </button>
-
-              <!-- Phone, Gmail, Password Boxes for Easy Reading & Typing -->
-              <div class="flex flex-wrap items-center gap-2.5">
-                <div class="bg-white px-3.5 py-1.5 rounded-xl border-2 border-purple-300 shadow-sm">
-                  <span class="text-[11px] font-extrabold text-slate-500 uppercase block">📱 সাইন-আপ নাম্বার (Phone)</span>
-                  <span class="mono-type text-sm md:text-base font-extrabold text-slate-900 select-all">${f.accountPhone || 'দেওয়া হয়নি'}</span>
-                </div>
-
-                <div class="bg-white px-3.5 py-1.5 rounded-xl border-2 border-purple-300 shadow-sm">
-                  <span class="text-[11px] font-extrabold text-slate-500 uppercase block">✉️ সাইন-আপ জিমেইল (Gmail)</span>
-                  <span class="mono-type text-sm md:text-base font-extrabold text-blue-900 select-all">${f.accountGmail || 'দেওয়া হয়নি'}</span>
-                </div>
-
-                <div class="bg-white px-3.5 py-1.5 rounded-xl border-2 ${isDifferentPass ? 'border-red-500 bg-red-50' : 'border-purple-300'} shadow-sm">
-                  <div class="flex items-center gap-1.5">
-                    <span class="text-[11px] font-extrabold text-slate-500 uppercase">🔑 পাসওয়ার্ড:</span>
-                    ${isDifferentPass ? `<span class="bg-red-600 text-white text-[10px] font-extrabold px-1.5 py-0.2 rounded">আলাদা পাসওয়ার্ড!</span>` : `<span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-1.5 rounded">কমন</span>`}
-                  </div>
-                  <span class="mono-type text-sm md:text-base font-extrabold ${isDifferentPass ? 'text-red-700' : 'text-slate-900'} select-all">${f.accountPassword || '---'}</span>
-                </div>
-              </div>
+              <span class="bg-slate-100 text-slate-600 border border-slate-200 px-2.5 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wide">${f.visaType}</span>
+              <h3 class="text-base font-extrabold text-[#0b132b] tracking-tight">${f.applicants[0]?.name || 'নাম লেখা হয়নি'}</h3>
+              <span class="bg-slate-50 text-slate-500 px-2 py-0.5 rounded text-[10px] font-bold border border-slate-200">${f.applicants.length > 1 ? `মোট ${f.applicants.length} জন` : 'সিঙ্গেল ফাইল'}</span>
+              ${f.worker ? `<span class="bg-[#00b4d8]/10 text-[#0077b6] px-2 py-0.5 rounded text-[10px] font-extrabold"><i class="fa-solid fa-user-gear mr-1"></i>${f.worker}</span>` : ''}
             </div>
-
-            ${f.note ? `<div class="bg-amber-100 text-amber-950 px-3.5 py-2 rounded-xl text-xs font-extrabold border-2 border-amber-300"><i class="fa-solid fa-bell mr-1.5 text-amber-600"></i>${f.note}</div>` : ''}
+            <div class="flex flex-wrap items-center gap-2 text-xs">
+              <button onclick="openQuickReturnModal('${f.id}')" class="px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1 ${f.isReturned ? 'bg-slate-100 text-rose-600 hover:bg-slate-200' : 'bg-white text-rose-500 border border-rose-200 hover:bg-rose-50'}"><i class="fa-solid fa-rotate-left"></i>${f.isReturned ? 'রানিং' : 'ফেরত'}</button>
+              <button onclick="toggleDelivery('${f.id}')" class="px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1 ${f.isDelivered ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' : 'bg-white text-emerald-600 border border-emerald-200 hover:bg-emerald-50'}"><i class="fa-solid ${f.isDelivered ? 'fa-rotate-left' : 'fa-box-archive'}"></i>${f.isDelivered ? 'রানিং' : 'ডেলিভারি'}</button>
+              <button onclick="openFileModal('${f.id}')" class="bg-[#0b132b] hover:bg-[#1c2541] text-white px-3.5 py-1.5 rounded-xl font-bold shadow-sm transition"><i class="fa-solid fa-pen-to-square mr-1"></i>এডিট</button>
+            </div>
           </div>
 
-          <!-- Per-Person Individual Cards (Person-wise Temp ID Copy + Individual Submit & BGD) -->
-          <div class="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-${Math.min(f.applicants.length, 4)} gap-4">
+          <div class="px-5 py-3.5 ${f.isSignedUp ? 'bg-purple-50/50' : 'bg-rose-50/30'} flex flex-wrap items-center justify-between gap-3 text-xs border-b border-slate-100">
+            <div class="flex flex-wrap items-center gap-3">
+              <button onclick="toggleCardSignUp('${f.id}')" class="px-3 py-1.5 rounded-xl font-extrabold shadow-sm transition flex items-center gap-1.5 ${f.isSignedUp ? 'bg-purple-600 text-white' : 'bg-rose-500 text-white'}"><i class="fa-solid ${f.isSignedUp ? 'fa-circle-check' : 'fa-circle-exclamation'}"></i>${f.isSignedUp ? 'SIGNED UP' : 'NOT SIGNED UP'}</button>
+              <div class="bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm"><span class="text-[10px] font-extrabold text-slate-400 block uppercase">ফোন</span><span class="mono-type text-sm font-extrabold text-slate-700">${f.accountPhone || '---'}</span></div>
+              <div class="bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm"><span class="text-[10px] font-extrabold text-slate-400 block uppercase">জিমেইল</span><span class="mono-type text-sm font-extrabold text-[#0077b6]">${f.accountGmail || '---'}</span></div>
+              <div class="bg-white px-3 py-1.5 rounded-xl border ${isDiffPass ? 'border-red-400 bg-red-50' : 'border-slate-200'} shadow-sm"><span class="text-[10px] font-extrabold text-slate-400 block uppercase">পাসওয়ার্ড ${isDiffPass ? '<b class="text-red-500">(আলাদা)</b>' : ''}</span><span class="mono-type text-sm font-extrabold ${isDiffPass ? 'text-red-600' : 'text-slate-700'}">${f.accountPassword || '---'}</span></div>
+            </div>
+          </div>
+
+          ${getDocChecklistBadges(f) ? `<div class="px-5 py-3 bg-slate-50 border-b border-slate-100 flex flex-wrap items-center gap-2"><span class="text-[10px] font-extrabold text-slate-400 uppercase mr-1">চেকলিস্ট:</span>${getDocChecklistBadges(f)}</div>` : ''}
+
+          <div class="p-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-${Math.min(f.applicants.length, 4)} gap-4">
             ${f.applicants.map((a, idx) => {
-              const pName = a.name || (idx === 0 ? 'মেইন অ্যাপ্লিক্যান্ট' : `কো-অ্যাপ্লিক্যান্ট #${idx}`);
+              const exp = getBgdExpiryInfo(a, f);
               return `
-              <div class="rounded-2xl border-2 ${a.isSubmitted ? 'bg-emerald-50/80 border-emerald-400' : 'bg-amber-50/70 border-amber-300'} p-4 flex flex-col justify-between shadow-sm hover:shadow-md transition">
+              <div class="rounded-2xl border ${exp.status === 'EXPIRED' ? 'bg-red-50/50 border-red-200' : (a.isSubmitted ? 'bg-emerald-50/40 border-emerald-200' : 'bg-white border-slate-200')} p-4 flex flex-col justify-between shadow-sm">
                 <div>
-                  <!-- Person Role & Individual Submit Checkbox -->
-                  <div class="flex justify-between items-start gap-2 pb-2.5 border-b-2 border-slate-200/80">
+                  <div class="flex justify-between items-start gap-1 pb-2 border-b border-slate-100">
                     <div>
-                      <span class="text-[11px] font-extrabold uppercase px-2.5 py-0.5 rounded-lg ${idx === 0 ? 'bg-blue-700 text-white shadow-sm' : 'bg-slate-700 text-white'}">
-                        ${idx === 0 ? '⭐ মেইন ফাইল (Main)' : '👥 কো-অ্যাপ্লিক্যান্ট #' + idx}
-                      </span>
-                      <h4 class="font-extrabold text-base text-slate-900 mt-1.5">${pName}</h4>
+                      <span class="text-[9px] font-extrabold uppercase tracking-wide text-slate-500">${idx === 0 ? '⭐ মেইন ফাইল' : '👥 কো-অ্যাপ্লিক্যান্ট #' + idx}</span>
+                      <h4 class="font-extrabold text-sm text-[#0b132b] mt-0.5">${a.name || 'Unnamed'}</h4>
                     </div>
-
-                    <label class="inline-flex items-center cursor-pointer px-3 py-1.5 rounded-xl text-xs font-extrabold shadow-sm transition ${a.isSubmitted ? 'bg-emerald-600 text-white' : 'bg-white text-amber-900 border-2 border-amber-400'}">
-                      <input type="checkbox" id="quick_sub_${f.id}_${idx}" onchange="quickSavePersonData('${f.id}', ${idx})" ${a.isSubmitted ? 'checked' : ''} class="mr-1.5 w-4 h-4 accent-emerald-700 cursor-pointer">
-                      ${a.isSubmitted ? '✓ সাবমিট সম্পন্ন' : '⏳ কাজ চলছে'}
-                    </label>
-                  </div>
-
-                  <!-- PER-PERSON TEMP ID BOX + BIG COPY BUTTON -->
-                  <div class="mt-3 bg-white p-3 rounded-xl border-2 border-amber-300 shadow-sm">
-                    <div class="flex justify-between items-center mb-1.5">
-                      <span class="text-xs font-extrabold text-amber-900"><i class="fa-solid fa-key mr-1 text-amber-600"></i>Temp ID (${idx === 0 ? 'মেইন' : 'কো-' + idx}):</span>
-                      <button onclick="quickSavePersonData('${f.id}',${idx})" class="text-[11px] bg-slate-800 hover:bg-slate-700 text-white px-2.5 py-0.5 rounded-lg font-bold transition">
-                        <i class="fa-solid fa-floppy-disk mr-1"></i>সেভ
-                      </button>
-                    </div>
-
-                    <input type="text" id="quick_temp_${f.id}_${idx}" value="${a.tempId || ''}" placeholder="এখানে Temp ID পেস্ট/লিখুন..." class="w-full px-3 py-2 rounded-lg border-2 border-amber-200 mono-type text-xs md:text-sm font-extrabold text-slate-900 bg-amber-50/40 focus:outline-none focus:border-amber-600 mb-2">
-
-                    <button onclick="quickSavePersonData('${f.id}',${idx}, true)" class="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950 py-2 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 shadow transition transform active:scale-95">
-                      <i class="fa-regular fa-copy text-sm"></i> 📋 এই ব্যক্তির Temp ID কপি করুন
-                    </button>
-                  </div>
-
-                  <!-- PER-PERSON BGD FILE NO BOX -->
-                  <div class="mt-2.5 bg-white p-3 rounded-xl border-2 border-emerald-300 shadow-sm">
-                    <div class="flex justify-between items-center mb-1.5">
-                      <span class="text-xs font-extrabold text-emerald-900"><i class="fa-solid fa-file-circle-check mr-1 text-emerald-600"></i>BGD নাম্বার (সাবমিট হলে):</span>
-                      ${a.bgdNo ? `<button onclick="copyPersonData('${a.bgdNo}', '${pName}', 'BGD নাম্বার')" class="text-[11px] bg-emerald-100 hover:bg-emerald-600 hover:text-white text-emerald-900 px-2 py-0.5 rounded-lg font-bold transition"><i class="fa-regular fa-copy"></i> কপি</button>` : ''}
-                    </div>
-                    <div class="flex gap-1.5">
-                      <input type="text" id="quick_bgd_${f.id}_${idx}" value="${a.bgdNo || ''}" placeholder="BGDD..." class="w-full px-3 py-1.5 rounded-lg border-2 border-emerald-200 mono-type text-xs font-extrabold text-slate-900 bg-emerald-50/30 focus:outline-none focus:border-emerald-600">
-                      <button onclick="quickSavePersonData('${f.id}',${idx})" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-1.5 rounded-lg text-xs font-extrabold shadow transition">
-                        সেভ
-                      </button>
+                    <div class="flex flex-col items-end gap-1.5">
+                      <label class="inline-flex items-center cursor-pointer px-2.5 py-1 rounded text-[10px] font-bold ${a.isSubmitted ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'}">
+                        <input type="checkbox" id="quick_sub_${f.id}_${idx}" onchange="quickSavePersonData('${f.id}', ${idx})" ${a.isSubmitted ? 'checked' : ''} class="mr-1 w-3 h-3 accent-emerald-600"> সাবমিট
+                      </label>
+                      <div class="flex gap-1.5 mt-0.5">
+                        ${idx > 0 ? `<button onclick="makeMainApplicant('${f.id}', ${idx})" title="মেইন ফাইল করুন" class="text-amber-600 bg-amber-50 hover:bg-amber-100 text-[10px] font-bold px-2 py-0.5 rounded transition"><i class="fa-solid fa-star"></i> মেইন</button>` : ''}
+                        <button onclick="openMoveModal('${f.id}',${idx})" title="ট্রান্সফার করুন" class="text-[#0077b6] bg-[#00b4d8]/10 hover:bg-[#00b4d8]/20 text-[10px] font-bold px-2 py-0.5 rounded transition"><i class="fa-solid fa-arrow-right-arrow-left"></i> মুভ</button>
+                      </div>
                     </div>
                   </div>
 
-                  <!-- Optional Passport / DOB / NID Info -->
-                  ${(a.passport || a.dob || a.nid) ? `
-                    <div class="mt-2.5 text-xs bg-white p-2.5 rounded-xl border border-slate-200 space-y-1">
-                      ${a.passport ? `<div class="flex justify-between items-center"><span><b>PP:</b> <span class="mono-type font-bold">${a.passport}</span></span> <button onclick="copyPersonData('${a.passport}', '${pName}', 'Passport No')" class="text-blue-600 font-bold text-[11px]"><i class="fa-regular fa-copy"></i> কপি</button></div>` : ''}
-                      ${a.dob ? `<div><b>DOB:</b> <span class="mono-type font-bold">${a.dob}</span></div>` : ''}
-                      ${a.nid ? `<div><b>NID:</b> <span class="mono-type font-bold">${a.nid}</span></div>` : ''}
-                    </div>
-                  ` : ''}
+                  ${a.isSubmitted ? `<div class="mt-2.5 flex items-center justify-between gap-1 bg-white p-2 rounded-xl border border-slate-100 shadow-sm"><div>${exp.badgeHtml}</div>${(exp.status === 'EXPIRED' || exp.status === 'WARNING') ? `<button onclick="reApplyApplicant('${f.id}',${idx})" class="bg-rose-50 text-rose-600 px-2 py-1 rounded text-[10px] font-bold"><i class="fa-solid fa-rotate-right"></i> Re-Apply</button>` : ''}</div>` : ''}
+
+                  <div class="mt-3">
+                    <div class="flex justify-between items-center mb-1"><span class="text-[10px] font-extrabold text-slate-500 uppercase">Temp ID</span><button onclick="quickSavePersonData('${f.id}',${idx})" class="text-[10px] text-blue-600 font-bold hover:underline">সেভ</button></div>
+                    <input type="text" id="quick_temp_${f.id}_${idx}" value="${a.tempId || ''}" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 mono-type text-xs font-bold text-slate-800 bg-slate-50 focus:border-[#00b4d8] focus:bg-white focus:outline-none mb-2">
+                    <button onclick="quickSavePersonData('${f.id}',${idx}, true)" class="w-full bg-white border border-slate-200 hover:border-[#00b4d8] text-slate-700 hover:text-[#0077b6] py-1.5 px-2 rounded-lg text-xs font-bold flex justify-center gap-1 shadow-sm transition"><i class="fa-regular fa-copy"></i> কপি Temp ID</button>
+                  </div>
+
+                  <div class="mt-3">
+                    <div class="flex justify-between items-center mb-1"><span class="text-[10px] font-extrabold text-slate-500 uppercase">BGD Number</span>${a.bgdNo ? `<button onclick="copyPersonData('${a.bgdNo}', '${a.name}', 'BGD')" class="text-[10px] text-emerald-600 font-bold hover:underline">কপি</button>` : ''}</div>
+                    <div class="flex gap-1.5"><input type="text" id="quick_bgd_${f.id}_${idx}" value="${a.bgdNo || ''}" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 mono-type text-xs font-bold text-slate-800 bg-slate-50 focus:border-emerald-400 focus:bg-white focus:outline-none"><button onclick="quickSavePersonData('${f.id}',${idx})" class="bg-slate-800 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-slate-700">সেভ</button></div>
+                  </div>
                 </div>
 
-                <!-- Per-Person Individual BGD PDF File -->
-                <div class="mt-3 pt-2.5 border-t border-slate-200 flex gap-2">
-                  ${a.pdfData ? `
-                    <button onclick="openPdf('${f.id}', ${idx})" class="flex-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white py-2 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 shadow transition">
-                      <i class="fa-solid fa-file-pdf"></i> BGD PDF ওপেন / প্রিন্ট
-                    </button>
-                    <label title="নতুন PDF ফাইল দিন" class="cursor-pointer bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-2 rounded-xl text-xs font-bold flex items-center justify-center">
-                      <i class="fa-solid fa-rotate"></i>
-                      <input type="file" accept="application/pdf" onchange="quickUploadCardPdf('${f.id}', ${idx}, event)" class="hidden">
-                    </label>
-                  ` : `
-                    <label class="w-full cursor-pointer bg-blue-600 hover:bg-blue-500 text-white py-2 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 shadow transition">
-                      <i class="fa-solid fa-cloud-arrow-up"></i> ${idx === 0 ? 'মেইন ফাইলের' : 'এই ব্যক্তির'} BGD PDF রাখুন
-                      <input type="file" accept="application/pdf" onchange="quickUploadCardPdf('${f.id}', ${idx}, event)" class="hidden">
-                    </label>
-                  `}
+                <div class="mt-4 flex gap-1.5">
+                  ${a.pdfData ? `<button onclick="openPdf('${f.id}', ${idx})" class="flex-1 bg-emerald-50 text-emerald-700 border border-emerald-200 py-1.5 px-2 rounded-xl text-xs font-bold hover:bg-emerald-100 transition"><i class="fa-solid fa-file-pdf"></i> PDF ওপেন</button>` : `<label class="w-full cursor-pointer bg-slate-50 text-slate-600 border border-slate-200 py-1.5 px-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1 hover:bg-slate-100 transition"><i class="fa-solid fa-upload"></i> PDF রাখুন<input type="file" accept="application/pdf" onchange="quickUploadCardPdf('${f.id}', ${idx}, event)" class="hidden"></label>`}
                 </div>
               </div>`;
             }).join('')}
@@ -701,155 +646,84 @@
       }).join('');
     }
 
-    // Modal Functions
     function openFileModal(fileId = null) {
       document.getElementById('fileModal').classList.remove('hidden');
       if (fileId) {
         const f = visaFiles.find(x => x.id === fileId);
-        if (!f) return;
-        document.getElementById('modalTitle').innerHTML = `<i class="fa-solid fa-pen-to-square text-amber-300"></i> ভিসা ফাইল সেট এডিট করুন`;
-        document.getElementById('editFileId').value = f.id;
-        document.getElementById('visaType').value = f.visaType || 'Medical';
-        document.getElementById('isSignedUp').checked = !!f.isSignedUp;
-        document.getElementById('accountPhone').value = f.accountPhone || '';
-        document.getElementById('accountGmail').value = f.accountGmail || '';
-        document.getElementById('accountPassword').value = f.accountPassword || '';
-        document.getElementById('fileNote').value = f.note || '';
+        document.getElementById('editFileId').value = f.id; document.getElementById('visaType').value = f.visaType || 'Medical';
+        document.getElementById('workerName').value = f.worker || ''; document.getElementById('isSignedUp').checked = !!f.isSignedUp;
+        document.getElementById('isDelivered').checked = !!f.isDelivered; document.getElementById('isReturned').checked = !!f.isReturned;
+        document.getElementById('accountPhone').value = f.accountPhone || ''; document.getElementById('accountGmail').value = f.accountGmail || '';
+        document.getElementById('accountPassword').value = f.accountPassword || ''; document.getElementById('docTrade').value = f.docTrade || 'NONE';
+        document.getElementById('docNoc').value = f.docNoc || 'NONE'; document.getElementById('docBank').value = f.docBank || 'CUSTOMER';
+        document.getElementById('docPassportHeld').value = f.docPassportHeld || 'CUSTOMER'; document.getElementById('feeStatus').value = f.feeStatus || 'UNPAID';
+        document.getElementById('appointmentDate').value = f.appointmentDate || ''; document.getElementById('billTotal').value = f.billTotal || '';
+        document.getElementById('billAdvance').value = f.billAdvance || ''; document.getElementById('billDue').value = f.billDue || '';
+        document.getElementById('keptCharge').value = f.keptCharge || ''; document.getElementById('refundAmount').value = f.refundAmount || '';
+        document.getElementById('returnReason').value = f.returnReason || ''; document.getElementById('fileNote').value = f.note || '';
         tempApplicants = JSON.parse(JSON.stringify(f.applicants));
       } else {
-        document.getElementById('modalTitle').innerHTML = `<i class="fa-solid fa-folder-plus text-amber-300"></i> নতুন ভিসা ফাইল সেট খুলুন`;
-        document.getElementById('editFileId').value = '';
-        document.getElementById('visaType').value = 'Medical';
-        document.getElementById('isSignedUp').checked = false;
-        document.getElementById('accountPhone').value = '';
-        document.getElementById('accountGmail').value = '';
-        document.getElementById('accountPassword').value = defaultPass;
-        document.getElementById('fileNote').value = '';
-        tempApplicants = [{
-          name: '', passport: '', dob: '', nid: '', tempId: '', bgdNo: '', isSubmitted: false, pdfName: '', pdfData: ''
-        }];
+        document.getElementById('editFileId').value = ''; document.getElementById('visaType').value = 'Medical'; document.getElementById('workerName').value = '';
+        document.getElementById('isSignedUp').checked = false; document.getElementById('isDelivered').checked = false; document.getElementById('isReturned').checked = false;
+        document.getElementById('accountPhone').value = ''; document.getElementById('accountGmail').value = ''; document.getElementById('accountPassword').value = defaultPass;
+        document.getElementById('docTrade').value = 'NONE'; document.getElementById('docNoc').value = 'NONE'; document.getElementById('docBank').value = 'CUSTOMER';
+        document.getElementById('docPassportHeld').value = 'CUSTOMER'; document.getElementById('feeStatus').value = 'UNPAID'; document.getElementById('appointmentDate').value = '';
+        document.getElementById('billTotal').value = ''; document.getElementById('billAdvance').value = ''; document.getElementById('billDue').value = '';
+        document.getElementById('keptCharge').value = ''; document.getElementById('refundAmount').value = ''; document.getElementById('returnReason').value = ''; document.getElementById('fileNote').value = '';
+        tempApplicants = [{ name: '', passport: '', dob: '', nid: '', tempId: '', bgdNo: '', isSubmitted: false, subDate: '', prevBgd: '', pdfName: '', pdfData: '' }];
       }
-      renderApplicantForms();
+      toggleRefundBox(); renderApplicantForms();
     }
 
-    function closeFileModal() {
-      document.getElementById('fileModal').classList.add('hidden');
-    }
-
-    function fillDefaultPass() {
-      document.getElementById('accountPassword').value = defaultPass;
-    }
+    function closeFileModal() { document.getElementById('fileModal').classList.add('hidden'); }
+    function fillDefaultPass() { document.getElementById('accountPassword').value = defaultPass; }
 
     function syncTempInputs() {
       tempApplicants.forEach((a, i) => {
-        const elName = document.getElementById(`app_name_${i}`);
-        if (elName) {
-          a.name = elName.value;
-          a.tempId = document.getElementById(`app_temp_${i}`).value;
-          a.bgdNo = document.getElementById(`app_bgd_${i}`).value;
-          a.passport = document.getElementById(`app_pp_${i}`).value;
-          a.dob = document.getElementById(`app_dob_${i}`).value;
-          a.nid = document.getElementById(`app_nid_${i}`).value;
-          a.isSubmitted = document.getElementById(`app_sub_${i}`).checked;
+        const el = document.getElementById(`app_name_${i}`);
+        if (el) {
+          a.name = el.value; a.tempId = document.getElementById(`app_temp_${i}`).value; a.bgdNo = document.getElementById(`app_bgd_${i}`).value;
+          a.passport = document.getElementById(`app_pp_${i}`).value; a.dob = document.getElementById(`app_dob_${i}`).value; a.nid = document.getElementById(`app_nid_${i}`).value;
+          a.isSubmitted = document.getElementById(`app_sub_${i}`).checked; a.subDate = document.getElementById(`app_subdate_${i}`).value;
+          if (a.bgdNo && !a.isSubmitted) a.isSubmitted = true; if (a.isSubmitted && !a.subDate) a.subDate = getTodayStr();
         }
       });
     }
 
-    function addApplicantForm() {
-      syncTempInputs();
-      if (tempApplicants.length >= 4) {
-        alert('মেইন ফাইলের সাথে সর্বোচ্চ ৩ জন কো-অ্যাপ্লিক্যান্ট (মোট ৪ জন) যোগ করা যাবে!');
-        return;
-      }
-      tempApplicants.push({
-        name: '', passport: '', dob: '', nid: '', tempId: '', bgdNo: '', isSubmitted: false, pdfName: '', pdfData: ''
-      });
-      renderApplicantForms();
-    }
-
-    function removeApplicantForm(idx) {
-      syncTempInputs();
-      tempApplicants.splice(idx, 1);
-      renderApplicantForms();
-    }
+    function addApplicantForm() { syncTempInputs(); if (tempApplicants.length >= 4) { alert('সর্বোচ্চ ৪ জন যোগ করা যাবে!'); return; } tempApplicants.push({ name: '', passport: '', dob: '', nid: '', tempId: '', bgdNo: '', isSubmitted: false, subDate: '', prevBgd: '', pdfName: '', pdfData: '' }); renderApplicantForms(); }
+    function removeApplicantForm(idx) { syncTempInputs(); tempApplicants.splice(idx, 1); renderApplicantForms(); }
 
     function handlePdfUpload(idx, event) {
-      syncTempInputs();
-      const file = event.target.files[0];
-      if (!file) return;
-      if (file.size > 5 * 1024 * 1024) {
-        alert('PDF ফাইল ৫ মেগাবাইটের (5MB) নিচে হতে হবে!');
-        return;
-      }
+      syncTempInputs(); const file = event.target.files[0]; if (!file) return;
+      if (file.size > 5 * 1024 * 1024) { alert('PDF ৫ মেগাবাইটের নিচে হতে হবে!'); return; }
       const reader = new FileReader();
-      reader.onload = function(e) {
-        tempApplicants[idx].pdfName = file.name;
-        tempApplicants[idx].pdfData = e.target.result;
-        tempApplicants[idx].isSubmitted = true;
-        renderApplicantForms();
-        showToast('BGD PDF ফাইল যুক্ত হয়েছে!');
-      };
+      reader.onload = (e) => { tempApplicants[idx].pdfName = file.name; tempApplicants[idx].pdfData = e.target.result; tempApplicants[idx].isSubmitted = true; if (!tempApplicants[idx].subDate) tempApplicants[idx].subDate = getTodayStr(); renderApplicantForms(); showToast('PDF যোগ হয়েছে!'); };
       reader.readAsDataURL(file);
     }
 
     function renderApplicantForms() {
-      const container = document.getElementById('applicantsContainer');
-      const btnAdd = document.getElementById('btnAddCoApplicant');
-      btnAdd.style.display = tempApplicants.length >= 4 ? 'none' : 'inline-flex';
-
-      container.innerHTML = tempApplicants.map((a, i) => `
-        <div class="p-4 rounded-2xl border-2 ${i === 0 ? 'border-blue-500 bg-blue-50/50' : 'border-slate-300 bg-white'} shadow-sm">
-          <div class="flex flex-wrap justify-between items-center mb-3 gap-2">
-            <span class="text-xs font-extrabold uppercase px-3 py-1 rounded-lg ${i === 0 ? 'bg-blue-700 text-white' : 'bg-slate-800 text-white'}">
-              ${i === 0 ? '⭐ মেইন ফাইল (Main Applicant - যার নামে সাইন-আপ)' : `👥 কো-অ্যাপ্লিক্যান্ট #${i}`}
-            </span>
-
-            <div class="flex items-center gap-3">
-              <label class="inline-flex items-center cursor-pointer bg-emerald-100 px-3 py-1 rounded-xl border border-emerald-400">
-                <input type="checkbox" id="app_sub_${i}" ${a.isSubmitted ? 'checked' : ''} class="w-4 h-4 accent-emerald-700 mr-1.5 cursor-pointer">
-                <span class="text-xs font-extrabold text-emerald-900">এই ব্যক্তির ফাইল সাবমিট সম্পন্ন</span>
-              </label>
-              ${i > 0 ? `<button type="button" onclick="removeApplicantForm(${i})" class="bg-red-100 hover:bg-red-600 hover:text-white text-red-600 px-2.5 py-1 rounded-lg text-xs font-bold transition"><i class="fa-solid fa-trash mr-1"></i>বাদ দিন</button>` : ''}
+      document.getElementById('btnAddCoApplicant').style.display = tempApplicants.length >= 4 ? 'none' : 'inline-flex';
+      document.getElementById('applicantsContainer').innerHTML = tempApplicants.map((a, i) => `
+        <div class="p-5 rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div class="flex flex-wrap justify-between items-center mb-3 gap-2 pb-3 border-b border-slate-100">
+            <span class="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded bg-slate-100 text-slate-600 tracking-wide">${i === 0 ? '⭐ মেইন ফাইল (Main)' : `👥 কো-অ্যাপ্লিক্যান্ট #${i}`}</span>
+            <div class="flex flex-wrap items-center gap-3">
+              <label class="inline-flex items-center cursor-pointer bg-slate-50 px-2.5 py-1 rounded-lg text-[11px] font-bold text-slate-700 border border-slate-200"><input type="checkbox" id="app_sub_${i}" ${a.isSubmitted ? 'checked' : ''} onchange="if(this.checked && !document.getElementById('app_subdate_${i}').value) document.getElementById('app_subdate_${i}').value = getTodayStr();" class="w-3.5 h-3.5 mr-1.5">সাবমিট সম্পন্ন</label>
+              <div class="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-lg border border-slate-200 text-[11px]"><span class="font-bold text-slate-500">তারিখ:</span><input type="date" id="app_subdate_${i}" value="${a.subDate || ''}" class="bg-transparent font-bold focus:outline-none"></div>
+              ${i > 0 ? `<button type="button" onclick="makeMainForm(${i})" title="মেইন ফাইল করুন" class="text-amber-600 bg-amber-50 hover:bg-amber-100 px-2 py-1 rounded text-[10px] font-bold transition">মেইন করুন</button><button type="button" onclick="removeApplicantForm(${i})" class="text-rose-500 hover:text-white hover:bg-rose-500 px-2 py-1 rounded text-[10px] font-bold transition"><i class="fa-solid fa-trash"></i></button>` : ''}
             </div>
           </div>
-
           <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
-            <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1">${i === 0 ? 'মেইন আবেদনকারীর নাম *' : `কো-অ্যাপ্লিক্যান্ট #${i}-এর নাম *`}</label>
-              <input type="text" id="app_name_${i}" value="${a.name || ''}" placeholder="পাসপোর্ট অনুযায়ী নাম" class="w-full px-3 py-2 rounded-xl border-2 border-slate-300 text-sm font-bold bg-white">
-            </div>
-            <div>
-              <label class="block text-xs font-extrabold text-amber-800 mb-1">🟠 Temp ID (এই ব্যক্তির আলাদা Temp ID)</label>
-              <input type="text" id="app_temp_${i}" value="${a.tempId || ''}" placeholder="Temp ID পেস্ট করুন..." class="w-full px-3 py-2 rounded-xl border-2 border-amber-300 bg-amber-50 mono-type text-sm font-bold">
-            </div>
-            <div>
-              <label class="block text-xs font-extrabold text-emerald-800 mb-1">🟢 BGD Number (ফাইনাল সাবমিট হলে)</label>
-              <input type="text" id="app_bgd_${i}" value="${a.bgdNo || ''}" placeholder="BGDD..." class="w-full px-3 py-2 rounded-xl border-2 border-emerald-300 bg-emerald-50 mono-type text-sm font-bold">
-            </div>
+            <div><label class="block text-[11px] font-extrabold text-slate-500 mb-1">নাম (Name) *</label><input type="text" id="app_name_${i}" value="${a.name || ''}" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold bg-slate-50 focus:bg-white focus:border-[#00b4d8] focus:outline-none"></div>
+            <div><label class="block text-[11px] font-extrabold text-slate-500 mb-1">Temp ID</label><input type="text" id="app_temp_${i}" value="${a.tempId || ''}" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-slate-50 mono-type text-xs font-bold focus:bg-white focus:border-[#00b4d8] focus:outline-none"></div>
+            <div><label class="block text-[11px] font-extrabold text-slate-500 mb-1">BGD Number</label><input type="text" id="app_bgd_${i}" value="${a.bgdNo || ''}" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-slate-50 mono-type text-xs font-bold focus:bg-white focus:border-emerald-400 focus:outline-none"></div>
           </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-4 gap-3 pt-3 border-t border-slate-200">
-            <div>
-              <label class="block text-[11px] font-bold text-slate-600 mb-1">পাসপোর্ট নাম্বার (ঐচ্ছিক)</label>
-              <input type="text" id="app_pp_${i}" value="${a.passport || ''}" placeholder="A0..." class="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs mono-type font-bold bg-white">
-            </div>
-            <div>
-              <label class="block text-[11px] font-bold text-slate-600 mb-1">জন্ম তারিখ - DOB (ঐচ্ছিক)</label>
-              <input type="text" id="app_dob_${i}" value="${a.dob || ''}" placeholder="DD/MM/YYYY" class="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs font-bold bg-white">
-            </div>
-            <div>
-              <label class="block text-[11px] font-bold text-slate-600 mb-1">NID / Citizenship No (ঐচ্ছিক)</label>
-              <input type="text" id="app_nid_${i}" value="${a.nid || ''}" placeholder="NID নাম্বার" class="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs mono-type font-bold bg-white">
-            </div>
-            <div>
-              <label class="block text-[11px] font-extrabold text-blue-800 mb-1">📄 এই ব্যক্তির BGD PDF ফাইল</label>
-              <div class="flex items-center gap-1.5">
-                <label class="cursor-pointer bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-xl text-xs font-bold flex-1 text-center truncate shadow-sm">
-                  <i class="fa-solid fa-upload mr-1"></i> ${a.pdfName ? a.pdfName : 'PDF ফাইল দিন'}
-                  <input type="file" accept="application/pdf" onchange="handlePdfUpload(${i}, event)" class="hidden">
-                </label>
-                ${a.pdfData ? `<button type="button" onclick="tempApplicants[${i}].pdfData=''; tempApplicants[${i}].pdfName=''; renderApplicantForms();" class="bg-red-100 text-red-600 px-2.5 py-1.5 rounded-xl text-xs font-bold"><i class="fa-solid fa-xmark"></i></button>` : ''}
-              </div>
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-3 pt-3 border-t border-slate-100">
+            <div><label class="block text-[10px] font-bold text-slate-400 mb-1">পাসপোর্ট</label><input type="text" id="app_pp_${i}" value="${a.passport || ''}" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs mono-type font-bold bg-slate-50"></div>
+            <div><label class="block text-[10px] font-bold text-slate-400 mb-1">DOB</label><input type="text" id="app_dob_${i}" value="${a.dob || ''}" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-bold bg-slate-50"></div>
+            <div><label class="block text-[10px] font-bold text-slate-400 mb-1">NID</label><input type="text" id="app_nid_${i}" value="${a.nid || ''}" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs mono-type font-bold bg-slate-50"></div>
+            <div><label class="block text-[10px] font-bold text-[#0077b6] mb-1">BGD PDF ফাইল</label>
+              <div class="flex items-center gap-1.5"><label class="cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold flex-1 text-center truncate transition"><i class="fa-solid fa-upload"></i> ${a.pdfName ? a.pdfName : 'PDF আপলোড'}<input type="file" accept="application/pdf" onchange="handlePdfUpload(${i}, event)" class="hidden"></label>${a.pdfData ? `<button type="button" onclick="tempApplicants[${i}].pdfData=''; tempApplicants[${i}].pdfName=''; renderApplicantForms();" class="text-rose-500 bg-rose-50 px-2 py-1.5 rounded-lg text-xs hover:bg-rose-500 hover:text-white transition"><i class="fa-solid fa-xmark"></i></button>` : ''}</div>
             </div>
           </div>
         </div>
@@ -859,97 +733,30 @@
     function saveVisaFileSet() {
       syncTempInputs();
       const editId = document.getElementById('editFileId').value;
-      const now = new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
-
       const fileObj = {
         id: editId || 'SET_' + Date.now(),
-        visaType: document.getElementById('visaType').value,
-        isSignedUp: document.getElementById('isSignedUp').checked,
-        accountPhone: document.getElementById('accountPhone').value.trim(),
-        accountGmail: document.getElementById('accountGmail').value.trim(),
-        accountPassword: document.getElementById('accountPassword').value.trim(),
-        note: document.getElementById('fileNote').value.trim(),
-        applicants: tempApplicants,
-        updatedAt: now
+        visaType: document.getElementById('visaType').value, worker: document.getElementById('workerName').value.trim(),
+        isSignedUp: document.getElementById('isSignedUp').checked, isDelivered: document.getElementById('isDelivered').checked, isReturned: document.getElementById('isReturned').checked,
+        accountPhone: document.getElementById('accountPhone').value.trim(), accountGmail: document.getElementById('accountGmail').value.trim(), accountPassword: document.getElementById('accountPassword').value.trim(),
+        docTrade: document.getElementById('docTrade').value, docNoc: document.getElementById('docNoc').value, docBank: document.getElementById('docBank').value, docPassportHeld: document.getElementById('docPassportHeld').value,
+        feeStatus: document.getElementById('feeStatus').value, appointmentDate: document.getElementById('appointmentDate').value,
+        billTotal: parseFloat(document.getElementById('billTotal').value) || 0, billAdvance: parseFloat(document.getElementById('billAdvance').value) || 0, billDue: parseFloat(document.getElementById('billDue').value) || 0,
+        keptCharge: parseFloat(document.getElementById('keptCharge').value) || 0, refundAmount: parseFloat(document.getElementById('refundAmount').value) || 0, returnReason: document.getElementById('returnReason').value.trim(),
+        note: document.getElementById('fileNote').value.trim(), applicants: tempApplicants,
+        updatedAt: new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
       };
-
-      if (editId) {
-        const idx = visaFiles.findIndex(x => x.id === editId);
-        if (idx > -1) visaFiles[idx] = fileObj;
-      } else {
-        visaFiles.unshift(fileObj);
-      }
-
-      closeFileModal();
-      renderFiles();
-      syncToCloud();
-      showToast('ভিসা ফাইল সেট সফলভাবে সেভ হয়েছে!');
+      if (editId) { const idx = visaFiles.findIndex(x => x.id === editId); if (idx > -1) visaFiles[idx] = fileObj; } else visaFiles.unshift(fileObj);
+      closeFileModal(); renderFiles(); syncToCloud(); showToast('সেভ সম্পন্ন!');
     }
 
-    function deleteFileSet(id) {
-      if (!confirm('আপনি কি নিশ্চিতভাবে এই ভিসা ফাইল সেটটি ডিলিট করতে চান?')) return;
-      visaFiles = visaFiles.filter(x => x.id !== id);
-      renderFiles();
-      syncToCloud();
-      showToast('ফাইল সেট ডিলিট করা হয়েছে');
-    }
+    function deleteFileSet(id) { if (!confirm('ডিলিট করতে চান?')) return; visaFiles = visaFiles.filter(x => x.id !== id); renderFiles(); syncToCloud(); showToast('ডিলিট হয়েছে'); }
+    function openPdf(fileId, appIdx) { const f = visaFiles.find(x => x.id === fileId); if (!f || !f.applicants[appIdx]?.pdfData) return; const pdfWindow = window.open(""); pdfWindow.document.write(`<title>${f.applicants[appIdx].name} - RTC Visa</title><body style="margin:0"><iframe width='100%' height='100%' src='${f.applicants[appIdx].pdfData}' style='border:none;'></iframe></body>`); }
 
-    function openPdf(fileId, appIdx) {
-      const f = visaFiles.find(x => x.id === fileId);
-      if (!f || !f.applicants[appIdx]?.pdfData) return;
-      const pdfWindow = window.open("");
-      pdfWindow.document.write(
-        `<title>${f.applicants[appIdx].name || 'BGD_File'} - RTC Visa</title><body style="margin:0"><iframe width='100%' height='100%' src='${f.applicants[appIdx].pdfData}' style='border:none;'></iframe></body>`
-      );
-    }
-
-    function openSettingsModal() {
-      document.getElementById('settingDefaultPass').value = defaultPass;
-      document.getElementById('settingCloudUrl').value = cloudUrl;
-      document.getElementById('settingsModal').classList.remove('hidden');
-    }
-
-    function closeSettingsModal() {
-      document.getElementById('settingsModal').classList.add('hidden');
-    }
-
-    function saveSettings() {
-      defaultPass = document.getElementById('settingDefaultPass').value.trim() || 'Rtc@2026';
-      cloudUrl = document.getElementById('settingCloudUrl').value.trim();
-      localStorage.setItem('rtc_default_pass', defaultPass);
-      localStorage.setItem('rtc_cloud_url', cloudUrl);
-      closeSettingsModal();
-      renderFiles();
-      if (cloudUrl) syncToCloud();
-      showToast('সেটিংস সেভ হয়েছে!');
-    }
-
-    function exportBackup() {
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(visaFiles, null, 2));
-      const dl = document.createElement('a');
-      dl.setAttribute("href", dataStr);
-      dl.setAttribute("download", `RTC_Visa_Backup_${new Date().toISOString().slice(0,10)}.json`);
-      dl.click();
-    }
-
-    function importBackup(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        try {
-          const imported = JSON.parse(e.target.result);
-          if (Array.isArray(imported)) {
-            visaFiles = imported;
-            renderFiles();
-            syncToCloud();
-            closeSettingsModal();
-            showToast('ব্যাকআপ সফলভাবে রিস্টোর হয়েছে!');
-          }
-        } catch (err) { alert('ভুল ব্যাকআপ ফাইল!'); }
-      };
-      reader.readAsText(file);
-    }
+    function openSettingsModal() { document.getElementById('settingAppPin').value = appPin; document.getElementById('settingDefaultPass').value = defaultPass; document.getElementById('settingCloudUrl').value = cloudUrl; document.getElementById('settingsModal').classList.remove('hidden'); }
+    function closeSettingsModal() { document.getElementById('settingsModal').classList.add('hidden'); }
+    function saveSettings() { appPin = document.getElementById('settingAppPin').value.trim() || '1234'; defaultPass = document.getElementById('settingDefaultPass').value.trim() || 'Rtc@2026'; cloudUrl = document.getElementById('settingCloudUrl').value.trim(); localStorage.setItem('rtc_app_pin', appPin); localStorage.setItem('rtc_default_pass', defaultPass); localStorage.setItem('rtc_cloud_url', cloudUrl); closeSettingsModal(); renderFiles(); if (cloudUrl) syncToCloud(); showToast('সেভ হয়েছে!'); }
+    function exportBackup() { const dl = document.createElement('a'); dl.setAttribute("href", "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(visaFiles, null, 2))); dl.setAttribute("download", `RTC_Visa_${new Date().toISOString().slice(0,10)}.json`); dl.click(); }
+    function importBackup(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (e) => { try { const imported = JSON.parse(e.target.result); if (Array.isArray(imported)) { visaFiles = imported; renderFiles(); syncToCloud(); closeSettingsModal(); showToast('রিস্টোর হয়েছে!'); } } catch (err) { alert('ভুল ব্যাকআপ!'); } }; reader.readAsText(file); }
   </script>
 </body>
 </html>
