@@ -30,22 +30,28 @@
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
   </style>
+
+  <!-- Firebase JS SDK (Compat Version) -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 </head>
 <body class="min-h-screen text-slate-800 flex flex-col">
 
-  <!-- SECURITY PIN LOCK SCREEN -->
+  <!-- SECURITY LOGIN SCREEN (Firebase Auth) -->
   <div id="lockScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-[#0b132b] p-4">
     <div class="bg-white p-10 rounded-[2rem] shadow-2xl max-w-sm w-full text-center border-t-4 border-[#00b4d8]">
       <div class="w-20 h-20 bg-slate-50 rounded-full mx-auto flex items-center justify-center text-4xl shadow-inner mb-5 border-2 border-slate-100">
         <img id="lockLogoImg" src="logo.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3135/3135715.png'" class="w-16 h-16 rounded-full object-cover">
       </div>
       <h2 class="text-2xl font-extrabold tracking-tight text-[#0b132b]">RTC VISA</h2>
-      <p class="text-xs text-slate-500 mt-1 mb-8 font-bold uppercase tracking-wider">Enterprise Management</p>
-      <input type="password" id="inputPin" maxlength="4" placeholder="••••" class="w-full text-center tracking-[16px] text-4xl font-bold py-4 px-4 rounded-2xl bg-slate-50 border-2 border-slate-200 focus:border-[#00b4d8] focus:bg-white focus:outline-none mb-6 mono-type text-[#0077b6] transition">
-      <button onclick="checkAppPin()" class="w-full btn-primary-rtc text-white font-extrabold py-3.5 rounded-2xl shadow-lg hover:shadow-xl transition active:scale-95 text-sm uppercase tracking-wide">
-        <i class="fa-solid fa-unlock-keyhole mr-2"></i> সিস্টেম আনলক করুন
+      <p class="text-xs text-slate-500 mt-1 mb-6 font-bold uppercase tracking-wider">Secure Login</p>
+      
+      <input type="email" id="authEmail" placeholder="Email Address" class="w-full text-center font-bold py-3 px-4 rounded-xl bg-slate-50 border-2 border-slate-200 focus:border-[#00b4d8] focus:bg-white focus:outline-none mb-3 transition text-[#0b132b]">
+      <input type="password" id="authPassword" placeholder="Password" class="w-full text-center font-bold py-3 px-4 rounded-xl bg-slate-50 border-2 border-slate-200 focus:border-[#00b4d8] focus:bg-white focus:outline-none mb-6 transition text-[#0077b6]">
+      
+      <button onclick="handleFirebaseLogin()" class="w-full btn-primary-rtc text-white font-extrabold py-3.5 rounded-2xl shadow-lg hover:shadow-xl transition active:scale-95 text-sm uppercase tracking-wide">
+        <i class="fa-solid fa-unlock-keyhole mr-2"></i> লগইন করুন
       </button>
-      <p class="text-[11px] text-slate-400 mt-5 font-medium">ডিফল্ট পিন: <b>1234</b></p>
     </div>
   </div>
 
@@ -310,43 +316,87 @@
       <p class="text-xs text-slate-500 font-bold mb-1">💡 নোট:</p>
       <p class="text-[11px] text-slate-400">এই পিসিতে কোনো সেটিং বদলালে তা লোকালি সেভ থাকবে। পারমানেন্ট করতে HTML কোডের ভেতর লিংক বসিয়ে দিন।</p>
     </div>
-    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200"><label class="block font-bold text-slate-600 mb-1">🔐 আনলক পিন</label><input type="text" id="settingAppPin" maxlength="4" class="w-full px-3 py-2 rounded-lg border border-slate-300 font-bold mono-type"></div><div class="bg-slate-50 p-4 rounded-xl border border-slate-200"><label class="block font-bold text-slate-600 mb-1">🔑 কমন পাসওয়ার্ড</label><input type="text" id="settingDefaultPass" class="w-full px-3 py-2 rounded-lg border border-slate-300 font-bold mono-type"></div><div class="bg-slate-50 p-4 rounded-xl border border-slate-200"><label class="block font-bold text-slate-600 mb-1">🌐 Firebase Cloud URL (লাইভ সিঙ্ক)</label><input type="url" id="settingCloudUrl" class="w-full px-3 py-2 rounded-lg border border-slate-300"></div><div class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex justify-between items-center"><div><p class="font-bold text-slate-700">📂 রিস্টোর</p></div><label class="cursor-pointer bg-slate-800 text-white px-3 py-1.5 rounded-lg font-bold">ফাইল দিন <input type="file" accept=".json" onchange="importBackup(event)" class="hidden"></label></div></div><div class="bg-slate-50 px-6 py-3.5 flex justify-end gap-2 border-t border-slate-200"><button onclick="closeSettingsModal()" class="px-4 py-2 rounded-xl border bg-white font-bold">বন্ধ</button><button onclick="saveSettings()" class="btn-primary-rtc text-white px-5 py-2 rounded-xl font-bold shadow">সেভ করুন</button></div></div></div>
+    <!-- Security PIN option removed as Firebase Auth is implemented -->
+    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200"><label class="block font-bold text-slate-600 mb-1">🔑 কমন পাসওয়ার্ড</label><input type="text" id="settingDefaultPass" class="w-full px-3 py-2 rounded-lg border border-slate-300 font-bold mono-type"></div><div class="bg-slate-50 p-4 rounded-xl border border-slate-200"><label class="block font-bold text-slate-600 mb-1">🌐 Firebase Cloud URL (লাইভ সিঙ্ক)</label><input type="url" id="settingCloudUrl" class="w-full px-3 py-2 rounded-lg border border-slate-300"></div><div class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex justify-between items-center"><div><p class="font-bold text-slate-700">📂 রিস্টোর</p></div><label class="cursor-pointer bg-slate-800 text-white px-3 py-1.5 rounded-lg font-bold">ফাইল দিন <input type="file" accept=".json" onchange="importBackup(event)" class="hidden"></label></div></div><div class="bg-slate-50 px-6 py-3.5 flex justify-end gap-2 border-t border-slate-200"><button onclick="closeSettingsModal()" class="px-4 py-2 rounded-xl border bg-white font-bold">বন্ধ</button><button onclick="saveSettings()" class="btn-primary-rtc text-white px-5 py-2 rounded-xl font-bold shadow">সেভ করুন</button></div></div></div>
 
   <div id="toast" class="fixed bottom-6 right-6 bg-[#0b132b] text-white px-5 py-3.5 rounded-2xl shadow-2xl text-xs font-bold hidden z-50 flex items-center gap-3 border-l-4 border-[#00b4d8] animate-[fadeInSlide_0.3s_ease-out_forwards]"><i class="fa-solid fa-circle-check text-[#00b4d8] text-base"></i> <span id="toastMsg" class="tracking-wide">Action Done!</span></div>
 
   <script>
     // ==========================================
-    // ⚙️ অটোমেটিক সেটিংস (স্থায়ীভাবে সেভ করা)
+    // ⚙️ অটোমেটিক সেটিংস ও ফায়ারবেস কনফিগ
     // ==========================================
+    const firebaseConfig = {
+      apiKey: "AIzaSyCHSXIS5eCX-pQ9N-L2u5W1jSS7VoTRP1w",
+      authDomain: "rtcvisa-fdbb5.firebaseapp.com",
+      databaseURL: "https://rtcvisa-fdbb5-default-rtdb.firebaseio.com",
+      projectId: "rtcvisa-fdbb5",
+      storageBucket: "rtcvisa-fdbb5.firebasestorage.app",
+      messagingSenderId: "303353393180",
+      appId: "1:303353393180:web:b4c69c1b07caca2e286fd9",
+      measurementId: "G-MJYESB90ZE"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
     const AUTO_FIREBASE_URL = "https://rtcvisa-fdbb5-default-rtdb.firebaseio.com";
     const AUTO_LOGO_NAME = "logo.png";
-    const AUTO_PIN = "1234";
     const AUTO_PASS = "Prachi2019@";
     // ==========================================
 
     let visaFiles = JSON.parse(localStorage.getItem('rtc_visa_files') || '[]');
     let defaultPass = localStorage.getItem('rtc_default_pass') || AUTO_PASS;
-    let appPin = localStorage.getItem('rtc_app_pin') || AUTO_PIN;
     let cloudUrl = localStorage.getItem('rtc_cloud_url') || (AUTO_FIREBASE_URL.includes('firebaseio.com') ? AUTO_FIREBASE_URL : '');
     let customLogo = localStorage.getItem('rtc_custom_logo') || AUTO_LOGO_NAME;
     
     let activeTab = 'RUNNING'; let viewMode = localStorage.getItem('rtc_view_mode') || 'CARD'; let tempApplicants = [];
 
     window.onload = () => {
-      const isAuth = sessionStorage.getItem('rtc_authenticated');
-      if (isAuth === 'true') unlockAppUI();
-      else { document.getElementById('lockScreen').classList.remove('hidden'); document.getElementById('inputPin').focus(); }
+      // Firebase Auth Observer (একাউন্ট লগইন থাকলে ড্যাশবোর্ডে যাবে)
+      auth.onAuthStateChanged((user) => {
+        if (user) {
+          document.getElementById('lockScreen').classList.add('hidden'); 
+          document.getElementById('mainAppContent').classList.remove('hidden');
+          if (customLogo) applyCustomLogo(customLogo);
+          if (cloudUrl) fetchFromCloud(true);
+          populateWorkerDropdown(); renderFiles();
+        } else {
+          document.getElementById('mainAppContent').classList.add('hidden'); 
+          document.getElementById('lockScreen').classList.remove('hidden'); 
+          if (customLogo) applyCustomLogo(customLogo);
+        }
+      });
       
-      if (customLogo) applyCustomLogo(customLogo);
-      if (cloudUrl) fetchFromCloud(true);
-      populateWorkerDropdown(); renderFiles();
+      document.addEventListener('visibilitychange', () => { if (!document.hidden && cloudUrl && auth.currentUser) fetchFromCloud(true); });
       setInterval(() => {
+        if (document.hidden || !auth.currentUser) return;
         if (cloudUrl && document.getElementById('fileModal').classList.contains('hidden') && document.getElementById('quickReturnModal').classList.contains('hidden') && document.getElementById('moveApplicantModal').classList.contains('hidden')) {
           const tag = document.activeElement ? document.activeElement.tagName : '';
           if (tag !== 'INPUT') fetchFromCloud(true);
         }
-      }, 9000);
+      }, 30000);
     };
+
+    // Firebase Login Logic
+    function handleFirebaseLogin() {
+      const email = document.getElementById('authEmail').value.trim();
+      const pass = document.getElementById('authPassword').value.trim();
+      if (!email || !pass) {
+          alert('অনুগ্রহ করে ইমেইল ও পাসওয়ার্ড দিন!');
+          return;
+      }
+      auth.signInWithEmailAndPassword(email, pass).then(() => {
+          document.getElementById('authEmail').value = '';
+          document.getElementById('authPassword').value = '';
+      }).catch((error) => {
+          console.error(error);
+          alert('❌ লগইন ফেইল! ইমেইল বা পাসওয়ার্ড ভুল, অথবা ইউজারের অস্তিত্ব নেই।');
+      });
+    }
+
+    // Firebase Logout Logic
+    function lockApp() { 
+      auth.signOut().catch(e => console.error("Logout Error:", e));
+    }
 
     function getTodayStr() { return new Date().toISOString().slice(0, 10); }
 
@@ -411,7 +461,7 @@
       const f = visaFiles.find(x => x.id === fileId); const a = f.applicants[appIdx];
       if (!confirm(`🔄 "${a.name}"-এর ফাইল রিসেট করবেন?`)) return;
       if (a.bgdNo) a.prevBgd = a.bgdNo;
-      a.tempId = ''; a.bgdNo = ''; a.pdfName = ''; a.pdfData = ''; a.isSubmitted = false; a.subDate = '';
+      a.tempId = ''; a.bgdNo = ''; a.pdfName = ''; a.pdfData = ''; a.pdfId = ''; a.isSubmitted = false; a.subDate = '';
       f.updatedAt = new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
       renderFiles(); syncToCloud(); showToast('Re-Apply রেডি!');
     }
@@ -430,15 +480,7 @@
       closeQuickReturnModal(); renderFiles(); syncToCloud(); showToast('🔙 ফাইল ফেরত সম্পন্ন!');
     }
 
-    function checkAppPin() {
-      if (document.getElementById('inputPin').value === appPin) { sessionStorage.setItem('rtc_authenticated', 'true'); unlockAppUI(); }
-      else { alert('❌ ভুল পিন!'); document.getElementById('inputPin').value = ''; document.getElementById('inputPin').focus(); }
-    }
-    function unlockAppUI() { document.getElementById('lockScreen').classList.add('hidden'); document.getElementById('mainAppContent').classList.remove('hidden'); renderFiles(); }
-    function lockApp() { sessionStorage.removeItem('rtc_authenticated'); document.getElementById('inputPin').value = ''; document.getElementById('mainAppContent').classList.add('hidden'); document.getElementById('lockScreen').classList.remove('hidden'); document.getElementById('inputPin').focus(); }
-
     function applyCustomLogo(dataUrl) {
-      // Apply logic if image exists, otherwise fallback to default
       const imgs = ['appLogoImg', 'lockLogoImg'];
       imgs.forEach(id => {
         const el = document.getElementById(id);
@@ -481,15 +523,51 @@
     function toggleRefundBox() { document.getElementById('refundCalcBox').classList.toggle('hidden', !document.getElementById('isReturned').checked); }
     function calcRefund() { document.getElementById('refundAmount').value = Math.max(0, (parseFloat(document.getElementById('billAdvance').value)||0) - (parseFloat(document.getElementById('keptCharge').value)||0)); }
 
+    // ---------- PDF আলাদা স্টোরেজ (দ্রুত করার জন্য) ----------
+    const pdfCache = {}; let cloudBusy = 0; let lastCloudText = ''; let migratingPdfs = false;
+    function pdfReplacer(key, val) { if (key === 'pdfData' && this && this.pdfId) return undefined; return val; }
+    function safeLocalSave() { try { localStorage.setItem('rtc_visa_files', JSON.stringify(visaFiles, pdfReplacer)); } catch (e) { console.warn('localStorage full, skipped', e); } }
+    function genPdfId() { return 'P' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+    function readFileAsDataURL(file) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = (e) => res(e.target.result); r.onerror = () => rej(r.error); r.readAsDataURL(file); }); }
+    function dataUrlToBlob(d) { const parts = d.split(','); const mime = (parts[0].match(/:(.*?);/) || [])[1] || 'application/pdf'; const bin = atob(parts[1]); const arr = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i); return new Blob([arr], { type: mime }); }
+    async function uploadPdfToCloud(pdfId, dataUrl) {
+      const r = await fetch(cloudUrl.replace(/\/$/, '') + '/rtc_pdfs/' + pdfId + '.json', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dataUrl) });
+      if (!r.ok) throw new Error('PDF upload failed'); pdfCache[pdfId] = dataUrl;
+    }
+    async function migrateOldPdfs() {
+      if (migratingPdfs || !cloudUrl) return;
+      const old = []; visaFiles.forEach(f => (f.applicants || []).forEach(a => { if (a.pdfData && !a.pdfId) old.push(a); }));
+      if (!old.length) return;
+      migratingPdfs = true; cloudBusy++;
+      try {
+        showToast('⏳ পুরনো PDF নতুন সিস্টেমে নেওয়া হচ্ছে, অপেক্ষা করুন...');
+        for (const a of old) { const id = genPdfId(); await uploadPdfToCloud(id, a.pdfData); a.pdfId = id; }
+        old.forEach(a => { delete a.pdfData; });
+        cloudBusy--; migratingPdfs = false; await syncToCloud(); renderFiles(); showToast('✅ পুরনো PDF গুলো নতুন সিস্টেমে নেওয়া হয়েছে!'); return;
+      } catch (e) { console.warn('migrate failed', e); }
+      cloudBusy--; migratingPdfs = false;
+    }
+
     async function syncToCloud() {
-      localStorage.setItem('rtc_visa_files', JSON.stringify(visaFiles)); populateWorkerDropdown();
+      safeLocalSave(); populateWorkerDropdown();
       if (!cloudUrl) return;
-      try { document.getElementById('syncStatusText').innerText = 'Syncing...'; await fetch(cloudUrl.replace(/\/$/, '') + '/rtc_visa_files.json', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(visaFiles) }); document.getElementById('syncStatusText').innerText = 'Live Sync Ready'; }
+      try { document.getElementById('syncStatusText').innerText = 'Syncing...'; const r = await fetch(cloudUrl.replace(/\/$/, '') + '/rtc_visa_files.json', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(visaFiles, pdfReplacer) }); document.getElementById('syncStatusText').innerText = r.ok ? 'Live Sync Ready' : 'Sync Error'; }
       catch (e) { document.getElementById('syncStatusText').innerText = 'Offline Mode'; }
     }
     async function fetchFromCloud(silent = false) {
       if (!cloudUrl) { if (!silent) showToast('রিফ্রেশ সম্পন্ন!'); renderFiles(); return; }
-      try { const res = await fetch(cloudUrl.replace(/\/$/, '') + '/rtc_visa_files.json'); if (res.ok) { const data = await res.json(); if (Array.isArray(data)) { visaFiles = data; localStorage.setItem('rtc_visa_files', JSON.stringify(visaFiles)); populateWorkerDropdown(); renderFiles(); } document.getElementById('syncStatusText').innerText = 'Live Sync Ready'; if (!silent) showToast('ক্লাউড ডাটা লোড হয়েছে!'); } }
+      if (cloudBusy > 0) return;
+      try {
+        const res = await fetch(cloudUrl.replace(/\/$/, '') + '/rtc_visa_files.json');
+        if (res.ok) {
+          const txt = await res.text();
+          if (txt !== lastCloudText) {
+            lastCloudText = txt; const data = JSON.parse(txt);
+            if (Array.isArray(data)) { visaFiles = data; safeLocalSave(); populateWorkerDropdown(); renderFiles(); migrateOldPdfs(); }
+          }
+          document.getElementById('syncStatusText').innerText = 'Live Sync Ready'; if (!silent) showToast('ক্লাউড ডাটা লোড হয়েছে!');
+        }
+      }
       catch (e) { if (!silent) document.getElementById('syncStatusText').innerText = 'Sync Error'; }
     }
 
@@ -515,12 +593,18 @@
       if (alsoCopyTemp) copyPersonData(a.tempId, a.name, 'Temp ID'); else showToast('✅ সেভ হয়েছে!');
     }
 
-    function quickUploadCardPdf(fileId, appIdx, event) {
+    async function quickUploadCardPdf(fileId, appIdx, event) {
       const file = event.target.files[0]; if (!file) return;
       if (file.size > 5 * 1024 * 1024) { alert('PDF ৫ মেগাবাইটের নিচে হতে হবে!'); return; }
-      const f = visaFiles.find(x => x.id === fileId); const reader = new FileReader();
-      reader.onload = (e) => { const a = f.applicants[appIdx]; a.pdfName = file.name; a.pdfData = e.target.result; a.isSubmitted = true; if (!a.subDate) a.subDate = getTodayStr(); f.updatedAt = new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }); renderFiles(); syncToCloud(); showToast('📄 PDF সেভ হয়েছে!'); };
-      reader.readAsDataURL(file);
+      if (!cloudUrl) { alert('PDF রাখতে ক্লাউড URL সেট থাকতে হবে!'); return; }
+      const f = visaFiles.find(x => x.id === fileId); if (!f) return;
+      cloudBusy++; showToast('⏳ PDF আপলোড হচ্ছে...');
+      try {
+        const dataUrl = await readFileAsDataURL(file); const pdfId = genPdfId(); await uploadPdfToCloud(pdfId, dataUrl);
+        const a = f.applicants[appIdx]; a.pdfName = file.name; a.pdfId = pdfId; delete a.pdfData; a.isSubmitted = true; if (!a.subDate) a.subDate = getTodayStr();
+        f.updatedAt = new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+        cloudBusy--; renderFiles(); syncToCloud(); showToast('📄 PDF সেভ হয়েছে!');
+      } catch (e) { cloudBusy--; alert('PDF আপলোড হয়নি, ইন্টারনেট চেক করে আবার চেষ্টা করুন!'); }
     }
 
     function hasExpiringOrExpiredBgd(fileSet) {
@@ -637,7 +721,7 @@
                 </div>
 
                 <div class="mt-4 flex gap-1.5">
-                  ${a.pdfData ? `<button onclick="openPdf('${f.id}', ${idx})" class="flex-1 bg-emerald-50 text-emerald-700 border border-emerald-200 py-1.5 px-2 rounded-xl text-xs font-bold hover:bg-emerald-100 transition"><i class="fa-solid fa-file-pdf"></i> PDF ওপেন</button>` : `<label class="w-full cursor-pointer bg-slate-50 text-slate-600 border border-slate-200 py-1.5 px-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1 hover:bg-slate-100 transition"><i class="fa-solid fa-upload"></i> PDF রাখুন<input type="file" accept="application/pdf" onchange="quickUploadCardPdf('${f.id}', ${idx}, event)" class="hidden"></label>`}
+                  ${(a.pdfId || a.pdfData) ? `<button onclick="openPdf('${f.id}', ${idx})" class="flex-1 bg-emerald-50 text-emerald-700 border border-emerald-200 py-1.5 px-2 rounded-xl text-xs font-bold hover:bg-emerald-100 transition"><i class="fa-solid fa-file-pdf"></i> PDF ওপেন</button>` : `<label class="w-full cursor-pointer bg-slate-50 text-slate-600 border border-slate-200 py-1.5 px-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1 hover:bg-slate-100 transition"><i class="fa-solid fa-upload"></i> PDF রাখুন<input type="file" accept="application/pdf" onchange="quickUploadCardPdf('${f.id}', ${idx}, event)" class="hidden"></label>`}
                 </div>
               </div>`;
             }).join('')}
@@ -670,7 +754,7 @@
         document.getElementById('docPassportHeld').value = 'CUSTOMER'; document.getElementById('feeStatus').value = 'UNPAID'; document.getElementById('appointmentDate').value = '';
         document.getElementById('billTotal').value = ''; document.getElementById('billAdvance').value = ''; document.getElementById('billDue').value = '';
         document.getElementById('keptCharge').value = ''; document.getElementById('refundAmount').value = ''; document.getElementById('returnReason').value = ''; document.getElementById('fileNote').value = '';
-        tempApplicants = [{ name: '', passport: '', dob: '', nid: '', tempId: '', bgdNo: '', isSubmitted: false, subDate: '', prevBgd: '', pdfName: '', pdfData: '' }];
+        tempApplicants = [{ name: '', passport: '', dob: '', nid: '', tempId: '', bgdNo: '', isSubmitted: false, subDate: '', prevBgd: '', pdfName: '', pdfData: '', pdfId: '' }];
       }
       toggleRefundBox(); renderApplicantForms();
     }
@@ -690,15 +774,19 @@
       });
     }
 
-    function addApplicantForm() { syncTempInputs(); if (tempApplicants.length >= 4) { alert('সর্বোচ্চ ৪ জন যোগ করা যাবে!'); return; } tempApplicants.push({ name: '', passport: '', dob: '', nid: '', tempId: '', bgdNo: '', isSubmitted: false, subDate: '', prevBgd: '', pdfName: '', pdfData: '' }); renderApplicantForms(); }
+    function addApplicantForm() { syncTempInputs(); if (tempApplicants.length >= 4) { alert('সর্বোচ্চ ৪ জন যোগ করা যাবে!'); return; } tempApplicants.push({ name: '', passport: '', dob: '', nid: '', tempId: '', bgdNo: '', isSubmitted: false, subDate: '', prevBgd: '', pdfName: '', pdfData: '', pdfId: '' }); renderApplicantForms(); }
     function removeApplicantForm(idx) { syncTempInputs(); tempApplicants.splice(idx, 1); renderApplicantForms(); }
 
-    function handlePdfUpload(idx, event) {
+    async function handlePdfUpload(idx, event) {
       syncTempInputs(); const file = event.target.files[0]; if (!file) return;
       if (file.size > 5 * 1024 * 1024) { alert('PDF ৫ মেগাবাইটের নিচে হতে হবে!'); return; }
-      const reader = new FileReader();
-      reader.onload = (e) => { tempApplicants[idx].pdfName = file.name; tempApplicants[idx].pdfData = e.target.result; tempApplicants[idx].isSubmitted = true; if (!tempApplicants[idx].subDate) tempApplicants[idx].subDate = getTodayStr(); renderApplicantForms(); showToast('PDF যোগ হয়েছে!'); };
-      reader.readAsDataURL(file);
+      if (!cloudUrl) { alert('PDF রাখতে ক্লাউড URL সেট থাকতে হবে!'); return; }
+      cloudBusy++; showToast('⏳ PDF আপলোড হচ্ছে...');
+      try {
+        const dataUrl = await readFileAsDataURL(file); const pdfId = genPdfId(); await uploadPdfToCloud(pdfId, dataUrl);
+        syncTempInputs(); const t = tempApplicants[idx]; if (t) { t.pdfName = file.name; t.pdfId = pdfId; delete t.pdfData; t.isSubmitted = true; if (!t.subDate) t.subDate = getTodayStr(); }
+        cloudBusy--; renderApplicantForms(); showToast('PDF যোগ হয়েছে!');
+      } catch (e) { cloudBusy--; alert('PDF আপলোড হয়নি, ইন্টারনেট চেক করে আবার চেষ্টা করুন!'); }
     }
 
     function renderApplicantForms() {
@@ -723,7 +811,7 @@
             <div><label class="block text-[10px] font-bold text-slate-400 mb-1">DOB</label><input type="text" id="app_dob_${i}" value="${a.dob || ''}" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-bold bg-slate-50"></div>
             <div><label class="block text-[10px] font-bold text-slate-400 mb-1">NID</label><input type="text" id="app_nid_${i}" value="${a.nid || ''}" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs mono-type font-bold bg-slate-50"></div>
             <div><label class="block text-[10px] font-bold text-[#0077b6] mb-1">BGD PDF ফাইল</label>
-              <div class="flex items-center gap-1.5"><label class="cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold flex-1 text-center truncate transition"><i class="fa-solid fa-upload"></i> ${a.pdfName ? a.pdfName : 'PDF আপলোড'}<input type="file" accept="application/pdf" onchange="handlePdfUpload(${i}, event)" class="hidden"></label>${a.pdfData ? `<button type="button" onclick="tempApplicants[${i}].pdfData=''; tempApplicants[${i}].pdfName=''; renderApplicantForms();" class="text-rose-500 bg-rose-50 px-2 py-1.5 rounded-lg text-xs hover:bg-rose-500 hover:text-white transition"><i class="fa-solid fa-xmark"></i></button>` : ''}</div>
+              <div class="flex items-center gap-1.5"><label class="cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold flex-1 text-center truncate transition"><i class="fa-solid fa-upload"></i> ${a.pdfName ? a.pdfName : 'PDF আপলোড'}<input type="file" accept="application/pdf" onchange="handlePdfUpload(${i}, event)" class="hidden"></label>${(a.pdfId || a.pdfData) ? `<button type="button" onclick="tempApplicants[${i}].pdfData=''; tempApplicants[${i}].pdfId=''; tempApplicants[${i}].pdfName=''; renderApplicantForms();" class="text-rose-500 bg-rose-50 px-2 py-1.5 rounded-lg text-xs hover:bg-rose-500 hover:text-white transition"><i class="fa-solid fa-xmark"></i></button>` : ''}</div>
             </div>
           </div>
         </div>
@@ -750,11 +838,37 @@
     }
 
     function deleteFileSet(id) { if (!confirm('ডিলিট করতে চান?')) return; visaFiles = visaFiles.filter(x => x.id !== id); renderFiles(); syncToCloud(); showToast('ডিলিট হয়েছে'); }
-    function openPdf(fileId, appIdx) { const f = visaFiles.find(x => x.id === fileId); if (!f || !f.applicants[appIdx]?.pdfData) return; const pdfWindow = window.open(""); pdfWindow.document.write(`<title>${f.applicants[appIdx].name} - RTC Visa</title><body style="margin:0"><iframe width='100%' height='100%' src='${f.applicants[appIdx].pdfData}' style='border:none;'></iframe></body>`); }
+    async function openPdf(fileId, appIdx) {
+      const f = visaFiles.find(x => x.id === fileId); const a = f && f.applicants[appIdx]; if (!a || (!a.pdfId && !a.pdfData)) return;
+      const w = window.open('', '_blank'); if (w) w.document.write('<title>Loading...</title><p style="font-family:sans-serif;padding:20px">PDF লোড হচ্ছে...</p>');
+      try {
+        let dataUrl = a.pdfData || pdfCache[a.pdfId];
+        if (!dataUrl) { const r = await fetch(cloudUrl.replace(/\/$/, '') + '/rtc_pdfs/' + a.pdfId + '.json'); dataUrl = await r.json(); if (!dataUrl) throw new Error('empty'); pdfCache[a.pdfId] = dataUrl; }
+        const url = URL.createObjectURL(dataUrlToBlob(dataUrl)); if (w) w.location.href = url; else window.open(url, '_blank');
+      } catch (e) { if (w) w.close(); alert('PDF লোড করা যায়নি!'); }
+    }
 
-    function openSettingsModal() { document.getElementById('settingAppPin').value = appPin; document.getElementById('settingDefaultPass').value = defaultPass; document.getElementById('settingCloudUrl').value = cloudUrl; document.getElementById('settingsModal').classList.remove('hidden'); }
-    function closeSettingsModal() { document.getElementById('settingsModal').classList.add('hidden'); }
-    function saveSettings() { appPin = document.getElementById('settingAppPin').value.trim() || '1234'; defaultPass = document.getElementById('settingDefaultPass').value.trim() || 'Rtc@2026'; cloudUrl = document.getElementById('settingCloudUrl').value.trim(); localStorage.setItem('rtc_app_pin', appPin); localStorage.setItem('rtc_default_pass', defaultPass); localStorage.setItem('rtc_cloud_url', cloudUrl); closeSettingsModal(); renderFiles(); if (cloudUrl) syncToCloud(); showToast('সেভ হয়েছে!'); }
+    function openSettingsModal() { 
+      document.getElementById('settingDefaultPass').value = defaultPass; 
+      document.getElementById('settingCloudUrl').value = cloudUrl; 
+      document.getElementById('settingsModal').classList.remove('hidden'); 
+    }
+    
+    function closeSettingsModal() { 
+      document.getElementById('settingsModal').classList.add('hidden'); 
+    }
+    
+    function saveSettings() { 
+      defaultPass = document.getElementById('settingDefaultPass').value.trim() || 'Rtc@2026'; 
+      cloudUrl = document.getElementById('settingCloudUrl').value.trim(); 
+      localStorage.setItem('rtc_default_pass', defaultPass); 
+      localStorage.setItem('rtc_cloud_url', cloudUrl); 
+      closeSettingsModal(); 
+      renderFiles(); 
+      if (cloudUrl) syncToCloud(); 
+      showToast('সেভ হয়েছে!'); 
+    }
+    
     function exportBackup() { const dl = document.createElement('a'); dl.setAttribute("href", "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(visaFiles, null, 2))); dl.setAttribute("download", `RTC_Visa_${new Date().toISOString().slice(0,10)}.json`); dl.click(); }
     function importBackup(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (e) => { try { const imported = JSON.parse(e.target.result); if (Array.isArray(imported)) { visaFiles = imported; renderFiles(); syncToCloud(); closeSettingsModal(); showToast('রিস্টোর হয়েছে!'); } } catch (err) { alert('ভুল ব্যাকআপ!'); } }; reader.readAsText(file); }
   </script>
