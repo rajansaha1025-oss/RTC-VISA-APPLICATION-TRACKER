@@ -67,13 +67,13 @@
           </label>
           <div>
             <h1 class="text-lg font-extrabold tracking-wide leading-none">RTC VISA</h1>
-            <p class="text-[10px] text-[#00b4d8] uppercase tracking-widest mt-1 font-bold">Workspace Pro</p>
+            <p class="text-[10px] text-[#00b4d8] uppercase tracking-widest mt-1 font-bold" id="currentUserDisplay">Workspace Pro</p>
           </div>
         </div>
 
         <nav class="p-4 space-y-2 text-xs font-bold">
           <button onclick="switchTab('RUNNING')" id="tab_RUNNING" class="w-full flex items-center justify-between px-4 py-3 rounded-2xl btn-primary-rtc text-white shadow-md transition"><span class="flex items-center gap-3"><i class="fa-solid fa-folder-open text-white/90 text-sm"></i> রানিং ফাইল</span><span class="bg-white/25 px-2 py-0.5 rounded-full text-[11px]" id="badgeRunning">0</span></button>
-          <button onclick="switchTab('EXPIRING')" id="tab_EXPIRING" class="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-white/10 text-slate-300 transition"><span class="flex items-center gap-3"><i class="fa-solid fa-triangle-exclamation text-rose-400 text-sm"></i> মেয়াদ সতর্কতা</span><span class="bg-rose-500 text-white px-2 py-0.5 rounded-full text-[11px]" id="badgeExpiring">0</span></button>
+          <button onclick="switchTab('EXPIRING')" id="tab_EXPIRING" class="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-white/10 text-slate-300 transition"><span class="flex items-center gap-3"><i class="fa-solid fa-triangle-exclamation text-rose-400 text-sm"></i> মেয়াদ সতর্কতা</span><span class="bg-rose-50 text-rose-600 px-2 py-0.5 rounded-full text-[11px]" id="badgeExpiring">0</span></button>
           <button onclick="switchTab('SIGNED_UP')" id="tab_SIGNED_UP" class="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-white/10 text-slate-300 transition"><span class="flex items-center gap-3"><i class="fa-solid fa-user-check text-purple-400 text-sm"></i> সাইন-আপ সম্পন্ন</span><span class="bg-white/10 px-2 py-0.5 rounded-full text-[11px]" id="badgeSignedUp">0</span></button>
           <button onclick="switchTab('APPOINTMENT')" id="tab_APPOINTMENT" class="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-white/10 text-slate-300 transition"><span class="flex items-center gap-3"><i class="fa-solid fa-calendar-check text-emerald-400 text-sm"></i> অ্যাপয়েন্টমেন্ট</span><span class="bg-white/10 px-2 py-0.5 rounded-full text-[11px]" id="badgeAppointment">0</span></button>
           <button onclick="switchTab('DELIVERED')" id="tab_DELIVERED" class="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-white/10 text-slate-300 transition"><span class="flex items-center gap-3"><i class="fa-solid fa-box-archive text-amber-400 text-sm"></i> ডেলিভারি আর্কাইভ</span><span class="bg-white/10 px-2 py-0.5 rounded-full text-[11px]" id="badgeDelivered">0</span></button>
@@ -245,8 +245,9 @@
         <!-- Section 3: Billing -->
         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
           <div class="absolute top-0 left-0 w-1.5 h-full bg-[#10b981]"></div>
-          <h3 class="text-xs font-extrabold text-slate-800 uppercase tracking-wide mb-3 pl-2">৩. পেমেন্ট ও অ্যাপয়েন্টমেন্ট</h3>
-          <div class="grid grid-cols-2 md:grid-cols-5 gap-4 pl-2">
+          <h3 class="text-xs font-extrabold text-slate-800 uppercase tracking-wide mb-3 pl-2">৩. পেমেন্ট, খরচ ও অ্যাপয়েন্টমেন্ট</h3>
+          
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pl-2 mb-4">
             <div>
               <label class="block text-[11px] font-bold text-slate-500 mb-1">ভিসা ফি স্ট্যাটাস</label>
               <select id="feeStatus" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold bg-slate-50">
@@ -259,8 +260,19 @@
               <input type="date" id="appointmentDate" class="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs font-bold bg-slate-50">
             </div>
             <div>
-              <label class="block text-[11px] font-bold text-slate-500 mb-1">মোট বিল (Tk)</label>
-              <input type="number" id="billTotal" oninput="calcDue()" placeholder="0" class="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs font-bold bg-slate-50">
+              <label class="block text-[11px] font-bold text-slate-500 mb-1">ভিসা ফি খরচ (Tk)</label>
+              <input type="number" id="baseVisaFee" oninput="calcDue()" value="1500" class="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs font-bold bg-slate-50">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-500 mb-1">সফটওয়্যার/অন্য খরচ</label>
+              <input type="number" id="softwareCharge" oninput="calcDue()" placeholder="0" class="w-full px-3 py-1.5 rounded-xl border border-amber-200 text-xs font-bold bg-amber-50">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pl-2">
+            <div>
+              <label class="block text-[11px] font-bold text-slate-500 mb-1">কাস্টমারের মোট বিল</label>
+              <input type="number" id="billTotal" oninput="calcDue()" placeholder="0" class="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs font-extrabold bg-blue-50 text-blue-700">
             </div>
             <div>
               <label class="block text-[11px] font-bold text-slate-500 mb-1">জমা (Advance)</label>
@@ -269,6 +281,10 @@
             <div>
               <label class="block text-[11px] font-bold text-slate-500 mb-1">বাকি (Due)</label>
               <input type="number" id="billDue" readonly placeholder="0" class="w-full px-3 py-1.5 rounded-xl border border-rose-200 text-xs font-extrabold bg-rose-50 text-rose-600">
+            </div>
+            <div>
+              <label class="block text-[11px] font-bold text-slate-500 mb-1">সম্ভাব্য লাভ (Profit)</label>
+              <input type="number" id="profitAmount" readonly placeholder="0" class="w-full px-3 py-1.5 rounded-xl border border-emerald-200 text-xs font-extrabold bg-emerald-50 text-emerald-700">
             </div>
           </div>
 
@@ -306,7 +322,7 @@
     </div>
   </div>
 
-  <!-- OTHER MODALS (Transfer, Settings, Return) - Structure Kept Compact for Code Length -->
+  <!-- OTHER MODALS -->
   <div id="quickReturnModal" class="fixed inset-0 modal-bg hidden z-50 flex items-center justify-center p-3"><div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-md overflow-hidden border border-slate-200"><div class="bg-[#d90429] text-white px-6 py-4 flex justify-between items-center"><h3 class="font-extrabold text-sm flex items-center gap-2"><i class="fa-solid fa-rotate-left"></i> ফাইল ফেরত</h3><button onclick="closeQuickReturnModal()" class="text-white text-xl">&times;</button></div><div class="p-6 space-y-4 text-xs"><input type="hidden" id="returnTargetFileId"><div class="bg-slate-50 p-3 rounded-xl border font-bold text-slate-700" id="returnCustomerSummary"></div><div><label class="block font-bold text-slate-500 mb-1">মোট জমা (Advance Tk):</label><input type="number" id="qRetAdvance" oninput="calcQuickReturn()" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-extrabold bg-white"></div><div><label class="block font-bold text-slate-500 mb-1">✂️ চার্জ রাখা হলো (Tk):</label><input type="number" id="qRetKept" oninput="calcQuickReturn()" class="w-full px-3 py-2 rounded-xl border-2 border-amber-400 font-extrabold bg-amber-50"></div><div><label class="block font-bold text-slate-500 mb-1">💸 ফেরত দেওয়া হলো (Tk):</label><input type="number" id="qRetRefund" class="w-full px-3 py-2 rounded-xl border-2 border-[#d90429] font-extrabold bg-rose-50 text-[#d90429]"></div><div><label class="block font-bold text-slate-500 mb-1">নোট:</label><input type="text" id="qRetNote" value="স্লট না পাওয়ায় ফেরত" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold bg-white"></div></div><div class="bg-slate-50 px-6 py-3.5 flex justify-end gap-2 border-t border-slate-200"><button onclick="closeQuickReturnModal()" class="px-4 py-2 rounded-xl border bg-white font-bold">বাতিল</button><button onclick="confirmQuickReturn()" class="bg-[#d90429] text-white px-5 py-2 rounded-xl font-extrabold shadow">🔙 কনফার্ম</button></div></div></div>
 
   <div id="moveApplicantModal" class="fixed inset-0 modal-bg hidden z-50 flex items-center justify-center p-3"><div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-md overflow-hidden border border-slate-200"><div class="bg-[#0077b6] text-white px-6 py-4 flex justify-between items-center"><h3 class="font-extrabold text-sm flex items-center gap-2"><i class="fa-solid fa-arrow-right-arrow-left"></i> ট্রান্সফার</h3><button onclick="closeMoveModal()" class="text-white text-xl">&times;</button></div><div class="p-6 space-y-4 text-xs"><input type="hidden" id="moveSourceFileId"><input type="hidden" id="moveAppIdx"><div class="bg-slate-50 p-4 rounded-xl border border-slate-200"><p class="font-bold text-slate-500 mb-1">যাকে সরাতে চান:</p><p class="text-base font-extrabold text-slate-900" id="moveApplicantName"></p></div><div><label class="block font-bold text-slate-500 mb-2">কোথায় পাঠাতে চান?</label><select id="moveTargetSet" class="w-full px-3 py-2.5 rounded-xl border-2 border-[#00b4d8] font-bold bg-white focus:outline-none"></select></div></div><div class="bg-slate-50 px-6 py-3.5 flex justify-end gap-2 border-t border-slate-200"><button onclick="closeMoveModal()" class="px-4 py-2 rounded-xl border bg-white font-bold">বাতিল</button><button onclick="confirmMoveApplicant()" class="btn-primary-rtc text-white px-5 py-2 rounded-xl font-extrabold shadow"><i class="fa-solid fa-check mr-1"></i> কনফার্ম</button></div></div></div>
@@ -316,7 +332,6 @@
       <p class="text-xs text-slate-500 font-bold mb-1">💡 নোট:</p>
       <p class="text-[11px] text-slate-400">এই পিসিতে কোনো সেটিং বদলালে তা লোকালি সেভ থাকবে। পারমানেন্ট করতে HTML কোডের ভেতর লিংক বসিয়ে দিন।</p>
     </div>
-    <!-- Security PIN option removed as Firebase Auth is implemented -->
     <div class="bg-slate-50 p-4 rounded-xl border border-slate-200"><label class="block font-bold text-slate-600 mb-1">🔑 কমন পাসওয়ার্ড</label><input type="text" id="settingDefaultPass" class="w-full px-3 py-2 rounded-lg border border-slate-300 font-bold mono-type"></div><div class="bg-slate-50 p-4 rounded-xl border border-slate-200"><label class="block font-bold text-slate-600 mb-1">🌐 Firebase Cloud URL (লাইভ সিঙ্ক)</label><input type="url" id="settingCloudUrl" class="w-full px-3 py-2 rounded-lg border border-slate-300"></div><div class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex justify-between items-center"><div><p class="font-bold text-slate-700">📂 রিস্টোর</p></div><label class="cursor-pointer bg-slate-800 text-white px-3 py-1.5 rounded-lg font-bold">ফাইল দিন <input type="file" accept=".json" onchange="importBackup(event)" class="hidden"></label></div></div><div class="bg-slate-50 px-6 py-3.5 flex justify-end gap-2 border-t border-slate-200"><button onclick="closeSettingsModal()" class="px-4 py-2 rounded-xl border bg-white font-bold">বন্ধ</button><button onclick="saveSettings()" class="btn-primary-rtc text-white px-5 py-2 rounded-xl font-bold shadow">সেভ করুন</button></div></div></div>
 
   <div id="toast" class="fixed bottom-6 right-6 bg-[#0b132b] text-white px-5 py-3.5 rounded-2xl shadow-2xl text-xs font-bold hidden z-50 flex items-center gap-3 border-l-4 border-[#00b4d8] animate-[fadeInSlide_0.3s_ease-out_forwards]"><i class="fa-solid fa-circle-check text-[#00b4d8] text-base"></i> <span id="toastMsg" class="tracking-wide">Action Done!</span></div>
@@ -351,13 +366,18 @@
     let activeTab = 'RUNNING'; let viewMode = localStorage.getItem('rtc_view_mode') || 'CARD'; let tempApplicants = [];
 
     window.onload = () => {
-      // Firebase Auth Observer (একাউন্ট লগইন থাকলে ড্যাশবোর্ডে যাবে)
+      // Firebase Auth Observer
       auth.onAuthStateChanged((user) => {
         if (user) {
           document.getElementById('lockScreen').classList.add('hidden'); 
           document.getElementById('mainAppContent').classList.remove('hidden');
           if (customLogo) applyCustomLogo(customLogo);
           if (cloudUrl) fetchFromCloud(true);
+          
+          // Show user name in Sidebar
+          let dispName = user.displayName || user.email.split('@')[0];
+          document.getElementById('currentUserDisplay').innerText = "Signed in as: " + dispName.toUpperCase();
+          
           populateWorkerDropdown(); renderFiles();
         } else {
           document.getElementById('mainAppContent').classList.add('hidden'); 
@@ -393,7 +413,6 @@
       });
     }
 
-    // Firebase Logout Logic
     function lockApp() { 
       auth.signOut().catch(e => console.error("Logout Error:", e));
     }
@@ -448,7 +467,7 @@
       const now = new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
 
       if (tId === 'NEW') {
-        const newF = JSON.parse(JSON.stringify(sFile)); newF.id = 'SET_' + Date.now(); newF.applicants = [appToMove]; newF.appointmentDate = ''; newF.feeStatus = 'UNPAID'; newF.billTotal = 0; newF.billAdvance = 0; newF.billDue = 0; newF.updatedAt = now; visaFiles.unshift(newF);
+        const newF = JSON.parse(JSON.stringify(sFile)); newF.id = 'SET_' + Date.now(); newF.applicants = [appToMove]; newF.appointmentDate = ''; newF.feeStatus = 'UNPAID'; newF.billTotal = 0; newF.billAdvance = 0; newF.billDue = 0; newF.baseVisaFee = 1500; newF.softwareCharge = 0; newF.updatedAt = now; visaFiles.unshift(newF);
       } else {
         const tFile = visaFiles.find(x => x.id === tId); if (tFile.applicants.length >= 4) { sFile.applicants.splice(aIdx, 0, appToMove); alert('ফাইলে ৪ জন পূর্ণ!'); return; }
         tFile.applicants.push(appToMove); tFile.updatedAt = now;
@@ -519,11 +538,30 @@
       const select = document.getElementById('filterWorker'); const workers = new Set(); visaFiles.forEach(f => { if (f.worker) workers.add(f.worker.trim()); });
       select.innerHTML = '<option value="ALL">সব ওয়ার্কার</option>'; workers.forEach(w => { select.innerHTML += `<option value="${w}">${w}</option>`; });
     }
-    function calcDue() { document.getElementById('billDue').value = Math.max(0, (parseFloat(document.getElementById('billTotal').value)||0) - (parseFloat(document.getElementById('billAdvance').value)||0)); }
+
+    // New Calc Function with Profit checking
+    function calcDue() { 
+      let total = parseFloat(document.getElementById('billTotal').value) || 0;
+      let adv = parseFloat(document.getElementById('billAdvance').value) || 0;
+      document.getElementById('billDue').value = Math.max(0, total - adv);
+
+      let base = parseFloat(document.getElementById('baseVisaFee').value) || 0;
+      let soft = parseFloat(document.getElementById('softwareCharge').value) || 0;
+      let profit = total - (base + soft);
+      
+      let profitEl = document.getElementById('profitAmount');
+      if(profitEl) {
+          profitEl.value = profit;
+          profitEl.className = profit >= 0 
+            ? "w-full px-3 py-1.5 rounded-xl border border-emerald-200 text-xs font-extrabold bg-emerald-50 text-emerald-700" 
+            : "w-full px-3 py-1.5 rounded-xl border border-rose-200 text-xs font-extrabold bg-rose-50 text-rose-600";
+      }
+    }
+    
     function toggleRefundBox() { document.getElementById('refundCalcBox').classList.toggle('hidden', !document.getElementById('isReturned').checked); }
     function calcRefund() { document.getElementById('refundAmount').value = Math.max(0, (parseFloat(document.getElementById('billAdvance').value)||0) - (parseFloat(document.getElementById('keptCharge').value)||0)); }
 
-    // ---------- PDF আলাদা স্টোরেজ (দ্রুত করার জন্য) ----------
+    // ---------- PDF আলাদা স্টোরেজ ----------
     const pdfCache = {}; let cloudBusy = 0; let lastCloudText = ''; let migratingPdfs = false;
     function pdfReplacer(key, val) { if (key === 'pdfData' && this && this.pdfId) return undefined; return val; }
     function safeLocalSave() { try { localStorage.setItem('rtc_visa_files', JSON.stringify(visaFiles, pdfReplacer)); } catch (e) { console.warn('localStorage full, skipped', e); } }
@@ -741,22 +779,40 @@
         document.getElementById('accountPassword').value = f.accountPassword || ''; document.getElementById('docTrade').value = f.docTrade || 'NONE';
         document.getElementById('docNoc').value = f.docNoc || 'NONE'; document.getElementById('docBank').value = f.docBank || 'CUSTOMER';
         document.getElementById('docPassportHeld').value = f.docPassportHeld || 'CUSTOMER'; document.getElementById('feeStatus').value = f.feeStatus || 'UNPAID';
-        document.getElementById('appointmentDate').value = f.appointmentDate || ''; document.getElementById('billTotal').value = f.billTotal || '';
+        document.getElementById('appointmentDate').value = f.appointmentDate || ''; 
+        
+        // Load fee values
+        document.getElementById('baseVisaFee').value = f.baseVisaFee !== undefined ? f.baseVisaFee : 1500;
+        document.getElementById('softwareCharge').value = f.softwareCharge || '';
+        document.getElementById('billTotal').value = f.billTotal || '';
+        
         document.getElementById('billAdvance').value = f.billAdvance || ''; document.getElementById('billDue').value = f.billDue || '';
         document.getElementById('keptCharge').value = f.keptCharge || ''; document.getElementById('refundAmount').value = f.refundAmount || '';
         document.getElementById('returnReason').value = f.returnReason || ''; document.getElementById('fileNote').value = f.note || '';
         tempApplicants = JSON.parse(JSON.stringify(f.applicants));
       } else {
-        document.getElementById('editFileId').value = ''; document.getElementById('visaType').value = 'Medical'; document.getElementById('workerName').value = '';
+        document.getElementById('editFileId').value = ''; document.getElementById('visaType').value = 'Medical'; 
+        
+        // Auto Set Worker Name
+        let currentWorker = auth.currentUser ? (auth.currentUser.displayName || auth.currentUser.email.split('@')[0]) : '';
+        document.getElementById('workerName').value = currentWorker.toUpperCase();
+        
         document.getElementById('isSignedUp').checked = false; document.getElementById('isDelivered').checked = false; document.getElementById('isReturned').checked = false;
         document.getElementById('accountPhone').value = ''; document.getElementById('accountGmail').value = ''; document.getElementById('accountPassword').value = defaultPass;
         document.getElementById('docTrade').value = 'NONE'; document.getElementById('docNoc').value = 'NONE'; document.getElementById('docBank').value = 'CUSTOMER';
         document.getElementById('docPassportHeld').value = 'CUSTOMER'; document.getElementById('feeStatus').value = 'UNPAID'; document.getElementById('appointmentDate').value = '';
-        document.getElementById('billTotal').value = ''; document.getElementById('billAdvance').value = ''; document.getElementById('billDue').value = '';
+        
+        // Reset fee values
+        document.getElementById('baseVisaFee').value = 1500;
+        document.getElementById('softwareCharge').value = '';
+        document.getElementById('billTotal').value = '';
+        
+        document.getElementById('billAdvance').value = ''; document.getElementById('billDue').value = '';
         document.getElementById('keptCharge').value = ''; document.getElementById('refundAmount').value = ''; document.getElementById('returnReason').value = ''; document.getElementById('fileNote').value = '';
         tempApplicants = [{ name: '', passport: '', dob: '', nid: '', tempId: '', bgdNo: '', isSubmitted: false, subDate: '', prevBgd: '', pdfName: '', pdfData: '', pdfId: '' }];
       }
       toggleRefundBox(); renderApplicantForms();
+      setTimeout(calcDue, 50); // Instantly update profit visual
     }
 
     function closeFileModal() { document.getElementById('fileModal').classList.add('hidden'); }
@@ -828,6 +884,10 @@
         accountPhone: document.getElementById('accountPhone').value.trim(), accountGmail: document.getElementById('accountGmail').value.trim(), accountPassword: document.getElementById('accountPassword').value.trim(),
         docTrade: document.getElementById('docTrade').value, docNoc: document.getElementById('docNoc').value, docBank: document.getElementById('docBank').value, docPassportHeld: document.getElementById('docPassportHeld').value,
         feeStatus: document.getElementById('feeStatus').value, appointmentDate: document.getElementById('appointmentDate').value,
+        
+        baseVisaFee: parseFloat(document.getElementById('baseVisaFee').value) || 1500,
+        softwareCharge: parseFloat(document.getElementById('softwareCharge').value) || 0,
+        
         billTotal: parseFloat(document.getElementById('billTotal').value) || 0, billAdvance: parseFloat(document.getElementById('billAdvance').value) || 0, billDue: parseFloat(document.getElementById('billDue').value) || 0,
         keptCharge: parseFloat(document.getElementById('keptCharge').value) || 0, refundAmount: parseFloat(document.getElementById('refundAmount').value) || 0, returnReason: document.getElementById('returnReason').value.trim(),
         note: document.getElementById('fileNote').value.trim(), applicants: tempApplicants,
@@ -838,6 +898,7 @@
     }
 
     function deleteFileSet(id) { if (!confirm('ডিলিট করতে চান?')) return; visaFiles = visaFiles.filter(x => x.id !== id); renderFiles(); syncToCloud(); showToast('ডিলিট হয়েছে'); }
+    
     async function openPdf(fileId, appIdx) {
       const f = visaFiles.find(x => x.id === fileId); const a = f && f.applicants[appIdx]; if (!a || (!a.pdfId && !a.pdfData)) return;
       const w = window.open('', '_blank'); if (w) w.document.write('<title>Loading...</title><p style="font-family:sans-serif;padding:20px">PDF লোড হচ্ছে...</p>');
