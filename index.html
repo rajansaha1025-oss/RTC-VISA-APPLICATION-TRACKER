@@ -33,7 +33,7 @@
 </head>
 <body class="min-h-screen text-slate-800 flex flex-col">
 
-  <!-- SECURITY PIN LOCK SCREEN (No longer hidden by default) -->
+  <!-- SECURITY PIN LOCK SCREEN (White Screen problem fixed: hidden removed) -->
   <div id="lockScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-[#0b132b] p-4">
     <div class="bg-white p-10 rounded-[2rem] shadow-2xl max-w-sm w-full text-center border-t-4 border-[#00b4d8]">
       <div class="w-20 h-20 bg-slate-50 rounded-full mx-auto flex items-center justify-center text-4xl shadow-inner mb-5 border-2 border-slate-100">
@@ -42,7 +42,7 @@
       <h2 class="text-2xl font-extrabold tracking-tight text-[#0b132b]">RTC VISA</h2>
       <p class="text-xs text-slate-500 mt-1 mb-8 font-bold uppercase tracking-wider">Enterprise Management</p>
       <input type="password" id="inputPin" maxlength="4" placeholder="••••" class="w-full text-center tracking-[16px] text-4xl font-bold py-4 px-4 rounded-2xl bg-slate-50 border-2 border-slate-200 focus:border-[#00b4d8] focus:bg-white focus:outline-none mb-6 mono-type text-[#0077b6] transition">
-      <button onclick="checkAppPin()" class="w-full btn-primary-rtc text-white font-extrabold py-3.5 rounded-2xl shadow-lg hover:shadow-xl transition active:scale-95 text-sm uppercase tracking-wide">
+      <button type="button" onclick="checkAppPin()" class="w-full btn-primary-rtc text-white font-extrabold py-3.5 rounded-2xl shadow-lg hover:shadow-xl transition active:scale-95 text-sm uppercase tracking-wide">
         <i class="fa-solid fa-unlock-keyhole mr-2"></i> সিস্টেম আনলক করুন
       </button>
       <p class="text-[11px] text-slate-400 mt-5 font-medium">ডিফল্ট পিন: <b>1823</b></p>
@@ -118,15 +118,9 @@
   <!-- ADD / EDIT VISA FILE MODAL -->
   <div id="fileModal" class="fixed inset-0 modal-bg hidden z-50 flex items-center justify-center p-4 overflow-y-auto">
     <div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden border border-slate-200">
-      
-      <div class="bg-[#0b132b] text-white px-7 py-4 flex justify-between items-center">
-        <h2 class="text-lg font-extrabold flex items-center gap-2.5 tracking-wide" id="modalTitle"><i class="fa-solid fa-folder-plus text-[#00b4d8]"></i> ভিসা ফাইল প্রসেসিং</h2>
-        <button onclick="closeFileModal()" class="bg-white/10 hover:bg-rose-500 text-white w-8 h-8 rounded-full flex items-center justify-center transition">&times;</button>
-      </div>
-
+      <div class="bg-[#0b132b] text-white px-7 py-4 flex justify-between items-center"><h2 class="text-lg font-extrabold flex items-center gap-2.5 tracking-wide" id="modalTitle"><i class="fa-solid fa-folder-plus text-[#00b4d8]"></i> ভিসা ফাইল প্রসেসিং</h2><button onclick="closeFileModal()" class="bg-white/10 hover:bg-rose-500 text-white w-8 h-8 rounded-full flex items-center justify-center transition">&times;</button></div>
       <div class="p-6 md:p-8 overflow-y-auto space-y-6 flex-1 bg-[#f8fafc]">
         <input type="hidden" id="editFileId">
-
         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm grid grid-cols-1 md:grid-cols-5 gap-4">
           <div><label class="block text-[11px] font-extrabold text-slate-500 uppercase mb-1.5">ভিসা ক্যাটাগরি *</label><select id="visaType" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-extrabold text-[#0b132b] bg-slate-50 focus:outline-none"><option value="Medical">🏥 Medical Visa</option><option value="Tourist">🏖️ Tourist Visa</option><option value="Double Entry">🔄 Double Entry</option><option value="Business">💼 Business Visa</option><option value="Entry">🚪 Entry Visa</option><option value="Student">🎓 Student Visa</option></select></div>
           <div><label class="block text-[11px] font-extrabold text-slate-500 uppercase mb-1.5">ওয়ার্কারের নাম</label><input type="text" id="workerName" placeholder="যেমন: Worker 1" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-bold bg-slate-50 focus:outline-none"></div>
@@ -157,7 +151,7 @@
             <div><label class="block text-[11px] font-bold text-slate-500 mb-1">ভিসা ফি স্ট্যাটাস</label><select id="feeStatus" class="w-full px-2.5 py-1.5 rounded-xl border border-slate-300 text-xs font-bold bg-slate-50 focus:outline-none"><option value="UNPAID">⏳ Pending</option><option value="PAID">💳 Paid সম্পন্ন</option></select></div>
             <div><label class="block text-[11px] font-bold text-slate-500 mb-1">অ্যাপয়েন্টমেন্ট ডেট</label><input type="date" id="appointmentDate" class="w-full px-2.5 py-1.5 rounded-xl border border-slate-300 text-xs font-bold bg-slate-50 focus:outline-none"></div>
             <div><label class="block text-[11px] font-bold text-slate-500 mb-1">মোট বিল (Tk)</label><input type="number" id="billTotal" oninput="calcBilling()" placeholder="0" class="w-full px-2.5 py-1.5 rounded-xl border border-slate-300 text-xs font-bold bg-slate-50 focus:outline-none"></div>
-            <div><label class="block text-[11px] font-bold text-orange-600 mb-1">দোকানের খরচ (Cost)</label><input type="number" id="billCost" oninput="calcBilling()" value="1500" placeholder="1500" class="w-full px-2.5 py-1.5 rounded-xl border border-orange-300 text-xs font-bold bg-orange-50 text-orange-700 focus:outline-none" title="স্লট বা ভিসার আসল খরচ"></div>
+            <div><label class="block text-[11px] font-bold text-orange-600 mb-1">দোকানের খরচ (Cost)</label><input type="number" id="billCost" oninput="calcBilling()" value="1500" placeholder="1500" class="w-full px-2.5 py-1.5 rounded-xl border border-orange-300 text-xs font-bold bg-orange-50 text-orange-700 focus:outline-none"></div>
             <div><label class="block text-[11px] font-bold text-slate-500 mb-1">জমা (Advance)</label><input type="number" id="billAdvance" oninput="calcBilling(); calcRefund();" placeholder="0" class="w-full px-2.5 py-1.5 rounded-xl border border-slate-300 text-xs font-bold bg-slate-50 focus:outline-none"></div>
             <div><label class="block text-[11px] font-bold text-slate-500 mb-1">বাকি | লাভ</label>
               <div class="flex gap-1">
@@ -166,16 +160,12 @@
               </div>
             </div>
           </div>
-          
           <div id="refundCalcBox" class="mt-4 p-4 rounded-xl bg-rose-50 border border-rose-200 hidden ml-2"><p class="text-[11px] font-extrabold text-rose-800 uppercase mb-2"><i class="fa-solid fa-rotate-left mr-1"></i> পেমেন্ট রিফান্ড হিসাব</p><div class="grid grid-cols-1 md:grid-cols-3 gap-3"><div><label class="block text-[11px] font-bold text-slate-600 mb-1">চার্জ রাখা হলো (Tk)</label><input type="number" id="keptCharge" oninput="calcRefund()" placeholder="200" class="w-full px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-bold"></div><div><label class="block text-[11px] font-bold text-slate-600 mb-1">ফেরত দেওয়া হলো</label><input type="number" id="refundAmount" placeholder="0" class="w-full px-3 py-1.5 rounded-lg border border-rose-300 text-xs font-extrabold bg-white text-rose-600"></div><div><label class="block text-[11px] font-bold text-slate-600 mb-1">নোট / কারণ</label><input type="text" id="returnReason" placeholder="স্লট না পাওয়ায় ফেরত" class="w-full px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-bold"></div></div></div>
           <div class="mt-3 pl-2"><input type="text" id="fileNote" placeholder="বিশেষ কোনো নোট বা রেফারেন্স থাকলে লিখুন..." class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-bold bg-slate-50 focus:outline-none"></div>
         </div>
 
         <div>
-          <div class="flex justify-between items-end mb-3">
-            <h3 class="text-xs font-extrabold text-slate-800 uppercase tracking-wide">৪. আবেদনকারী তালিকা (মেইন + কো-অ্যাপ্লিক্যান্ট)</h3>
-            <button type="button" id="btnAddCoApplicant" onclick="addApplicantForm()" class="btn-primary-rtc text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md hover:shadow-lg transition"><i class="fa-solid fa-user-plus"></i> + কো-অ্যাপ্লিক্যান্ট যোগ (Max 3)</button>
-          </div>
+          <div class="flex justify-between items-end mb-3"><h3 class="text-xs font-extrabold text-slate-800 uppercase tracking-wide">৪. আবেদনকারী তালিকা (মেইন + কো-অ্যাপ্লিক্যান্ট)</h3><button type="button" id="btnAddCoApplicant" onclick="addApplicantForm()" class="btn-primary-rtc text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md hover:shadow-lg transition"><i class="fa-solid fa-user-plus"></i> + কো-অ্যাপ্লিক্যান্ট যোগ (Max 3)</button></div>
           <div id="applicantsContainer" class="space-y-4"></div>
         </div>
       </div>
@@ -192,13 +182,15 @@
   <!-- MOVE APPLICANT MODAL -->
   <div id="moveApplicantModal" class="fixed inset-0 modal-bg hidden z-50 flex items-center justify-center p-3"><div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-md overflow-hidden border border-slate-200"><div class="bg-[#0077b6] text-white px-6 py-4 flex justify-between items-center"><h3 class="font-extrabold text-sm flex items-center gap-2"><i class="fa-solid fa-arrow-right-arrow-left"></i> ট্রান্সফার</h3><button onclick="closeMoveModal()" class="text-white text-xl">&times;</button></div><div class="p-6 space-y-4 text-xs"><input type="hidden" id="moveSourceFileId"><input type="hidden" id="moveAppIdx"><div class="bg-slate-50 p-4 rounded-xl border border-slate-200"><p class="font-bold text-slate-500 mb-1">যাকে সরাতে চান:</p><p class="text-base font-extrabold text-slate-900" id="moveApplicantName"></p></div><div><label class="block font-bold text-slate-500 mb-2">কোথায় পাঠাতে চান?</label><select id="moveTargetSet" class="w-full px-3 py-2.5 rounded-xl border-2 border-[#00b4d8] font-bold bg-white focus:outline-none"></select></div></div><div class="bg-slate-50 px-6 py-3.5 flex justify-end gap-2 border-t border-slate-200"><button onclick="closeMoveModal()" class="px-4 py-2 rounded-xl border bg-white font-bold">বাতিল</button><button onclick="confirmMoveApplicant()" class="btn-primary-rtc text-white px-5 py-2 rounded-xl font-extrabold shadow"><i class="fa-solid fa-check mr-1"></i> কনফার্ম</button></div></div></div>
 
-  <!-- SETTINGS MODAL (With DB Sync capabilities) -->
+  <!-- SETTINGS MODAL -->
   <div id="settingsModal" class="fixed inset-0 modal-bg hidden z-50 flex items-center justify-center p-3"><div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-lg overflow-hidden border border-slate-200"><div class="bg-[#0b132b] text-white px-6 py-4 flex justify-between items-center"><h3 class="font-extrabold text-sm flex items-center gap-2"><i class="fa-solid fa-sliders text-[#00b4d8]"></i> সেটিংস (অটোমেটিক গ্লোবাল সেভ)</h3><button onclick="closeSettingsModal()" class="text-white text-xl">&times;</button></div><div class="p-6 space-y-4 text-xs">
     <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-center mb-2">
-      <p class="text-xs text-slate-500 font-bold mb-1">💡 নোট:</p>
       <p class="text-[11px] text-slate-400">এখান থেকে পিন বা পাসওয়ার্ড পাল্টালে তা সব পিসিতে অটোমেটিক পরিবর্তন হয়ে যাবে!</p>
     </div>
-    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200"><label class="block font-bold text-slate-600 mb-1">🔐 আনলক পিন</label><input type="text" id="settingAppPin" maxlength="4" placeholder="1823" class="w-full px-3 py-2 rounded-lg border border-slate-300 font-bold mono-type"></div><div class="bg-slate-50 p-4 rounded-xl border border-slate-200"><label class="block font-bold text-slate-600 mb-1">🔑 কমন পাসওয়ার্ড</label><input type="text" id="settingDefaultPass" placeholder="Prachi2019@" class="w-full px-3 py-2 rounded-lg border border-slate-300 font-bold mono-type"></div><div class="bg-slate-50 p-4 rounded-xl border border-slate-200"><label class="block font-bold text-slate-600 mb-1">🌐 Firebase Cloud URL (লাইভ সিঙ্ক)</label><input type="url" id="settingCloudUrl" class="w-full px-3 py-2 rounded-lg border border-slate-300"></div><div class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex justify-between items-center"><div><p class="font-bold text-slate-700">📂 রিস্টোর</p></div><label class="cursor-pointer bg-slate-800 text-white px-3 py-1.5 rounded-lg font-bold">ফাইল দিন <input type="file" accept=".json" onchange="importBackup(event)" class="hidden"></label></div></div><div class="bg-slate-50 px-6 py-3.5 flex justify-end gap-2 border-t border-slate-200"><button onclick="closeSettingsModal()" class="px-4 py-2 rounded-xl border bg-white font-bold">বন্ধ</button><button onclick="saveSettings()" class="btn-primary-rtc text-white px-5 py-2 rounded-xl font-bold shadow">সেভ করুন</button></div></div></div>
+    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200"><label class="block font-bold text-slate-600 mb-1">🔐 আনলক পিন</label><input type="text" id="settingAppPin" maxlength="4" placeholder="1823" class="w-full px-3 py-2 rounded-lg border border-slate-300 font-bold mono-type"></div>
+    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200"><label class="block font-bold text-slate-600 mb-1">🔑 কমন পাসওয়ার্ড</label><input type="text" id="settingDefaultPass" placeholder="Prachi2019@" class="w-full px-3 py-2 rounded-lg border border-slate-300 font-bold mono-type"></div>
+    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200"><label class="block font-bold text-slate-600 mb-1">🌐 Firebase Cloud URL (লাইভ সিঙ্ক)</label><input type="url" id="settingCloudUrl" class="w-full px-3 py-2 rounded-lg border border-slate-300"></div>
+    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex justify-between items-center"><div><p class="font-bold text-slate-700">📂 রিস্টোর</p></div><label class="cursor-pointer bg-slate-800 text-white px-3 py-1.5 rounded-lg font-bold">ফাইল দিন <input type="file" accept=".json" onchange="importBackup(event)" class="hidden"></label></div></div><div class="bg-slate-50 px-6 py-3.5 flex justify-end gap-2 border-t border-slate-200"><button onclick="closeSettingsModal()" class="px-4 py-2 rounded-xl border bg-white font-bold">বন্ধ</button><button onclick="saveSettings()" class="btn-primary-rtc text-white px-5 py-2 rounded-xl font-bold shadow">সেভ করুন</button></div></div></div>
 
   <!-- TOAST NOTIFICATION -->
   <div id="toast" class="fixed bottom-6 right-6 bg-[#0b132b] text-white px-5 py-3.5 rounded-2xl shadow-2xl text-xs font-bold hidden z-50 flex items-center gap-3 border-l-4 border-[#00b4d8] animate-[fadeInSlide_0.3s_ease-out_forwards]"><i class="fa-solid fa-circle-check text-[#00b4d8] text-base"></i> <span id="toastMsg" class="tracking-wide">Action Done!</span></div>
@@ -208,23 +200,19 @@
     // ⚙️ অটোমেটিক সেটিংস (স্থায়ীভাবে সেভ করা)
     // ==========================================
     const AUTO_FIREBASE_URL = "https://rtcvisa-fdbb5-default-rtdb.firebaseio.com";
-    const AUTO_STORAGE_BUCKET = "rtcvisa-fdbb5.firebasestorage.app"; 
+    const AUTO_DRIVE_API_URL = "https://script.google.com/macros/s/AKfycbxL6qTTpYHeNUMPaWwtHT1yzwBzPGPkujjIDS1UTiDx7j3sTyJ-Auv7nfz2wRKbh4trsA/exec"; 
     const AUTO_LOGO_NAME = "logo.png";
     const AUTO_PIN = "1823"; // MASTER PIN
     const AUTO_PASS = "Prachi2019@";
     // ==========================================
 
     let visaFiles = [];
-    try {
-        visaFiles = JSON.parse(localStorage.getItem('rtc_visa_files') || '[]');
-    } catch(e) {
-        visaFiles = [];
-        localStorage.setItem('rtc_visa_files', '[]');
-    }
+    try { visaFiles = JSON.parse(localStorage.getItem('rtc_visa_files') || '[]'); } catch(e) { visaFiles = []; localStorage.setItem('rtc_visa_files', '[]'); }
 
     let defaultPass = localStorage.getItem('rtc_default_pass') || AUTO_PASS;
     let appPin = localStorage.getItem('rtc_app_pin') || AUTO_PIN;
     let cloudUrl = localStorage.getItem('rtc_cloud_url') || (AUTO_FIREBASE_URL.includes('firebaseio.com') ? AUTO_FIREBASE_URL : '');
+    let driveApiUrl = localStorage.getItem('rtc_drive_api_url') || AUTO_DRIVE_API_URL;
     let customLogo = localStorage.getItem('rtc_custom_logo') || AUTO_LOGO_NAME;
     
     let activeTab = 'RUNNING'; let viewMode = localStorage.getItem('rtc_view_mode') || 'CARD'; let tempApplicants = [];
@@ -238,29 +226,46 @@
           if (data) {
             if (data.appPin) { appPin = data.appPin; localStorage.setItem('rtc_app_pin', appPin); }
             if (data.defaultPass) { defaultPass = data.defaultPass; localStorage.setItem('rtc_default_pass', defaultPass); }
+            if (data.driveApiUrl) { driveApiUrl = data.driveApiUrl; localStorage.setItem('rtc_drive_api_url', driveApiUrl); }
           }
         }
-      } catch (e) { console.log('Settings Fetch Error'); }
+      } catch (e) {}
     }
 
     async function saveSettingsToCloud() {
       if (!cloudUrl) return;
       try {
         await fetch(cloudUrl.replace(/\/$/, '') + '/rtc_visa_settings.json', { 
-            method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ appPin: appPin, defaultPass: defaultPass }) 
+            method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ appPin: appPin, defaultPass: defaultPass, driveApiUrl: driveApiUrl }) 
         });
-      } catch (e) { console.log('Settings Save Error'); }
+      } catch (e) {}
     }
 
-    async function uploadFileToFirebase(file) {
-      const bucket = AUTO_STORAGE_BUCKET;
-      const safeName = Date.now() + "_" + file.name.replace(/[^a-zA-Z0-9.\-_]/g, '');
-      const uploadUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o?name=visafiles%2F${safeName}`;
-      
-      const res = await fetch(uploadUrl, { method: 'POST', headers: { 'Content-Type': 'application/pdf' }, body: file });
-      const data = await res.json();
-      if(data.error) throw new Error(data.error.message);
-      return `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/visafiles%2F${safeName}?alt=media`;
+    // 🚀 Google Drive Upload Logic
+    async function uploadToDriveAPI(file) {
+      if (!driveApiUrl || !driveApiUrl.includes("script.google.com")) {
+        throw new Error("Google Drive API লিংক বসানো হয়নি!");
+      }
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = async function() {
+          try {
+            const base64Data = reader.result.split(',')[1];
+            const payload = { filename: file.name, mimeType: file.type, base64: base64Data };
+            
+            const res = await fetch(driveApiUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+              body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.url) resolve(data.url);
+            else reject(new Error(data.error || "Upload Failed"));
+          } catch(err) { reject(err); }
+        };
+        reader.onerror = () => reject(new Error("File read error"));
+        reader.readAsDataURL(file);
+      });
     }
 
     // 🚀 Bulletproof Init App 
@@ -268,18 +273,18 @@
       if (customLogo) applyCustomLogo(customLogo);
       
       const isAuth = sessionStorage.getItem('rtc_authenticated');
+      // Make sure main app or lock screen shows appropriately right away
       if (isAuth === 'true') {
-          unlockAppUI();
+          document.getElementById('lockScreen').classList.add('hidden');
+          document.getElementById('mainAppContent').classList.remove('hidden');
       } else { 
+          document.getElementById('mainAppContent').classList.add('hidden');
+          document.getElementById('lockScreen').classList.remove('hidden');
           document.getElementById('inputPin').focus(); 
       }
       
-      if (cloudUrl) {
-          fetchSettingsFromCloud().then(() => fetchFromCloud(true));
-      }
-      
-      populateWorkerDropdown(); 
-      renderFiles();
+      if (cloudUrl) { fetchSettingsFromCloud().then(() => fetchFromCloud(true)); }
+      populateWorkerDropdown(); renderFiles();
 
       setInterval(() => {
         if (cloudUrl && document.getElementById('fileModal').classList.contains('hidden') && document.getElementById('quickReturnModal').classList.contains('hidden') && document.getElementById('moveApplicantModal').classList.contains('hidden')) {
@@ -288,17 +293,15 @@
         }
       }, 9000);
     }
-
-    // Execute immediately without waiting for window load to prevent white screen
+    
+    // Call initApp directly to avoid loading delay
     initApp();
 
     function checkAppPin() {
       const entered = document.getElementById('inputPin').value;
       if (entered === appPin || entered === AUTO_PIN || entered === "1823") { 
-          sessionStorage.setItem('rtc_authenticated', 'true'); 
-          unlockAppUI(); 
-      }
-      else { alert('❌ ভুল পিন!'); document.getElementById('inputPin').value = ''; document.getElementById('inputPin').focus(); }
+          sessionStorage.setItem('rtc_authenticated', 'true'); unlockAppUI(); 
+      } else { alert('❌ ভুল পিন!'); document.getElementById('inputPin').value = ''; document.getElementById('inputPin').focus(); }
     }
 
     function unlockAppUI() { document.getElementById('lockScreen').classList.add('hidden'); document.getElementById('mainAppContent').classList.remove('hidden'); renderFiles(); }
@@ -309,7 +312,6 @@
       imgs.forEach(id => { const el = document.getElementById(id); if (el) { el.src = dataUrl; } });
       document.getElementById('dynamicFavicon').href = dataUrl; 
     }
-    
     function uploadCustomLogo(event) {
       const file = event.target.files[0]; if (!file) return;
       const reader = new FileReader(); reader.onload = (e) => { customLogo = e.target.result; localStorage.setItem('rtc_custom_logo', customLogo); applyCustomLogo(customLogo); showToast('লোগো আপডেট হয়েছে!'); }; reader.readAsDataURL(file);
@@ -328,9 +330,8 @@
         if (t === tabName) btn.className = 'w-full flex items-center justify-between px-4 py-3 rounded-2xl btn-primary-rtc text-white shadow-md transition';
         else btn.className = 'w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-white/10 text-slate-300 transition';
       });
-      const titles = { 'RUNNING': '📂 রানিং ফাইল', 'EXPIRING': '⚠️ মেয়াদ সতর্কতা', 'SIGNED_UP': '🟣 সাইন-আপ সম্পন্ন', 'APPOINTMENT': '📅 অ্যাপয়েন্টমেন্ট', 'DELIVERED': '📦 ডেলিভারি', 'RETURNED': '🔙 ফেরত ফাইল', 'ALL': '📋 সব ফাইল' };
-      document.getElementById('currentViewTitle').innerText = titles[tabName];
-      renderFiles();
+      const titles = { 'RUNNING': '📂 রানিং ফাইল', 'EXPIRING': '⚠️ মেয়াদ সতর্কতা', 'SIGNED_UP': '🟣 সাই-আপ সম্পন্ন', 'APPOINTMENT': '📅 অ্যাপয়েন্টমেন্ট', 'DELIVERED': '📦 ডেলিভারি', 'RETURNED': '🔙 ফেরত ফাইল', 'ALL': '📋 সব ফাইল' };
+      document.getElementById('currentViewTitle').innerText = titles[tabName]; renderFiles();
     }
     
     function setViewMode(mode) {
@@ -346,11 +347,8 @@
     }
 
     function calcBilling() { 
-      const tot = parseFloat(document.getElementById('billTotal').value) || 0;
-      const adv = parseFloat(document.getElementById('billAdvance').value) || 0;
-      const cost = parseFloat(document.getElementById('billCost').value) || 0;
-      document.getElementById('billDue').value = Math.max(0, tot - adv); 
-      document.getElementById('billProfit').value = tot - cost; 
+      const tot = parseFloat(document.getElementById('billTotal').value) || 0; const adv = parseFloat(document.getElementById('billAdvance').value) || 0; const cost = parseFloat(document.getElementById('billCost').value) || 0;
+      document.getElementById('billDue').value = Math.max(0, tot - adv); document.getElementById('billProfit').value = tot - cost; 
     }
     
     function toggleRefundBox() { document.getElementById('refundCalcBox').classList.toggle('hidden', !document.getElementById('isReturned').checked); }
@@ -362,7 +360,6 @@
       try { document.getElementById('syncStatusText').innerText = 'Syncing...'; await fetch(cloudUrl.replace(/\/$/, '') + '/rtc_visa_files.json', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(visaFiles) }); document.getElementById('syncStatusText').innerText = 'Live Sync Ready'; }
       catch (e) { document.getElementById('syncStatusText').innerText = 'Offline Mode'; }
     }
-    
     async function fetchFromCloud(silent = false) {
       if (!cloudUrl) { if (!silent) showToast('রিফ্রেশ সম্পন্ন!'); renderFiles(); return; }
       try { const res = await fetch(cloudUrl.replace(/\/$/, '') + '/rtc_visa_files.json'); if (res.ok) { const data = await res.json(); if (Array.isArray(data)) { visaFiles = data; localStorage.setItem('rtc_visa_files', JSON.stringify(visaFiles)); populateWorkerDropdown(); renderFiles(); } document.getElementById('syncStatusText').innerText = 'Live Sync Ready'; if (!silent) showToast('ক্লাউড ডাটা লোড হয়েছে!'); } }
@@ -415,20 +412,20 @@
       if (alsoCopyTemp) copyPersonData(a.tempId, a.name, 'Temp ID'); else showToast('✅ সেভ হয়েছে!');
     }
 
+    // 🚀 PDF Upload function using Google Drive API
     async function quickUploadCardPdf(fileId, appIdx, event) {
       const file = event.target.files[0]; if (!file) return;
       if (file.size > 5 * 1024 * 1024) { alert('PDF ৫ মেগাবাইটের নিচে হতে হবে!'); return; }
-      const f = visaFiles.find(x => x.id === fileId); 
-      if (!f || !f.applicants[appIdx]) return;
+      const f = visaFiles.find(x => x.id === fileId); if (!f || !f.applicants[appIdx]) return;
       const a = f.applicants[appIdx];
-      showToast('⏳ PDF আপলোড হচ্ছে... দয়া করে অপেক্ষা করুন।');
+      showToast('⏳ আপনার Google Drive-এ আপলোড হচ্ছে...');
       try {
-          const fileUrl = await uploadFileToFirebase(file);
+          const fileUrl = await uploadToDriveAPI(file);
           a.pdfName = file.name; a.pdfData = fileUrl; a.isSubmitted = true; 
           if (!a.subDate) a.subDate = getTodayStr(); 
           f.updatedAt = new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }); 
-          renderFiles(); syncToCloud(); showToast('✅ PDF সফলভাবে ক্লাউডে সেভ হয়েছে!'); 
-      } catch(err) { alert('আপলোডে সমস্যা হয়েছে: ' + err.message); }
+          renderFiles(); syncToCloud(); showToast('✅ PDF গুগল ড্রাইভে সেভ হয়েছে!'); 
+      } catch(err) { alert('আপলোডে সমস্যা: ' + err.message); }
     }
 
     function makeMainApplicant(fileId, appIdx) {
@@ -444,8 +441,7 @@
       const f = visaFiles.find(x => x.id === fileId);
       document.getElementById('moveSourceFileId').value = fileId; document.getElementById('moveAppIdx').value = appIdx;
       document.getElementById('moveApplicantName').innerText = f.applicants[appIdx].name || 'Unnamed';
-      const select = document.getElementById('moveTargetSet');
-      select.innerHTML = '<option value="NEW">✨ আলাদা নতুন ফাইল তৈরি করুন</option>';
+      const select = document.getElementById('moveTargetSet'); select.innerHTML = '<option value="NEW">✨ আলাদা নতুন ফাইল তৈরি করুন</option>';
       visaFiles.forEach(t => { if (t.id !== fileId && !t.isDelivered && !t.isReturned) select.innerHTML += `<option value="${t.id}">📂 যুক্ত করুন: ${t.applicants[0]?.name} (${t.accountPhone}) - ${t.applicants.length} জন</option>`; });
       document.getElementById('moveApplicantModal').classList.remove('hidden');
     }
@@ -614,7 +610,7 @@
                 </div>
 
                 <div class="mt-4 flex gap-1.5">
-                  ${a.pdfData ? `<button onclick="openPdf('${f.id}', ${idx})" class="flex-1 bg-emerald-50 text-emerald-700 border border-emerald-200 py-1.5 px-2 rounded-xl text-xs font-bold hover:bg-emerald-100 transition"><i class="fa-solid fa-file-pdf"></i> PDF ওপেন</button>` : `<label class="w-full cursor-pointer bg-slate-50 text-slate-600 border border-slate-200 py-1.5 px-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1 hover:bg-slate-100 transition"><i class="fa-solid fa-upload"></i> PDF রাখুন<input type="file" accept="application/pdf" onchange="quickUploadCardPdf('${f.id}', ${idx}, event)" class="hidden"></label>`}
+                  ${a.pdfData ? `<button onclick="openPdf('${f.id}', ${idx})" class="flex-1 bg-emerald-50 text-emerald-700 border border-emerald-200 py-1.5 px-2 rounded-xl text-xs font-bold hover:bg-emerald-100 transition"><i class="fa-solid fa-file-pdf"></i> PDF ওপেন</button>` : `<label class="w-full cursor-pointer bg-slate-50 text-slate-600 border border-slate-200 py-1.5 px-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1 hover:bg-slate-100 transition"><i class="fa-solid fa-upload"></i> PDF ড্রাইভ আপলোড<input type="file" accept="application/pdf" onchange="quickUploadCardPdf('${f.id}', ${idx}, event)" class="hidden"></label>`}
                 </div>
               </div>`;
             }).join('')}
@@ -623,6 +619,7 @@
       }).join('');
     }
 
+    // Modal Upload with Google Drive
     async function handlePdfUpload(idx, event) {
       syncTempInputs(); const file = event.target.files[0]; if (!file) return;
       if (file.size > 5 * 1024 * 1024) { alert('PDF ৫ মেগাবাইটের নিচে হতে হবে!'); return; }
@@ -630,13 +627,13 @@
       showToast('⏳ PDF আপলোড হচ্ছে... দয়া করে অপেক্ষা করুন।');
       
       try {
-          const fileUrl = await uploadFileToFirebase(file);
+          const fileUrl = await uploadToDriveAPI(file);
           tempApplicants[idx].pdfName = file.name; 
           tempApplicants[idx].pdfData = fileUrl; 
           tempApplicants[idx].isSubmitted = true; 
           if (!tempApplicants[idx].subDate) tempApplicants[idx].subDate = getTodayStr(); 
           renderApplicantForms(); 
-          showToast('✅ PDF সফলভাবে ক্লাউডে আপলোড হয়েছে!'); 
+          showToast('✅ PDF সফলভাবে ড্রাইভে আপলোড হয়েছে!'); 
       } catch(err) {
           alert('আপলোডে সমস্যা হয়েছে: ' + err.message);
       }
@@ -745,14 +742,7 @@
     function openPdf(fileId, appIdx) { 
       const f = visaFiles.find(x => x.id === fileId); 
       if (!f || !f.applicants[appIdx]?.pdfData) return; 
-      
-      const pdfData = f.applicants[appIdx].pdfData;
-      if (pdfData.startsWith('http')) {
-          window.open(pdfData, '_blank');
-      } else {
-          const pdfWindow = window.open(""); 
-          pdfWindow.document.write(`<title>${f.applicants[appIdx].name} - RTC Visa</title><body style="margin:0"><iframe width='100%' height='100%' src='${pdfData}' style='border:none;'></iframe></body>`); 
-      }
+      window.open(f.applicants[appIdx].pdfData, '_blank'); 
     }
 
     function openSettingsModal() { document.getElementById('settingAppPin').value = appPin; document.getElementById('settingDefaultPass').value = defaultPass; document.getElementById('settingCloudUrl').value = cloudUrl; document.getElementById('settingsModal').classList.remove('hidden'); }
