@@ -750,7 +750,7 @@
     }
 
     async function quickUploadCardPdf(fileId, appIdx, event) {
-      if (cloudBusy > 0) { alert('⏳ Ekti PDF upload hocche, onugroho kore shesh howa porjonto opekkha korun!'); event.target.value = ''; return; }
+      if (cloudBusy > 0) { alert('⏳ একটি PDF আপলোড হচ্ছে, অনুগ্রহ করে শেষ হওয়া পর্যন্ত অপেক্ষা করুন!'); event.target.value = ''; return; }
       
       const file = event.target.files[0]; if (!file) return;
       if (file.size > 5 * 1024 * 1024) { alert('PDF ৫ মেগাবাইটের নিচে হতে হবে!'); return; }
@@ -767,7 +767,9 @@
         a.pdfName = file.name; a.bgdUploadedBy = whoAmI(); a.bgdUploadedAt = stampNow(); a.isSubmitted = true; if (!a.subDate) a.subDate = getTodayStr();
         f.updatedAt = stampNow(); f.updatedBy = whoAmI();
         
-        renderFiles(); syncToCloud(); showToast('📄 PDF সেভ হয়েছে!');
+        renderFiles(); 
+        await syncToCloud(); // 🔥 FIX: Database-e save howar jonno wait korbe
+        showToast('📄 PDF সেভ হয়েছে!');
       } catch (e) { console.error(e); alert('PDF আপলোড হয়নি!\n\nকারণ: ' + ((e && e.message) || e)); }
       finally { cloudBusy = Math.max(0, cloudBusy - 1); event.target.value = ''; }
     }
@@ -973,13 +975,13 @@
     function removeApplicantForm(idx) { syncTempInputs(); tempApplicants.splice(idx, 1); renderApplicantForms(); }
 
     async function handlePdfUpload(idx, event) {
-      if (cloudBusy > 0) { alert('⏳ Ekti PDF upload hocche, onugroho kore shesh howa porjonto opekkha korun!'); event.target.value = ''; return; }
+      if (cloudBusy > 0) { alert('⏳ একটি PDF আপলোড হচ্ছে, অনুগ্রহ করে শেষ হওয়া পর্যন্ত অপেক্ষা করুন!'); event.target.value = ''; return; }
       
       syncTempInputs(); const file = event.target.files[0]; if (!file) return;
       if (file.size > 5 * 1024 * 1024) { alert('PDF ৫ মেগাবাইটের নিচে হতে হবে!'); return; }
       if (!driveEnabled()) { alert('PDF রাখার জায়গা সেট করা নেই!'); return; }
       if (!((tempApplicants[0].name || '').trim()) || !((tempApplicants[idx].name || '').trim())) { alert('আগে মেইন আবেদনকারী ও এই আবেদনকারীর নাম লিখুন, তারপর PDF দিন।'); event.target.value = ''; return; }
-      cloudBusy++; showToast('⏳ PDF Drive-e আপলোড হচ্ছে...');
+      cloudBusy++; showToast('⏳ PDF আপলোড হচ্ছে...');
       try {
         const t0 = tempApplicants[idx];
         const res = await driveUploadApplicant({ folderId: modalDriveFolderId, folderName: tempApplicants[0].name, idx: idx, name: t0 ? t0.name : '', file: file });
@@ -988,7 +990,10 @@
         const patch = { driveFileId: res.fileId, driveFileName: res.fileName };
         syncTempInputs(); const t = tempApplicants[idx];
         if (t) { Object.assign(t, patch); t.pdfName = file.name; t.bgdUploadedBy = whoAmI(); t.bgdUploadedAt = stampNow(); t.isSubmitted = true; if (!t.subDate) t.subDate = getTodayStr(); }
-        renderApplicantForms(); showToast('✅ PDF যোগ হয়েছে!');
+        
+        renderApplicantForms(); 
+        await syncToCloud(); // 🔥 FIX: Database-e save howar jonno wait korbe
+        showToast('✅ PDF যোগ হয়েছে!');
       } catch (e) { console.error(e); alert('PDF আপলোড হয়নি!\n\nকারণ: ' + ((e && e.message) || e)); }
       finally { cloudBusy = Math.max(0, cloudBusy - 1); event.target.value = ''; }
     }
