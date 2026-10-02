@@ -659,8 +659,9 @@
       if (!driveEnabled()) throw new Error('NO_DRIVE_URL');
       const user = auth.currentUser; if (!user) throw new Error('AUTH');
       payload.idToken = await user.getIdToken();
-      const r = await fetch(DRIVE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
-      const d = await r.json(); if (!d.ok) throw new Error(d.error || 'DRIVE_ERROR'); return d;
+      let r; try { r = await fetch(DRIVE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) }); } catch (e) { throw new Error('DRIVE_NETWORK: ' + (e.message || e)); }
+      const txt = await r.text(); let d; try { d = JSON.parse(txt); } catch (e) { throw new Error('DRIVE_BAD_RESPONSE: ' + txt.replace(/\s+/g, ' ').slice(0, 160)); }
+      if (!d.ok) throw new Error(d.error || 'DRIVE_ERROR'); return d;
     }
     async function driveUploadApplicant(o) {
       const dataUrl = o.dataUrl || await readFileAsDataURL(o.file); const nm = safeName(o.name);
@@ -785,6 +786,7 @@
       if (file.size > 5 * 1024 * 1024) { alert('PDF ৫ মেগাবাইটের নিচে হতে হবে!'); return; }
       const f = visaFiles.find(x => x.id === fileId); if (!f) return; const a = f.applicants[appIdx];
       if (!driveEnabled() && !cloudUrl) { alert('PDF রাখার জায়গা সেট করা নেই!'); return; }
+      if (driveEnabled() && (!((f.applicants[0].name || '').trim()) || !((a.name || '').trim()))) { alert('আগে মেইন আবেদনকারী ও এই আবেদনকারীর নাম লিখে সেভ করুন, তারপর PDF দিন।'); event.target.value = ''; return; }
       cloudBusy++; showToast('⏳ PDF আপলোড হচ্ছে...');
       try {
         if (driveEnabled()) {
@@ -795,9 +797,10 @@
           const dataUrl = await readFileAsDataURL(file); const pdfId = genPdfId(); await uploadPdfToCloud(pdfId, dataUrl); a.pdfId = pdfId;
         }
         delete a.pdfData; a.pdfName = file.name; a.bgdUploadedBy = whoAmI(); a.bgdUploadedAt = stampNow(); a.isSubmitted = true; if (!a.subDate) a.subDate = getTodayStr();
-        f.updatedAt = new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }); f.updatedBy = whoAmI();
-        cloudBusy--; renderFiles(); syncToCloud(); showToast('📄 PDF সেভ হয়েছে!');
-      } catch (e) { cloudBusy--; alert('PDF আপলোড হয়নি, ইন্টারনেট/Drive কানেকশন চেক করে আবার চেষ্টা করুন!'); }
+        f.updatedAt = stampNow(); f.updatedBy = whoAmI();
+        renderFiles(); syncToCloud(); showToast('📄 PDF সেভ হয়েছে!');
+      } catch (e) { console.error(e); alert('PDF আপলোড হয়নি!\n\nকারণ: ' + ((e && e.message) || e)); }
+      finally { cloudBusy = Math.max(0, cloudBusy - 1); event.target.value = ''; }
     }
 
     function hasExpiringOrExpiredBgd(fileSet) {
@@ -1004,6 +1007,7 @@
       syncTempInputs(); const file = event.target.files[0]; if (!file) return;
       if (file.size > 5 * 1024 * 1024) { alert('PDF ৫ মেগাবাইটের নিচে হতে হবে!'); return; }
       if (!driveEnabled() && !cloudUrl) { alert('PDF রাখার জায়গা সেট করা নেই!'); return; }
+      if (driveEnabled() && (!((tempApplicants[0].name || '').trim()) || !((tempApplicants[idx].name || '').trim()))) { alert('আগে মেইন আবেদনকারী ও এই আবেদনকারীর নাম লিখুন, তারপর PDF দিন।'); event.target.value = ''; return; }
       cloudBusy++; showToast('⏳ PDF আপলোড হচ্ছে...');
       try {
         let patch = {};
@@ -1018,8 +1022,9 @@
         }
         syncTempInputs(); const t = tempApplicants[idx];
         if (t) { Object.assign(t, patch); t.pdfName = file.name; t.bgdUploadedBy = whoAmI(); t.bgdUploadedAt = stampNow(); delete t.pdfData; t.isSubmitted = true; if (!t.subDate) t.subDate = getTodayStr(); }
-        cloudBusy--; renderApplicantForms(); showToast('PDF যোগ হয়েছে!');
-      } catch (e) { cloudBusy--; alert('PDF আপলোড হয়নি, ইন্টারনেট/Drive কানেকশন চেক করে আবার চেষ্টা করুন!'); }
+        renderApplicantForms(); showToast('PDF যোগ হয়েছে!');
+      } catch (e) { console.error(e); alert('PDF আপলোড হয়নি!\n\nকারণ: ' + ((e && e.message) || e)); }
+      finally { cloudBusy = Math.max(0, cloudBusy - 1); event.target.value = ''; }
     }
 
     function renderApplicantForms() {
