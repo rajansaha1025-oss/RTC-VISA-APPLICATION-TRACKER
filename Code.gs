@@ -21,7 +21,7 @@ function authorize_() {
 }
 
 // ====== ৩) মূল ফাংশন ======
-const VERSION = 'v9-backup';
+const VERSION = 'v10-sms-folders';
 // ব্রাউজারে Web App URL খুললে এটা দেখাবে: নতুন ভার্শন ডিপ্লয় হয়েছে কিনা বোঝার জন্য
 function doGet() { return out_({ ok: true, version: VERSION, msg: 'RTC VISA Drive script চালু আছে' }); }
 
@@ -106,6 +106,19 @@ function statusFolder_(root, status) {
   while (it.hasNext()) { const f = it.next(); if (!f.isTrashed()) return f; }
   return root.createFolder(name);
 }
+// কোন স্ট্যাটাস ফোল্ডারের ভেতরে SMS অ্যাপ অনুযায়ী সাব-ফোল্ডার হবে (Running/Rtcsms/মেইন-ব্যক্তির-ফোল্ডার)
+// অন্য স্ট্যাটাসেও চাইলে এখানে যোগ করুন, যেমন: { Running: true, Expired: true }
+const SMS_STATUSES = { Running: true };
+function cleanSms_(s) { return String(s || '').replace(/[\\\/:*?"<>|]/g, ' ').replace(/\s+/g, ' ').trim() || 'Rtcsms'; }
+function targetFolder_(root, status, sms) {
+  const key = STATUS_FOLDERS[status] ? status : 'Running';
+  const sf = statusFolder_(root, key);
+  if (!SMS_STATUSES[key]) return sf;
+  const name = cleanSms_(sms);
+  const it = sf.getFoldersByName(name);
+  while (it.hasNext()) { const f = it.next(); if (!f.isTrashed()) return f; }
+  return sf.createFolder(name);
+}
 function inFolder_(item, folder) {
   const ps = item.getParents();
   while (ps.hasNext()) { if (ps.next().getId() === folder.getId()) return true; }
@@ -118,7 +131,7 @@ function upload_(r) {
   try {
     step = 'root'; const root = getRoot_();
     step = 'folder'; let folder = r.folderId ? folderOk_(r.folderId, root) : null;
-    if (!folder) folder = statusFolder_(root, r.status).createFolder(r.folderName || 'Unnamed');
+    if (!folder) folder = targetFolder_(root, r.status, r.sms).createFolder(r.folderName || 'Unnamed');
     step = 'decode'; if (!r.data) throw new Error('PDF data খালি এসেছে');
     const bytes = Utilities.base64Decode(r.data);
     step = 'blob'; const blob = Utilities.newBlob(bytes, 'application/pdf', r.fileName || 'BGD.pdf');
@@ -157,7 +170,7 @@ function moveFile_(r) {
   const root = getRoot_();
   const file = fileOk_(r.fileId, root); if (!file) return { ok: false, error: 'FILE_NOT_FOUND' };
   let to = r.toFolderId ? folderOk_(r.toFolderId, root) : null;
-  if (!to) to = statusFolder_(root, r.status).createFolder(r.toFolderName || 'Unnamed');
+  if (!to) to = targetFolder_(root, r.status, r.sms).createFolder(r.toFolderName || 'Unnamed');
   file.moveTo(to);
   if (r.trashFromIfEmpty && r.fromFolderId) { const from = folderOk_(r.fromFolderId, root); if (from && isEmpty_(from)) from.setTrashed(true); }
   return { ok: true, folderId: to.getId(), folderName: to.getName() };
@@ -167,7 +180,7 @@ function moveFile_(r) {
 function setStatus_(r) {
   const root = getRoot_(); const fo = folderOk_(r.folderId, root);
   if (!fo) return { ok: false, error: 'FOLDER_NOT_FOUND' };
-  const target = statusFolder_(root, r.status);
+  const target = targetFolder_(root, r.status, r.sms);
   if (!inFolder_(fo, target)) fo.moveTo(target);
   return { ok: true };
 }
@@ -177,7 +190,7 @@ function organize_(r) {
   (r.items || []).forEach(function (it) {
     const fo = folderOk_(it.folderId, root);
     if (!fo) { missing.push(it.folderId); return; }
-    const target = statusFolder_(root, it.status);
+    const target = targetFolder_(root, it.status, it.sms);
     if (!inFolder_(fo, target)) fo.moveTo(target);
     done.push(it.folderId);
   });
