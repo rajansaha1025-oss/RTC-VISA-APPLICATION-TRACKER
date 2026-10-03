@@ -65,7 +65,7 @@
   <!-- MAIN APP LAYOUT -->
   <div id="mainAppContent" class="flex-1 flex flex-col md:flex-row hidden h-screen overflow-hidden">
     <aside class="sidebar-gradient text-white md:w-64 flex-shrink-0 flex flex-col justify-between shadow-xl z-20">
-      <div class="overflow-y-auto">
+      <div id="sidebarScroll" class="flex-1 min-h-0 overflow-y-auto">
         <div class="p-6 flex items-center gap-3.5 border-b border-white/10">
           <label class="relative group cursor-pointer" title="লোগো পরিবর্তন করুন">
             <img id="appLogoImg" src="logo.png" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3135/3135715.png'" class="w-12 h-12 rounded-xl object-cover bg-white shadow-lg border-2 border-white/20">
@@ -124,7 +124,7 @@
       <div class="px-6 py-4 bg-white/50 backdrop-blur-md border-b border-slate-200 flex flex-wrap gap-3 items-center justify-between">
         <div class="relative flex-1 min-w-[260px]">
           <i class="fa-solid fa-magnifying-glass absolute left-4 top-3.5 text-slate-400"></i>
-          <input type="text" id="searchInput" oninput="renderFiles()" placeholder="কাস্টমারের নাম, ফোন, Temp ID, BGD বা পাসপোর্ট দিয়ে খুঁজুন..." class="w-full pl-11 pr-4 py-2.5 rounded-xl border border-slate-300 text-sm font-bold focus:border-[#00b4d8] focus:ring-2 focus:ring-[#00b4d8]/20 focus:outline-none transition shadow-sm">
+          <input type="text" id="searchInput" oninput="renderFiles()" placeholder="নাম, ফোন, Temp ID, BGD, পাসপোর্ট বা #ফাইল-নম্বর দিয়ে খুঁজুন..." class="w-full pl-11 pr-4 py-2.5 rounded-xl border border-slate-300 text-sm font-bold focus:border-[#00b4d8] focus:ring-2 focus:ring-[#00b4d8]/20 focus:outline-none transition shadow-sm">
         </div>
         <div class="flex flex-wrap gap-2.5">
           <select id="filterVisaType" onchange="renderFiles()" class="px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-700 bg-white shadow-sm focus:outline-none"><option value="ALL">সব ক্যাটাগরি</option><option value="Medical">🏥 Medical Visa</option><option value="Tourist">🏖️ Tourist Visa</option><option value="Double Entry">🔄 Double Entry</option><option value="Business">💼 Business Visa</option><option value="Entry">🚪 Entry Visa</option><option value="Student">🎓 Student Visa</option></select>
@@ -362,6 +362,7 @@
     <div class="bg-slate-50 p-4 rounded-xl border border-slate-200"><label class="block font-bold text-slate-600 mb-1">🔑 কমন পাসওয়ার্ড</label><input type="text" id="settingDefaultPass" class="w-full px-3 py-2 rounded-lg border border-slate-300 font-bold mono-type"></div><div class="bg-slate-50 p-4 rounded-xl border border-slate-200"><label class="block font-bold text-slate-600 mb-1">🌐 Firebase Cloud URL (লাইভ সিঙ্ক)</label><input type="url" id="settingCloudUrl" class="w-full px-3 py-2 rounded-lg border border-slate-300"></div><div class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex justify-between items-center"><div><p class="font-bold text-slate-700">📂 রিস্টোর</p></div><label class="cursor-pointer bg-slate-800 text-white px-3 py-1.5 rounded-lg font-bold">ফাইল দিন <input type="file" accept=".json" onchange="importBackup(event)" class="hidden"></label></div></div><div class="bg-slate-50 px-6 py-3.5 flex justify-end gap-2 border-t border-slate-200"><button onclick="closeSettingsModal()" class="px-4 py-2 rounded-xl border bg-white font-bold">বন্ধ</button><button onclick="saveSettings()" class="btn-primary-rtc text-white px-5 py-2 rounded-xl font-bold shadow">সেভ করুন</button></div></div></div>
 
   <div id="toast" class="fixed bottom-6 right-6 bg-[#0b132b] text-white px-5 py-3.5 rounded-2xl shadow-2xl text-xs font-bold hidden z-50 flex items-center gap-3 border-l-4 border-[#00b4d8] animate-[fadeInSlide_0.3s_ease-out_forwards]"><i class="fa-solid fa-circle-check text-[#00b4d8] text-base"></i> <span id="toastMsg" class="tracking-wide">Action Done!</span></div>
+  <div id="serialModal" class="fixed inset-0 modal-bg hidden z-[60] flex items-center justify-center p-4"><div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-sm overflow-hidden border border-slate-200 text-center"><div class="bg-[#0b132b] text-white px-6 py-3 font-extrabold text-sm">✅ ফাইল সেভ হয়েছে</div><div class="p-6"><p class="text-xs font-bold text-slate-500">প্র্যাকটিক্যাল ফাইলে এই নম্বর লিখুন</p><div id="serialModalNo" class="mono-type text-6xl font-extrabold text-[#0b132b] my-3">#0</div><p id="serialModalName" class="text-xs font-bold text-slate-500 mb-4"></p><button type="button" onclick="closeSerialModal()" class="btn-accent-rtc text-white px-8 py-2.5 rounded-xl text-sm font-extrabold">ঠিক আছে</button></div></div></div>
 
   <script>
     // ==========================================
@@ -510,7 +511,8 @@
       const now = new Date().toLocaleString('en-GB', BD_TIME_OPTS);
       let dest;
       if (tId === 'NEW') {
-        const newF = JSON.parse(JSON.stringify(sFile)); newF.id = 'SET_' + Date.now(); newF.driveFolderId = ''; newF.driveFolderName = ''; newF.driveStatus = ''; newF.applicants = [appToMove]; newF.appointmentDate = ''; newF.isAppointed = false; newF.invoiceFileId = ''; newF.invoiceFileName = ''; newF.invoiceName = ''; newF.invoiceBy = ''; newF.invoiceAt = ''; newF.feeStatus = 'UNPAID'; newF.billTotal = 0; newF.billAdvance = 0; newF.billDue = 0; newF.baseVisaFee = VISA_FEE_PER_PERSON; newF.softwareCharge = 0; newF.updatedAt = now; newF.updatedBy = whoAmI(); visaFiles.unshift(newF); dest = newF;
+        const newF = JSON.parse(JSON.stringify(sFile)); newF.id = 'SET_' + Date.now(); newF.driveFolderId = ''; newF.driveFolderName = ''; newF.driveStatus = ''; newF.applicants = [appToMove]; newF.appointmentDate = ''; newF.isAppointed = false; newF.invoiceFileId = ''; newF.invoiceFileName = ''; newF.invoiceName = ''; newF.invoiceBy = ''; newF.invoiceAt = ''; newF.feeStatus = 'UNPAID'; newF.billTotal = 0; newF.billAdvance = 0; newF.billDue = 0; newF.baseVisaFee = VISA_FEE_PER_PERSON; newF.softwareCharge = 0; newF.updatedAt = now; newF.updatedBy = whoAmI(); newF.serial = ''; visaFiles.unshift(newF); dest = newF;
+        nextSerial().then(n => { const t = visaFiles.find(x => x.id === newF.id); if (t) { t.serial = n; renderFiles(); syncToCloud(); showSerialModal(n, appToMove.name || ''); } }).catch(() => showToast('⚠️ নতুন ফাইলের সিরিয়াল নম্বর আনা যায়নি'));
       } else {
         const tFile = visaFiles.find(x => x.id === tId); const tOld = tFile.applicants.length;
         tFile.applicants.push(appToMove); tFile.updatedAt = now; tFile.updatedBy = whoAmI();
@@ -769,7 +771,7 @@
     async function driveUploadApplicant(o) {
       const dataUrl = o.dataUrl || await readFileAsDataURL(o.file); const nm = safeName(o.name);
       const fileName = o.fileName || driveExpectedName({ name: o.name }, o.idx);
-      const d = await driveCall({ action: 'upload', folderId: o.folderId || '', folderName: safeName(o.folderName), fileName: fileName, data: dataUrl.split(',')[1], replaceFileId: o.replaceFileId || '', status: o.status || 'Running' }); return { folderId: d.folderId, folderName: d.folderName, fileId: d.fileId, fileName: fileName };
+      const d = await driveCall({ action: 'upload', folderId: o.folderId || '', folderName: safeName(o.folderName), fileName: fileName, data: dataUrl.split(',')[1], replaceFileId: o.replaceFileId || '', status: o.status || 'Running', sms: o.sms || '' }); return { folderId: d.folderId, folderName: d.folderName, fileId: d.fileId, fileName: fileName };
     }
     function driveExpectedName(a, idx, f) { const nm = safeName(a.name); const core = idx === 0 ? '1 - ' + nm + ' (MAIN BGD)' : nm + ' (BGD)'; const exp = !!(f && expiryRelevant(f) && needsRenewal(a, f)); return (exp ? 'EXPIRED - ' : '') + core + '.pdf'; }
     async function driveSyncSet(f) {
@@ -790,8 +792,8 @@
       cloudBusy++;
       try {
         if (moved.driveFileId) {
-          const r = await driveCall({ action: 'moveFile', fileId: moved.driveFileId, toFolderId: dest.driveFolderId || '', toFolderName: safeName(dest.applicants[0].name), fromFolderId: sFile.driveFolderId || '', trashFromIfEmpty: !!sRemoved, status: driveStatusOf(dest) });
-          if (!dest.driveFolderId) dest.driveStatus = driveStatusOf(dest);
+          const r = await driveCall({ action: 'moveFile', fileId: moved.driveFileId, toFolderId: dest.driveFolderId || '', toFolderName: safeName(dest.applicants[0].name), fromFolderId: sFile.driveFolderId || '', trashFromIfEmpty: !!sRemoved, status: driveStatusOf(dest), sms: smsOf(dest) });
+          if (!dest.driveFolderId) dest.driveStatus = driveLocOf(dest);
           dest.driveFolderId = r.folderId; dest.driveFolderName = r.folderName;
         } else if (sRemoved && sFile.driveFolderId) { await driveCall({ action: 'deleteFiles', fileIds: [], folderIdIfEmpty: sFile.driveFolderId }); }
       } catch (e) { console.warn('drive move failed', e); }
@@ -813,6 +815,9 @@
       if (!isAppt(f) && f.applicants.length && f.applicants.every(a => needsRenewal(a, f))) return 'Expired';
       return 'Running';
     }
+    // Running ফোল্ডারের ভেতরে SMS অ্যাপের নামে সাব-ফোল্ডার (Code.gs এর SMS_STATUSES এর সাথে মিল রাখুন)
+    const SMS_FOLDER_STATUSES = ['Running'];
+    function driveLocOf(f) { const st = driveStatusOf(f); return SMS_FOLDER_STATUSES.includes(st) ? st + '/' + safeName(smsOf(f)) : st; }
     let statusSyncBusy = false; const statusSyncTried = {};
     const nameSyncTried = {};
     function driveNamesDrift(f) {
@@ -823,14 +828,14 @@
     async function driveSyncStatuses() {
       if (!driveEnabled() || !auth.currentUser || statusSyncBusy) return;
       const organized = visaFiles.filter(f => f.driveFolderId && f.driveStatus && !f.isDeleted);
-      const todo = organized.filter(f => f.driveStatus !== driveStatusOf(f) && (Date.now() - (statusSyncTried[f.id] || 0) > 60000));
+      const todo = organized.filter(f => f.driveStatus !== driveLocOf(f) && (Date.now() - (statusSyncTried[f.id] || 0) > 60000));
       const drift = organized.filter(f => driveNamesDrift(f) && (Date.now() - (nameSyncTried[f.id] || 0) > 60000));
       if (!todo.length && !drift.length) return;
       statusSyncBusy = true; let changed = false;
       try {
-        for (const f of todo) {
-          statusSyncTried[f.id] = Date.now(); const want = driveStatusOf(f);
-          try { await driveCall({ action: 'setStatus', folderId: f.driveFolderId, status: want }); f.driveStatus = want; changed = true; } catch (e) { console.warn('status folder move failed', e); }
+        for (const f of todo.slice(0, 30)) {
+          statusSyncTried[f.id] = Date.now(); const want = driveLocOf(f);
+          try { await driveCall({ action: 'setStatus', folderId: f.driveFolderId, status: driveStatusOf(f), sms: smsOf(f) }); f.driveStatus = want; changed = true; } catch (e) { console.warn('status folder move failed', e); }
         }
         for (const f of drift.slice(0, 12)) { nameSyncTried[f.id] = Date.now(); await driveSyncSet(f); }
       } finally { statusSyncBusy = false; }
@@ -845,8 +850,8 @@
       try {
         for (let i = 0; i < todo.length; i += 25) {
           const batch = todo.slice(i, i + 25); showToast('⏳ সাজানো হচ্ছে... ' + Math.min(i + 25, todo.length) + '/' + todo.length);
-          const d = await driveCall({ action: 'organize', items: batch.map(f => ({ folderId: f.driveFolderId, status: driveStatusOf(f) })) });
-          batch.forEach(f => { if (d.done.includes(f.driveFolderId)) { f.driveStatus = driveStatusOf(f); ok++; } else miss++; });
+          const d = await driveCall({ action: 'organize', items: batch.map(f => ({ folderId: f.driveFolderId, status: driveStatusOf(f), sms: smsOf(f) })) });
+          batch.forEach(f => { if (d.done.includes(f.driveFolderId)) { f.driveStatus = driveLocOf(f); ok++; } else miss++; });
           await syncToCloud();
         }
       } catch (e) { alert('মাঝপথে থেমেছে (' + ok + 'টি সাজানো হয়েছে)।\n\nকারণ: ' + ((e && e.message) || e) + '\n\nআবার চাপলে বাকিগুলো সাজাবে।'); }
@@ -913,6 +918,11 @@
     function toggleSmsMenu() { smsMenuOpen = !smsMenuOpen; localStorage.setItem('rtc_sms_menu_open', smsMenuOpen ? '1' : '0'); renderSmsMenu(); }
     // সাইডবার মেনু: কোন SMS অ্যাপে কতগুলো চলমান ফাইল (লাল সংখ্যা = ওই অ্যাপের Expired ফাইল)। ক্লিক করলে বর্তমান ট্যাবেই ফিল্টার হয়
     function renderSmsMenu() {
+      const sc = document.getElementById('sidebarScroll'); const top = sc ? sc.scrollTop : 0;
+      renderSmsMenuInner();
+      if (sc) { sc.scrollTop = top; requestAnimationFrame(() => { sc.scrollTop = top; }); }
+    }
+    function renderSmsMenuInner() {
       const box = document.getElementById('smsMenuList'); if (!box) return;
       const act = visaFiles.filter(f => !f.isDeleted && !f.isDelivered && !f.isReturned);
       const stat = {}; act.forEach(f => { const k = smsOf(f); const o = stat[k] || (stat[k] = { n: 0, x: 0 }); o.n++; if (hasExpired(f)) o.x++; });
@@ -961,7 +971,7 @@
       cloudBusy++; showToast('⏳ Invoice আপলোড হচ্ছে...');
       try {
         const hadFolder = !!f.driveFolderId;
-        const res = await driveUploadApplicant({ folderId: f.driveFolderId || '', folderName: f.applicants[0].name, fileName: invoiceFileNameFor(f), file: file, replaceFileId: f.invoiceFileId || '', status: driveStatusOf(f) });
+        const res = await driveUploadApplicant({ folderId: f.driveFolderId || '', folderName: f.applicants[0].name, fileName: invoiceFileNameFor(f), file: file, replaceFileId: f.invoiceFileId || '', status: driveStatusOf(f), sms: smsOf(f) });
         if (!hadFolder) f.driveStatus = driveStatusOf(f);
         f.driveFolderId = res.folderId; f.driveFolderName = res.folderName;
         f.invoiceFileId = res.fileId; f.invoiceFileName = res.fileName; f.invoiceName = file.name; f.invoiceBy = whoAmI(); f.invoiceAt = stampNow(); f.isAppointed = true;
@@ -1016,7 +1026,7 @@
       cloudBusy++; showToast('⏳ PDF আপলোড হচ্ছে...');
       try {
         const hadFolder = !!f.driveFolderId;
-          const res = await driveUploadApplicant({ folderId: f.driveFolderId || '', folderName: f.applicants[0].name, idx: appIdx, name: a.name, file: file, replaceFileId: a.driveFileId || '', status: driveStatusOf(f) });
+          const res = await driveUploadApplicant({ folderId: f.driveFolderId || '', folderName: f.applicants[0].name, idx: appIdx, name: a.name, file: file, replaceFileId: a.driveFileId || '', status: driveStatusOf(f), sms: smsOf(f) });
           if (!hadFolder) f.driveStatus = driveStatusOf(f);
           f.driveFolderId = res.folderId; f.driveFolderName = res.folderName; a.driveFileId = res.fileId; a.driveFileName = res.fileName;
         
@@ -1056,6 +1066,8 @@
         if (activeTab === 'RUNNING' && isClosed) return false; if (activeTab === 'EXPIRING' && !hasWarning(f)) return false; if (activeTab === 'EXPIRED' && !hasExpired(f)) return false; if (activeTab === 'SIGNED_UP' && (!f.isSignedUp || isClosed)) return false; if (activeTab === 'APPOINTMENT' && (!isAppt(f) || isClosed)) return false; if (activeTab === 'DELIVERED' && !f.isDelivered) return false; if (activeTab === 'RETURNED' && !f.isReturned) return false;
         if (vType !== 'ALL' && f.visaType !== vType) return false; if (workerVal !== 'ALL' && (f.worker || '').trim() !== workerVal) return false;
         if (!search) return true;
+        if (search.startsWith('#')) return String(f.serial || '') === search.slice(1).trim();
+        if (f.serial && String(f.serial) === search) return true;
         return smsOf(f).toLowerCase().includes(search) || (f.border || '').toLowerCase().includes(search) || (f.accountPhone || '').toLowerCase().includes(search) || (f.accountGmail || '').toLowerCase().includes(search) || (f.worker || '').toLowerCase().includes(search) || f.applicants.some(a => (a.name || '').toLowerCase().includes(search) || (a.tempId || '').toLowerCase().includes(search) || (a.bgdNo || '').toLowerCase().includes(search) || (a.passport || '').toLowerCase().includes(search));
       };
       const baseList = visaFiles.filter(_passBase); renderSmsChips(baseList);
@@ -1093,7 +1105,7 @@
             ${files.map(f => {
               const exPpl = expiredPeople(f);
               return `<tr class="hover:bg-[#f4f7fa] transition ${exPpl.length ? 'bg-red-50/40' : ''}">
-                <td class="p-3.5"><div class="font-extrabold text-[#0b132b] text-sm">${escHtml(f.applicants[0]?.name || 'Unnamed')}</div><div class="text-[10px] text-slate-500 font-bold uppercase mt-0.5">মোট ${f.applicants.length} জন</div>${f.updatedBy ? `<div class="text-[10px] text-slate-400 font-bold mt-0.5">শেষ আপডেট: ${escHtml(f.updatedBy)}${f.updatedAt ? ' · ' + escHtml(f.updatedAt) : ''}</div>` : ''}${exPpl.length ? `<div class="text-[10px] text-red-600 font-extrabold mt-0.5">⚠ Expired: ${exPpl.map(a => escHtml(a.name)).join(', ')}</div>` : ''}</td>
+                <td class="p-3.5">${f.serial ? '<div class="mb-1">' + serialBadge(f) + '</div>' : ''}<div class="font-extrabold text-[#0b132b] text-sm">${escHtml(f.applicants[0]?.name || 'Unnamed')}</div><div class="text-[10px] text-slate-500 font-bold uppercase mt-0.5">মোট ${f.applicants.length} জন</div>${f.updatedBy ? `<div class="text-[10px] text-slate-400 font-bold mt-0.5">শেষ আপডেট: ${escHtml(f.updatedBy)}${f.updatedAt ? ' · ' + escHtml(f.updatedAt) : ''}</div>` : ''}${exPpl.length ? `<div class="text-[10px] text-red-600 font-extrabold mt-0.5">⚠ Expired: ${exPpl.map(a => escHtml(a.name)).join(', ')}</div>` : ''}</td>
                 <td class="p-3.5 space-y-1.5"><span class="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-slate-100 text-slate-600">${escHtml(f.visaType)}</span><div class="flex flex-wrap gap-1 mt-1">${getDocChecklistBadges(f)}</div></td>
                 <td class="p-3.5"><div class="mono-type font-extrabold text-[#0b132b]">${escHtml(f.accountPhone || 'N/A')}</div>${f.border ? `<div class="text-[10px] text-indigo-600 font-bold mt-0.5">${escHtml(f.border)}</div>` : ''}<div class="text-[10px] text-slate-500 font-bold mt-0.5">📱 ${escHtml(smsOf(f))}</div></td>
                 <td class="p-3.5 space-y-1.5">${f.applicants.map((a, i) => {
@@ -1117,6 +1129,7 @@
         <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-lg transition visa-border-${f.visaType.replace(/\s+/g, '')}">
           <div class="bg-white px-5 py-4 flex flex-wrap justify-between items-center gap-3 border-b border-slate-100">
             <div class="flex flex-wrap items-center gap-3">
+              ${serialBadge(f)}
               <span class="bg-slate-100 text-slate-600 border border-slate-200 px-2.5 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wide">${f.visaType}</span>
               <h3 class="text-base font-extrabold text-[#0b132b] tracking-tight">${escHtml(f.applicants[0]?.name || 'Unnamed')}</h3>
               <span class="bg-slate-50 text-slate-500 px-2 py-0.5 rounded text-[10px] font-bold border border-slate-200">${f.applicants.length > 1 ? `মোট ${f.applicants.length} জন` : 'সিঙ্গেল ফাইল'}</span>
@@ -1202,7 +1215,7 @@
       modalNewDriveIds = []; modalOrphanDriveIds = []; modalDriveFolderId = ''; modalDriveFolderName = ''; modalFolderNew = false; modalStatusAtCreate = '';
       if (fileId) {
         const f = visaFiles.find(x => x.id === fileId); modalDriveFolderId = f.driveFolderId || ''; modalDriveFolderName = f.driveFolderName || '';
-        document.getElementById('editFileId').value = f.id; document.getElementById('visaType').value = f.visaType || 'Medical';
+        document.getElementById('editFileId').value = f.id; document.getElementById('visaType').value = f.visaType || 'Medical'; document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-folder-plus text-[#00b4d8]"></i> ভিসা ফাইল প্রসেসিং' + (f.serial ? ' <span class="bg-white/15 px-2.5 py-0.5 rounded-lg mono-type text-base">#' + escHtml(String(f.serial)) + '</span>' : '');
         document.getElementById('workerName').value = f.worker || ''; document.getElementById('isSignedUp').checked = !!f.isSignedUp; document.getElementById('entryBorder').value = f.border || ''; document.getElementById('smsApp').value = f.smsApp || 'Rtcsms'; refreshSmsDatalist();
         document.getElementById('isDelivered').checked = !!f.isDelivered; document.getElementById('isReturned').checked = !!f.isReturned;
         document.getElementById('accountPhone').value = f.accountPhone || ''; document.getElementById('accountGmail').value = f.accountGmail || '';
@@ -1222,7 +1235,7 @@
         document.getElementById('returnReason').value = f.returnReason || ''; document.getElementById('fileNote').value = f.note || '';
         tempApplicants = JSON.parse(JSON.stringify(f.applicants));
       } else {
-        document.getElementById('editFileId').value = ''; document.getElementById('visaType').value = 'Medical'; 
+        document.getElementById('editFileId').value = ''; document.getElementById('visaType').value = 'Medical'; document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-folder-plus text-[#00b4d8]"></i> ভিসা ফাইল প্রসেসিং <span class="text-xs font-bold text-white/60">(সেভ করলে ফাইল নম্বর পাবেন)</span>';
         
         // Auto Set Worker Name
         let currentWorker = auth.currentUser ? (auth.currentUser.displayName || auth.currentUser.email.split('@')[0]) : '';
@@ -1280,9 +1293,10 @@
       try {
         const t0 = tempApplicants[idx];
         const stNow = document.getElementById('isReturned').checked ? 'Returned' : (document.getElementById('isDelivered').checked ? 'Delivered' : 'Running');
+        const smsNow = ((document.getElementById('smsApp').value || '').trim()) || 'Rtcsms';
           const wasNew = !modalDriveFolderId;
-          const res = await driveUploadApplicant({ folderId: modalDriveFolderId, folderName: tempApplicants[0].name, idx: idx, name: t0 ? t0.name : '', file: file, status: stNow });
-          if (wasNew) { modalFolderNew = true; modalStatusAtCreate = stNow; }
+          const res = await driveUploadApplicant({ folderId: modalDriveFolderId, folderName: tempApplicants[0].name, idx: idx, name: t0 ? t0.name : '', file: file, status: stNow, sms: smsNow });
+          if (wasNew) { modalFolderNew = true; modalStatusAtCreate = (SMS_FOLDER_STATUSES.includes(stNow) ? stNow + '/' + safeName(smsNow) : stNow); }
         modalDriveFolderId = res.folderId; modalDriveFolderName = res.folderName; modalNewDriveIds.push(res.fileId);
         if (t0 && t0.driveFileId) modalOrphanDriveIds.push(t0.driveFileId);
         const patch = { driveFileId: res.fileId, driveFileName: res.fileName };
@@ -1326,9 +1340,37 @@
       `).join('');
     }
 
-    function saveVisaFileSet() {
+    // ================= 🔢 অটো সিরিয়াল নম্বর (প্র্যাকটিক্যাল ফাইলে লেখার জন্য) =================
+    // Firebase এর rtc_counter/serial এ কাউন্টার থাকে। transaction দিয়ে নেওয়া হয়, তাই দুজন একসাথে নিলেও একই নম্বর পাবে না।
+    async function nextSerial() {
+      const ref = firebase.database().ref('rtc_counter/serial');
+      const res = await Promise.race([
+        ref.transaction(cur => (Number(cur) || 0) + 1),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('TIMEOUT')), 10000))
+      ]);
+      if (!res.committed) throw new Error('NOT_COMMITTED');
+      return Number(res.snapshot.val());
+    }
+    function serialBadge(f) { return (f && f.serial) ? '<span title="ফাইল নম্বর" class="bg-[#0b132b] text-white px-2 py-0.5 rounded text-[11px] font-extrabold mono-type">#' + escHtml(String(f.serial)) + '</span>' : ''; }
+    function showSerialModal(no, name) {
+      document.getElementById('serialModalNo').innerText = '#' + no;
+      document.getElementById('serialModalName').innerText = name || '';
+      document.getElementById('serialModal').classList.remove('hidden');
+    }
+    function closeSerialModal() { document.getElementById('serialModal').classList.add('hidden'); }
+    let savingSet = false;
+
+    async function saveVisaFileSet() {
+      if (savingSet) return;
       syncTempInputs();
       const editId = document.getElementById('editFileId').value;
+      let newSerial = 0;
+      if (!editId) {
+        savingSet = true;
+        try { newSerial = await nextSerial(); }
+        catch (e) { savingSet = false; alert('⚠️ সিরিয়াল নম্বর আনা যায়নি, ফাইল সেভ হয়নি।\n\nইন্টারনেট ঠিক আছে কিনা দেখে আবার "সেভ" চাপুন।\nবারবার হলে অ্যাডমিনকে জানান (Firebase Rules এ rtc_counter এর পারমিশন লাগতে পারে)।\n\n' + ((e && e.message) || e)); return; }
+        savingSet = false; syncTempInputs();
+      }
       const fileObj = {
         id: editId || 'SET_' + Date.now(),
         visaType: document.getElementById('visaType').value, worker: document.getElementById('workerName').value.trim(),
@@ -1346,6 +1388,7 @@
         updatedAt: new Date().toLocaleString('en-GB', BD_TIME_OPTS), updatedBy: whoAmI()
       };
             const prevSet = editId ? visaFiles.find(x => x.id === editId) : null;
+      fileObj.serial = prevSet ? (prevSet.serial || '') : (newSerial || '');
       fileObj.driveStatus = modalFolderNew ? modalStatusAtCreate : (prevSet ? (prevSet.driveStatus || '') : '');
       if (prevSet && expiryRelevant(prevSet)) tempApplicants.forEach(a => { if (a.isSubmitted || a.renewing || !(a.name || '').trim()) return; const pv = prevSet.applicants.find(p => (p.name || '') === a.name); if (pv && needsRenewal(pv, prevSet)) a.renewing = true; });
       delete nameSyncTried[fileObj.id]; delete statusSyncTried[fileObj.id];
@@ -1357,6 +1400,7 @@
       if (editId) { const idx = visaFiles.findIndex(x => x.id === editId); if (idx > -1) visaFiles[idx] = fileObj; } else visaFiles.unshift(fileObj);
             modalNewDriveIds = []; modalOrphanDriveIds = []; modalDriveFolderId = ''; modalDriveFolderName = ''; modalFolderNew = false; modalStatusAtCreate = '';
       closeFileModal(); renderFiles(); syncToCloud(); showToast('সেভ সম্পন্ন!'); driveSyncSet(fileObj);
+      if (newSerial) showSerialModal(newSerial, (fileObj.applicants[0] && fileObj.applicants[0].name) || '');
     }
 
     function openPdf(fileId, appIdx) {
