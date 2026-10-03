@@ -5,6 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RTC Visa File Manager Pro</title>
   <link id="dynamicFavicon" rel="icon" href="logo.png" type="image/png">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0b132b">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="RTC VISA">
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=JetBrains+Mono:wght@600;700;800&display=swap" rel="stylesheet">
@@ -34,6 +40,7 @@
   <!-- Firebase JS SDK (Compat Version) -->
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 </head>
 <body class="min-h-screen text-slate-800 flex flex-col">
 
@@ -73,6 +80,7 @@
 
         <nav class="p-4 space-y-2 text-xs font-bold">
           <button onclick="switchTab('RUNNING')" id="tab_RUNNING" class="w-full flex items-center justify-between px-4 py-3 rounded-2xl btn-primary-rtc text-white shadow-md transition"><span class="flex items-center gap-3"><i class="fa-solid fa-folder-open text-white/90 text-sm"></i> রানিং ফাইল</span><span class="bg-white/25 px-2 py-0.5 rounded-full text-[11px]" id="badgeRunning">0</span></button>
+          <button onclick="switchTab('EXPIRED')" id="tab_EXPIRED" class="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-white/10 text-slate-300 transition"><span class="flex items-center gap-3"><i class="fa-solid fa-ban text-red-400 text-sm"></i> মেয়াদ শেষ (Expired)</span><span class="bg-red-500 text-white px-2 py-0.5 rounded-full text-[11px]" id="badgeExpired">0</span></button>
           <button onclick="switchTab('EXPIRING')" id="tab_EXPIRING" class="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-white/10 text-slate-300 transition"><span class="flex items-center gap-3"><i class="fa-solid fa-triangle-exclamation text-rose-400 text-sm"></i> মেয়াদ সতর্কতা</span><span class="bg-rose-50 text-rose-600 px-2 py-0.5 rounded-full text-[11px]" id="badgeExpiring">0</span></button>
           <button onclick="switchTab('SIGNED_UP')" id="tab_SIGNED_UP" class="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-white/10 text-slate-300 transition"><span class="flex items-center gap-3"><i class="fa-solid fa-user-check text-purple-400 text-sm"></i> সাইন-আপ সম্পন্ন</span><span class="bg-white/10 px-2 py-0.5 rounded-full text-[11px]" id="badgeSignedUp">0</span></button>
           <button onclick="switchTab('APPOINTMENT')" id="tab_APPOINTMENT" class="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-white/10 text-slate-300 transition"><span class="flex items-center gap-3"><i class="fa-solid fa-calendar-check text-emerald-400 text-sm"></i> অ্যাপয়েন্টমেন্ট</span><span class="bg-white/10 px-2 py-0.5 rounded-full text-[11px]" id="badgeAppointment">0</span></button>
@@ -80,6 +88,11 @@
           <button onclick="switchTab('RETURNED')" id="tab_RETURNED" class="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-white/10 text-slate-300 transition"><span class="flex items-center gap-3"><i class="fa-solid fa-rotate-left text-orange-400 text-sm"></i> ক্যানসেল/ফেরত</span><span class="bg-white/10 px-2 py-0.5 rounded-full text-[11px]" id="badgeReturned">0</span></button>
           <button onclick="switchTab('ALL')" id="tab_ALL" class="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-white/10 text-slate-300 transition"><span class="flex items-center gap-3"><i class="fa-solid fa-layer-group text-cyan-400 text-sm"></i> সব ফাইল</span><span class="bg-white/10 px-2 py-0.5 rounded-full text-[11px]" id="badgeAll">0</span></button>
           <button onclick="switchTab('RECYCLE')" id="tab_RECYCLE" style="display:none" class="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-white/10 text-slate-300 transition"><span class="flex items-center gap-3"><i class="fa-solid fa-trash-can text-slate-400 text-sm"></i> রিসাইকেল বিন</span><span class="bg-white/10 px-2 py-0.5 rounded-full text-[11px]" id="badgeRecycle">0</span></button>
+          <button onclick="switchTab('ACTIVITY')" id="tab_ACTIVITY" style="display:none" class="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-white/10 text-slate-300 transition"><span class="flex items-center gap-3"><i class="fa-solid fa-clock-rotate-left text-amber-400 text-sm"></i> অ্যাক্টিভিটি লগ</span></button>
+        <div class="pt-3 mt-2 border-t border-white/10">
+            <button type="button" onclick="toggleSmsMenu()" class="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-white/10 text-slate-300 transition"><span class="flex items-center gap-3"><i class="fa-solid fa-comment-sms text-indigo-400 text-sm"></i> SMS অ্যাপ</span><span class="flex items-center gap-2"><span class="bg-white/10 px-2 py-0.5 rounded-full text-[11px]" id="badgeSmsApps">0</span><i id="smsMenuChevron" class="fa-solid fa-chevron-up text-[10px]"></i></span></button>
+            <div id="smsMenuList" class="mt-1 space-y-1 pl-2"></div>
+          </div>
         </nav>
       </div>
       <div class="p-5 border-t border-white/10 text-xs">
@@ -87,6 +100,7 @@
           <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 pulse-dot shadow-[0_0_8px_rgba(52,211,153,0.8)]"></span>
           <span id="syncStatusText" class="truncate text-[11px] font-bold tracking-wide">Live Sync Ready</span>
         </div>
+        <button id="btnInstallApp" onclick="installApp()" style="display:none" class="w-full mb-2 bg-sky-500/10 hover:bg-sky-500 text-sky-300 hover:text-white py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 transition border border-sky-500/20"><i class="fa-solid fa-download"></i> অ্যাপ ইনস্টল করুন</button>
         <button onclick="lockApp()" class="w-full bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 transition border border-rose-500/20"><i class="fa-solid fa-lock"></i> সিস্টেম লক করুন</button>
       </div>
     </aside>
@@ -118,7 +132,7 @@
         </div>
       </div>
 
-      <main class="flex-1 p-6 overflow-y-auto" id="mainScrollArea"><div id="fileListContainer" class="space-y-5"></div></main>
+      <main class="flex-1 p-6 overflow-y-auto" id="mainScrollArea"><div id="smsChips" class="flex flex-wrap items-center gap-2 mb-4"></div><div id="fileListContainer" class="space-y-5"></div></main>
     </div>
   </div>
 
@@ -200,6 +214,15 @@
               </div>
             </div>
           </div>
+          <div class="pl-2 mt-4">
+            <label class="block text-[11px] font-bold text-slate-500 mb-1">বর্ডার (Entry Point)</label>
+            <select id="entryBorder" class="w-full md:w-1/2 px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold bg-slate-50 focus:bg-white focus:outline-none focus:border-[#8b5cf6]"><option value="">Select entry point</option><option value="BY AIR">BY AIR</option><option value="BY AIR/ HARIDASPUR">BY AIR/ HARIDASPUR</option><option value="BY RAIL CHITPUR">BY RAIL CHITPUR</option><option value="BY RAIL GEDE">BY RAIL GEDE</option><option value="BY RAIL GEDE/BY AIR">BY RAIL GEDE/BY AIR</option><option value="BY RAIL GEDE/BYROAD HARIDASPUR">BY RAIL GEDE/BYROAD HARIDASPUR</option><option value="BY RAIL NEW JALPAIGURI">BY RAIL NEW JALPAIGURI</option><option value="BY RAIL NISCHINTPUR">BY RAIL NISCHINTPUR</option><option value="BY RAIL PETRAPOLE">BY RAIL PETRAPOLE</option><option value="BY ROAD AGARTALA">BY ROAD AGARTALA</option><option value="BY ROAD BAGHMARA">BY ROAD BAGHMARA</option><option value="BY ROAD BELONIA">BY ROAD BELONIA</option><option value="BY ROAD BHOLAGONJ">BY ROAD BHOLAGONJ</option><option value="BY ROAD CHANGRABANDHA">BY ROAD CHANGRABANDHA</option><option value="BY ROAD CHANGRABANDHA/ JAYGAON">BY ROAD CHANGRABANDHA/ JAYGAON</option><option value="BY ROAD CHANGRABANDHA/ RANIGANJ">BY ROAD CHANGRABANDHA/ RANIGANJ</option><option value="BY ROAD DALU">BY ROAD DALU</option><option value="BY ROAD DAWKI">BY ROAD DAWKI</option><option value="BY ROAD DHALIGHAT">BY ROAD DHALIGHAT</option><option value="BY ROAD DHUBRI">BY ROAD DHUBRI</option><option value="BY ROAD GEDE">BY ROAD GEDE</option><option value="BY ROAD GHOJADANGA">BY ROAD GHOJADANGA</option><option value="BY ROAD GOLAKGANJ">BY ROAD GOLAKGANJ</option><option value="BY ROAD HALDIBARI">BY ROAD HALDIBARI</option><option value="BY ROAD HARIDASPUR">BY ROAD HARIDASPUR</option><option value="BY ROAD HILI">BY ROAD HILI</option><option value="BY ROAD JAIGAON">BY ROAD JAIGAON</option><option value="BY ROAD JAIGAON/PHULBARI">BY ROAD JAIGAON/PHULBARI</option><option value="BY ROAD KAILASHAHAR">BY ROAD KAILASHAHAR</option><option value="BY ROAD KARIMGANJ">BY ROAD KARIMGANJ</option><option value="BY ROAD KHOWAI">BY ROAD KHOWAI</option><option value="BY ROAD LALGOLAGHAT">BY ROAD LALGOLAGHAT</option><option value="BY ROAD MAHADIPUR">BY ROAD MAHADIPUR</option><option value="BY ROAD MANKARCHAR">BY ROAD MANKARCHAR</option><option value="BY ROAD MUHURIGHAT">BY ROAD MUHURIGHAT</option><option value="BY ROAD PHULBARI">BY ROAD PHULBARI</option><option value="BY ROAD PHULBARI/JAIGAON">BY ROAD PHULBARI/JAIGAON</option><option value="BY ROAD PHULBARI/RANIGANJ">BY ROAD PHULBARI/RANIGANJ</option><option value="BY ROAD RADHIKAPUR">BY ROAD RADHIKAPUR</option><option value="BY ROAD RANIGANJ">BY ROAD RANIGANJ</option><option value="BY ROAD RANIGANJ/PHULBARI">BY ROAD RANIGANJ/PHULBARI</option><option value="BY ROAD SABROOM">BY ROAD SABROOM</option><option value="BY ROAD SONAHAT">BY ROAD SONAHAT</option><option value="BY ROAD SRIMANTPUR">BY ROAD SRIMANTPUR</option><option value="BY ROAD SUTERKANDI">BY ROAD SUTERKANDI</option></select>
+          </div>
+          <div class="pl-2 mt-4">
+            <label class="block text-[11px] font-bold text-slate-500 mb-1">📱 SMS অ্যাপ (ডিফল্ট Rtcsms, চাইলে নিজে লিখে বদলান)</label>
+            <input type="text" id="smsApp" list="smsAppList" placeholder="Rtcsms" autocomplete="off" class="w-full md:w-1/2 px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold bg-slate-50 focus:bg-white focus:outline-none focus:border-[#8b5cf6]">
+            <datalist id="smsAppList"></datalist>
+          </div>
         </div>
 
         <!-- Section 2: Document Checklist -->
@@ -257,8 +280,8 @@
               </select>
             </div>
             <div>
-              <label class="block text-[11px] font-bold text-slate-500 mb-1">অ্যাপয়েন্টমেন্ট ডেট</label>
-              <input type="date" id="appointmentDate" class="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs font-bold bg-slate-50">
+              <label class="block text-[11px] font-bold text-slate-500 mb-1">অ্যাপয়েন্টমেন্ট</label>
+              <label class="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-sky-200 bg-sky-50 cursor-pointer"><input type="checkbox" id="isAppointed" class="w-4 h-4 accent-sky-600"><span class="text-xs font-extrabold text-sky-800">📅 Appointed (স্লট পাওয়া গেছে)</span></label>
             </div>
             <div>
               <label class="block text-[11px] font-bold text-slate-500 mb-1">ভিসা ফি খরচ (জনপ্রতি ১৫০০, অটো)</label>
@@ -328,12 +351,14 @@
 
   <div id="moveApplicantModal" class="fixed inset-0 modal-bg hidden z-50 flex items-center justify-center p-3"><div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-md overflow-hidden border border-slate-200"><div class="bg-[#0077b6] text-white px-6 py-4 flex justify-between items-center"><h3 class="font-extrabold text-sm flex items-center gap-2"><i class="fa-solid fa-arrow-right-arrow-left"></i> ট্রান্সফার</h3><button onclick="closeMoveModal()" class="text-white text-xl">&times;</button></div><div class="p-6 space-y-4 text-xs"><input type="hidden" id="moveSourceFileId"><input type="hidden" id="moveAppIdx"><div class="bg-slate-50 p-4 rounded-xl border border-slate-200"><p class="font-bold text-slate-500 mb-1">যাকে সরাতে চান:</p><p class="text-base font-extrabold text-slate-900" id="moveApplicantName"></p></div><div><label class="block font-bold text-slate-500 mb-2">কোথায় পাঠাতে চান?</label><select id="moveTargetSet" class="w-full px-3 py-2.5 rounded-xl border-2 border-[#00b4d8] font-bold bg-white focus:outline-none"></select></div></div><div class="bg-slate-50 px-6 py-3.5 flex justify-end gap-2 border-t border-slate-200"><button onclick="closeMoveModal()" class="px-4 py-2 rounded-xl border bg-white font-bold">বাতিল</button><button onclick="confirmMoveApplicant()" class="btn-primary-rtc text-white px-5 py-2 rounded-xl font-extrabold shadow"><i class="fa-solid fa-check mr-1"></i> কনফার্ম</button></div></div></div>
 
-  <div id="settingsModal" class="fixed inset-0 modal-bg hidden z-50 flex items-center justify-center p-3"><div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-lg overflow-hidden border border-slate-200"><div class="bg-[#0b132b] text-white px-6 py-4 flex justify-between items-center"><h3 class="font-extrabold text-sm flex items-center gap-2"><i class="fa-solid fa-sliders text-[#00b4d8]"></i> সেটিংস</h3><button onclick="closeSettingsModal()" class="text-white text-xl">&times;</button></div><div class="p-6 space-y-4 text-xs">
+  <div id="settingsModal" class="fixed inset-0 modal-bg hidden z-50 flex items-center justify-center p-3"><div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-lg overflow-hidden border border-slate-200"><div class="bg-[#0b132b] text-white px-6 py-4 flex justify-between items-center"><h3 class="font-extrabold text-sm flex items-center gap-2"><i class="fa-solid fa-sliders text-[#00b4d8]"></i> সেটিংস</h3><button onclick="closeSettingsModal()" class="text-white text-xl">&times;</button></div><div class="p-6 space-y-4 text-xs max-h-[68vh] overflow-y-auto">
     
     <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-center mb-2">
       <p class="text-xs text-slate-500 font-bold mb-1">💡 নোট:</p>
       <p class="text-[11px] text-slate-400">কমন পাসওয়ার্ড সেভ করলে তা ক্লাউডে (শুধু লগইন করা ইউজারদের জন্য) সেভ থাকবে।</p>
     </div>
+      <div id="driveOrganizeBox" style="display:none" class="bg-emerald-50 p-4 rounded-xl border border-emerald-200 text-center"><p class="text-xs text-emerald-800 font-bold mb-1">📁 Drive ফোল্ডার সাজান</p><div id="driveOrganizePending" style="display:none"><p class="text-[11px] text-emerald-700 mb-2">পুরনো <b id="driveOrganizeCount">0</b>টি ফোল্ডার এখনো সাজানো হয়নি (একবারই লাগে)</p><button type="button" onclick="organizeDriveFolders()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-bold">এখনই সাজান</button></div><p id="driveOrganizeDone" class="text-[11px] text-emerald-700">✅ সব ফোল্ডার সাজানো আছে। নতুন ফোল্ডার ও স্ট্যাটাস বদল নিজে নিজেই ঠিক জায়গায় যাবে।</p></div>
+      <div id="backupBox" style="display:none" class="bg-amber-50 p-4 rounded-xl border border-amber-200"><p class="text-xs text-amber-900 font-bold mb-1">🛡️ Drive অটো ব্যাকআপ</p><p id="backupLastText" class="text-[11px] text-amber-800 mb-2">লোড হচ্ছে...</p><div class="flex gap-2 flex-wrap"><button type="button" onclick="backupNow()" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold">এখনই ব্যাকআপ নিন</button><button type="button" onclick="loadBackupList()" class="bg-white border border-amber-300 text-amber-800 px-3 py-1.5 rounded-lg text-xs font-bold">ব্যাকআপ তালিকা / রিস্টোর</button></div><div id="backupListBox" class="mt-2 space-y-1 max-h-48 overflow-y-auto"></div></div>
     <div class="bg-slate-50 p-4 rounded-xl border border-slate-200"><label class="block font-bold text-slate-600 mb-1">🔑 কমন পাসওয়ার্ড</label><input type="text" id="settingDefaultPass" class="w-full px-3 py-2 rounded-lg border border-slate-300 font-bold mono-type"></div><div class="bg-slate-50 p-4 rounded-xl border border-slate-200"><label class="block font-bold text-slate-600 mb-1">🌐 Firebase Cloud URL (লাইভ সিঙ্ক)</label><input type="url" id="settingCloudUrl" class="w-full px-3 py-2 rounded-lg border border-slate-300"></div><div class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex justify-between items-center"><div><p class="font-bold text-slate-700">📂 রিস্টোর</p></div><label class="cursor-pointer bg-slate-800 text-white px-3 py-1.5 rounded-lg font-bold">ফাইল দিন <input type="file" accept=".json" onchange="importBackup(event)" class="hidden"></label></div></div><div class="bg-slate-50 px-6 py-3.5 flex justify-end gap-2 border-t border-slate-200"><button onclick="closeSettingsModal()" class="px-4 py-2 rounded-xl border bg-white font-bold">বন্ধ</button><button onclick="saveSettings()" class="btn-primary-rtc text-white px-5 py-2 rounded-xl font-bold shadow">সেভ করুন</button></div></div></div>
 
   <div id="toast" class="fixed bottom-6 right-6 bg-[#0b132b] text-white px-5 py-3.5 rounded-2xl shadow-2xl text-xs font-bold hidden z-50 flex items-center gap-3 border-l-4 border-[#00b4d8] animate-[fadeInSlide_0.3s_ease-out_forwards]"><i class="fa-solid fa-circle-check text-[#00b4d8] text-base"></i> <span id="toastMsg" class="tracking-wide">Action Done!</span></div>
@@ -354,9 +379,11 @@
     };
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
+    const rtdb = (typeof firebase.database === 'function') ? firebase.database() : null;   // অ্যাটমিক ট্রানজ্যাকশনের জন্য (লোড না হলে আগের REST পদ্ধতি চলবে)
 
     const AUTO_FIREBASE_URL = "https://rtcvisa-fdbb5-default-rtdb.firebaseio.com";
     const AUTO_LOGO_NAME = "logo.png";
+    const BD_TIME_OPTS = { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Dhaka' };
     // ==========================================
 
     let visaFiles = JSON.parse(localStorage.getItem('rtc_visa_files') || '[]');
@@ -368,7 +395,7 @@
     const DRIVE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw9zJgVEYhe0wFFbNYnkNoyPRGH7GcpCOEg4Jh3SwJBrYtGNlRai9iMgg84855bekxI/exec";
     const ADMIN_HASHES = ['5d1960914a680f8650fdae52e5b520e50ab3e91d3935d0a42e460dd3f9202342', '77a3013bd4968ef24c67b8d9e9090705de858ed888c6050222f6bf09e49518f8'];
     const VISA_FEE_PER_PERSON = 1500; let baseFeeManual = false;
-    let isAdmin = false; let modalDriveFolderId = ''; let modalDriveFolderName = ''; let modalNewDriveIds = []; let modalOrphanDriveIds = [];
+    let isAdmin = false; let modalFolderNew = false; let modalStatusAtCreate = ''; let modalDriveFolderId = ''; let modalDriveFolderName = ''; let modalNewDriveIds = []; let modalOrphanDriveIds = [];
     const driveEnabled = () => !DRIVE_SCRIPT_URL.startsWith('PASTE');
 
     let activeTab = 'RUNNING'; let viewMode = localStorage.getItem('rtc_view_mode') || 'CARD'; let tempApplicants = [];
@@ -381,7 +408,7 @@
           document.getElementById('mainAppContent').classList.remove('hidden');
           if (customLogo) applyCustomLogo(customLogo);
           if (cloudUrl) { fetchFromCloud(true); loadCloudSettings(); }
-          updateAdminState(user); driveWarmUp();
+          updateAdminState(user); driveWarmUp(); flushLogQueue(); setTimeout(autoBackupCheck, 25000);
           
           // Show user name in Sidebar
           let dispName = user.displayName || user.email.split('@')[0];
@@ -392,7 +419,7 @@
           document.getElementById('mainAppContent').classList.add('hidden'); 
           document.getElementById('lockScreen').classList.remove('hidden'); 
           isAdmin = false; applyAdminUI();
-          localStorage.removeItem('rtc_visa_files'); visaFiles = []; lastCloudText = '';
+          localStorage.removeItem('rtc_visa_files'); visaFiles = []; lastCloudText = ''; cloudSnap = {};
           if (customLogo) applyCustomLogo(customLogo);
         }
       });
@@ -428,12 +455,16 @@
       auth.signOut().catch(e => console.error("Logout Error:", e));
     }
 
-    function getTodayStr() { return new Date().toISOString().slice(0, 10); }
+    // 🇧🇩 সব তারিখ/সময় বাংলাদেশ সময় (Asia/Dhaka, UTC+6) ধরে হিসাব হয় — ডিভাইসের টাইমজোন যা-ই হোক
+    function getTodayStr() { return new Date(Date.now() + 6 * 3600 * 1000).toISOString().slice(0, 10); }
+    function dayDiff(a, b) { return Math.round((Date.parse(a + 'T00:00:00Z') - Date.parse(b + 'T00:00:00Z')) / 86400000); }
+    function isDateExpired(ds) { if (!ds) return false; return dayDiff(getTodayStr(), ds) >= 30; }
+    function isAppt(f) { return !!(f && (f.isAppointed || f.appointmentDate)); }
 
     function getBgdExpiryInfo(applicant, fileSet) {
       if (!applicant.isSubmitted || !applicant.subDate) return { status: 'NONE', badgeHtml: '' };
-      if (fileSet.appointmentDate || fileSet.isDelivered || fileSet.isReturned) return { status: 'SLOT_TAKEN', badgeHtml: `<span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded text-[10px] font-extrabold"><i class="fa-solid fa-check mr-1"></i>স্লট/কাজ সম্পন্ন</span>` };
-      const diffDays = Math.floor((new Date(getTodayStr() + 'T00:00:00').getTime() - new Date(applicant.subDate + 'T00:00:00').getTime()) / (1000 * 60 * 60 * 24));
+      if (isAppt(fileSet) || fileSet.isDelivered || fileSet.isReturned) return { status: 'SLOT_TAKEN', badgeHtml: `<span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded text-[10px] font-extrabold"><i class="fa-solid fa-check mr-1"></i>স্লট/কাজ সম্পন্ন</span>` };
+      const diffDays = dayDiff(getTodayStr(), applicant.subDate);
       const daysLeft = 30 - diffDays;
       if (daysLeft <= 0) return { status: 'EXPIRED', badgeHtml: `<span class="bg-red-100 border border-red-300 text-red-700 px-2 py-0.5 rounded text-[10px] font-extrabold blink-alert"><i class="fa-solid fa-triangle-exclamation mr-1"></i>মেয়াদ শেষ (${Math.abs(daysLeft)} দিন ওভার)</span>` };
       if (daysLeft <= 5) return { status: 'WARNING', badgeHtml: `<span class="bg-amber-100 border border-amber-300 text-amber-800 px-2 py-0.5 rounded text-[10px] font-extrabold"><i class="fa-solid fa-clock mr-1"></i>মাত্র ${daysLeft} দিন মেয়াদ!</span>` };
@@ -456,7 +487,7 @@
       const f = visaFiles.find(x => x.id === fileId); if (!f || !f.applicants[appIdx]) return;
       if (!confirm(`"${f.applicants[appIdx].name}"-কে মেইন ফাইল করতে চান?`)) return;
       f.applicants.unshift(f.applicants.splice(appIdx, 1)[0]);
-      f.updatedAt = new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }); f.updatedBy = whoAmI();
+      f.updatedAt = new Date().toLocaleString('en-GB', BD_TIME_OPTS); f.updatedBy = whoAmI();
       renderFiles(); syncToCloud(); showToast('⭐ মেইন ফাইল পরিবর্তন হয়েছে!'); driveSyncSet(f);
     }
     function makeMainForm(idx) { syncTempInputs(); tempApplicants.unshift(tempApplicants.splice(idx, 1)[0]); renderApplicantForms(); }
@@ -467,7 +498,7 @@
       document.getElementById('moveApplicantName').innerText = f.applicants[appIdx].name || 'Unnamed';
       const select = document.getElementById('moveTargetSet');
       select.innerHTML = '<option value="NEW">✨ আলাদা নতুন ফাইল তৈরি করুন</option>';
-      visaFiles.forEach(t => { if (t.id !== fileId && !t.isDeleted && !t.isDelivered && !t.isReturned) select.innerHTML += `<option value="${t.id}">📂 যুক্ত করুন: ${t.applicants[0]?.name} (${t.accountPhone}) - ${t.applicants.length} জন</option>`; });
+      visaFiles.forEach(t => { if (t.id !== fileId && !t.isDeleted && !t.isDelivered && !t.isReturned) select.innerHTML += `<option value="${t.id}">📂 যুক্ত করুন: ${escHtml(t.applicants[0]?.name)} (${escHtml(t.accountPhone)}) - ${t.applicants.length} জন</option>`; });
       document.getElementById('moveApplicantModal').classList.remove('hidden');
     }
     function closeMoveModal() { document.getElementById('moveApplicantModal').classList.add('hidden'); }
@@ -476,17 +507,17 @@
       const sFile = visaFiles.find(x => x.id === sId); if (!sFile) return;
       if (tId !== 'NEW') { const tChk = visaFiles.find(x => x.id === tId); if (!tChk) return; if (tChk.applicants.length >= 4) { alert('ফাইলে ৪ জন পূর্ণ!'); return; } }
       const sOldCount = sFile.applicants.length; const appToMove = sFile.applicants.splice(aIdx, 1)[0];
-      const now = new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+      const now = new Date().toLocaleString('en-GB', BD_TIME_OPTS);
       let dest;
       if (tId === 'NEW') {
-        const newF = JSON.parse(JSON.stringify(sFile)); newF.id = 'SET_' + Date.now(); newF.driveFolderId = ''; newF.driveFolderName = ''; newF.applicants = [appToMove]; newF.appointmentDate = ''; newF.feeStatus = 'UNPAID'; newF.billTotal = 0; newF.billAdvance = 0; newF.billDue = 0; newF.baseVisaFee = VISA_FEE_PER_PERSON; newF.softwareCharge = 0; newF.updatedAt = now; newF.updatedBy = whoAmI(); visaFiles.unshift(newF); dest = newF;
+        const newF = JSON.parse(JSON.stringify(sFile)); newF.id = 'SET_' + Date.now(); newF.driveFolderId = ''; newF.driveFolderName = ''; newF.driveStatus = ''; newF.applicants = [appToMove]; newF.appointmentDate = ''; newF.isAppointed = false; newF.invoiceFileId = ''; newF.invoiceFileName = ''; newF.invoiceName = ''; newF.invoiceBy = ''; newF.invoiceAt = ''; newF.feeStatus = 'UNPAID'; newF.billTotal = 0; newF.billAdvance = 0; newF.billDue = 0; newF.baseVisaFee = VISA_FEE_PER_PERSON; newF.softwareCharge = 0; newF.updatedAt = now; newF.updatedBy = whoAmI(); visaFiles.unshift(newF); dest = newF;
       } else {
         const tFile = visaFiles.find(x => x.id === tId); const tOld = tFile.applicants.length;
         tFile.applicants.push(appToMove); tFile.updatedAt = now; tFile.updatedBy = whoAmI();
         if (tFile.baseVisaFee === VISA_FEE_PER_PERSON * tOld) tFile.baseVisaFee = VISA_FEE_PER_PERSON * tFile.applicants.length; dest = tFile;
       }
       const sRemoved = sFile.applicants.length === 0;
-      if (sRemoved) visaFiles = visaFiles.filter(x => x.id !== sId);
+      if (sRemoved) { visaFiles = visaFiles.filter(x => x.id !== sId); logHint = 'ট্রান্সফারের পর সেটটি ফাঁকা হয়ে সরে গেছে'; }
       else { sFile.updatedAt = now; sFile.updatedBy = whoAmI(); if (sFile.baseVisaFee === VISA_FEE_PER_PERSON * sOldCount) sFile.baseVisaFee = VISA_FEE_PER_PERSON * sFile.applicants.length; }
       closeMoveModal(); renderFiles(); syncToCloud(); showToast('🔄 ট্রান্সফার সম্পন্ন!');
       driveAfterMove(sFile, sRemoved, dest, appToMove);
@@ -496,8 +527,10 @@
       const f = visaFiles.find(x => x.id === fileId); const a = f.applicants[appIdx];
       if (!confirm(`🔄 "${a.name}"-এর ফাইল রিসেট করবেন?`)) return;
       if (a.bgdNo) a.prevBgd = a.bgdNo;
-      a.tempId = ''; a.bgdNo = ''; if (a.driveFileId) { driveCall({ action: 'deleteFiles', fileIds: [a.driveFileId] }).catch(() => { }); } a.pdfName = ''; a.driveFileId = ''; a.driveFileName = ''; a.isSubmitted = false; a.subDate = '';
-      f.updatedAt = new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }); f.updatedBy = whoAmI();
+      if (a.driveFileId) { const oldTag = safeName(a.bgdNo || a.subDate || stampNow()); driveCall({ action: 'syncSet', folderId: '', files: [{ fileId: a.driveFileId, name: safeName(a.name) + ' (OLD BGD ' + oldTag + ').pdf' }] }).catch(() => { }); }
+            a.renewing = true;
+      a.tempId = ''; a.bgdNo = ''; a.pdfName = ''; a.driveFileId = ''; a.driveFileName = ''; a.isSubmitted = false; a.subDate = '';
+      f.updatedAt = new Date().toLocaleString('en-GB', BD_TIME_OPTS); f.updatedBy = whoAmI();
       renderFiles(); syncToCloud(); showToast('Re-Apply রেডি!');
     }
 
@@ -511,7 +544,7 @@
     function calcQuickReturn() { document.getElementById('qRetRefund').value = Math.max(0, (parseFloat(document.getElementById('qRetAdvance').value)||0) - (parseFloat(document.getElementById('qRetKept').value)||0)); }
     function confirmQuickReturn() {
       const f = visaFiles.find(x => x.id === document.getElementById('returnTargetFileId').value);
-      f.isReturned = true; f.isDelivered = false; f.billAdvance = parseFloat(document.getElementById('qRetAdvance').value)||0; f.keptCharge = parseFloat(document.getElementById('qRetKept').value)||0; f.refundAmount = parseFloat(document.getElementById('qRetRefund').value)||0; f.returnReason = document.getElementById('qRetNote').value.trim(); f.billDue = 0; f.updatedAt = new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }); f.updatedBy = whoAmI();
+      f.isReturned = true; f.isDelivered = false; f.billAdvance = parseFloat(document.getElementById('qRetAdvance').value)||0; f.keptCharge = parseFloat(document.getElementById('qRetKept').value)||0; f.refundAmount = parseFloat(document.getElementById('qRetRefund').value)||0; f.returnReason = document.getElementById('qRetNote').value.trim(); f.billDue = 0; f.updatedAt = new Date().toLocaleString('en-GB', BD_TIME_OPTS); f.updatedBy = whoAmI();
       closeQuickReturnModal(); renderFiles(); syncToCloud(); showToast('🔙 ফাইল ফেরত সম্পন্ন!');
     }
 
@@ -534,14 +567,14 @@
 
     function switchTab(tabName) {
       activeTab = tabName;
-      ['RUNNING', 'EXPIRING', 'SIGNED_UP', 'APPOINTMENT', 'DELIVERED', 'RETURNED', 'ALL', 'RECYCLE'].forEach(t => {
+      ['RUNNING', 'EXPIRING', 'EXPIRED', 'SIGNED_UP', 'APPOINTMENT', 'DELIVERED', 'RETURNED', 'ALL', 'RECYCLE', 'ACTIVITY'].forEach(t => {
         const btn = document.getElementById(`tab_${t}`);
         if (t === tabName) btn.className = 'w-full flex items-center justify-between px-4 py-3 rounded-2xl btn-primary-rtc text-white shadow-md transition';
         else btn.className = 'w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-white/10 text-slate-300 transition';
       });
-      const titles = { 'RUNNING': '📂 রানিং ফাইল', 'EXPIRING': '⚠️ মেয়াদ সতর্কতা', 'SIGNED_UP': '🟣 সাইন-আপ সম্পন্ন', 'APPOINTMENT': '📅 অ্যাপয়েন্টমেন্ট', 'DELIVERED': '📦 ডেলিভারি', 'RETURNED': '🔙 ফেরত ফাইল', 'ALL': '📋 সব ফাইল', 'RECYCLE': '🗑️ রিসাইকেল বিন' };
-      document.getElementById('currentViewTitle').innerText = titles[tabName];
+      updateViewTitle();
       renderFiles();
+      if (tabName === 'ACTIVITY') loadActivity();
     }
     function setViewMode(mode) {
       viewMode = mode; localStorage.setItem('rtc_view_mode', mode);
@@ -552,7 +585,7 @@
 
     function populateWorkerDropdown() {
       const select = document.getElementById('filterWorker'); const workers = new Set(); visaFiles.forEach(f => { if (f.worker && !f.isDeleted) workers.add(f.worker.trim()); });
-      select.innerHTML = '<option value="ALL">সব ওয়ার্কার</option>'; workers.forEach(w => { select.innerHTML += `<option value="${w}">${w}</option>`; });
+      select.innerHTML = '<option value="ALL">সব ওয়ার্কার</option>'; workers.forEach(w => { select.innerHTML += `<option value="${escHtml(w)}">${escHtml(w)}</option>`; });
     }
 
     // New Calc Function with Profit checking
@@ -595,22 +628,88 @@
     }
 
     let cloudBusy = 0; let lastCloudText = '';
-    async function syncToCloud() {
+    // 🔄 সেফ সিঙ্ক: একজনের সেভ অন্যজনের পরিবর্তন মুছে দেয় না। সেভের সময় ক্লাউডের লেটেস্ট কপি এনে ফাইল ধরে ধরে মার্জ করে তারপর লেখা হয়
+    function snapFrom(list) { const m = {}; (list || []).forEach(f => { if (f && f.id) m[f.id] = JSON.stringify(f); }); return m; }
+    let cloudSnap = snapFrom(visaFiles);   // ক্লাউডের সাথে সর্বশেষ মিলানো অবস্থা (ফাইল-আইডি → JSON)
+    function localChanges() {
+      const ids = new Set(); const changed = [];
+      visaFiles.forEach(f => { ids.add(f.id); if (cloudSnap[f.id] !== JSON.stringify(f)) changed.push(f); });
+      return { changed: changed, deleted: Object.keys(cloudSnap).filter(id => !ids.has(id)) };
+    }
+    function hasPendingChanges() { const c = localChanges(); return c.changed.length > 0 || c.deleted.length > 0; }
+    function replaceInPlace(target, src) { Object.keys(target).forEach(k => delete target[k]); Object.assign(target, src); }
+    function cloudListOf(raw) { if (!raw || typeof raw !== 'object') return []; return (Array.isArray(raw) ? raw : Object.values(raw)).filter(x => x && typeof x === 'object' && x.id); }
+
+    let syncChain = Promise.resolve(); let syncQueued = 0; let syncGen = 0;
+    function syncToCloud() {
       safeLocalSave(); populateWorkerDropdown();
+      syncQueued++; syncChain = syncChain.then(doCloudSync, doCloudSync);   // একটার পর একটা চলে, গোলমাল হয় না
+      return syncChain;
+    }
+    async function doCloudSync() { syncGen++; try { await doCloudSyncInner(); } finally { syncQueued--; } }
+    async function doCloudSyncInner() {
       if (!cloudUrl || !auth.currentUser) return;
-      try { document.getElementById('syncStatusText').innerText = 'Syncing...'; const r = await cloudFetch('/rtc_visa_files.json', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(visaFiles) }); document.getElementById('syncStatusText').innerText = r.ok ? 'Live Sync Ready' : 'Sync Error'; }
-      catch (e) { document.getElementById('syncStatusText').innerText = 'Offline Mode'; }
+      const st = document.getElementById('syncStatusText');
+      try {
+        const ch = localChanges();
+        if (!ch.changed.length && !ch.deleted.length) { st.innerText = 'Live Sync Ready'; setTimeout(driveSyncStatuses, 800); return; }
+        st.innerText = 'Syncing...';
+        const oldSnap = cloudSnap; const delSet = new Set(ch.deleted); const chMap = {}; ch.changed.forEach(f => { chMap[f.id] = f; });
+        // ক্লাউডের লেটেস্ট তালিকার সাথে আমার পরিবর্তন মিলিয়ে চূড়ান্ত তালিকা বানায়
+        const mergeWith = (remote) => {
+          if (!remote.length && visaFiles.length) return visaFiles.slice();   // ক্লাউড খালি থাকলে লোকালটাই ভরে দেওয়া হয়
+          const remoteIds = new Set(remote.map(x => x.id)); const merged = [];
+          remote.forEach(r => { if (!delSet.has(r.id)) merged.push(chMap[r.id] || r); });
+          // নতুন ফাইল সামনে বসে; আগে ছিল কিন্তু এখন ক্লাউডে নেই = অন্য কেউ মুছেছে, তাই ফিরিয়ে আনা হয় না
+          return ch.changed.filter(f => !remoteIds.has(f.id) && oldSnap[f.id] === undefined).concat(merged);
+        };
+        let finalList;
+        if (rtdb) {
+          // 🔒 অ্যাটমিক লেখা: দুইজন একই মুহূর্তে সেভ করলে Firebase নিজে একজনের পর একজনের ডাটা মার্জ করে ঢোকায়, কারো পরিবর্তন হারায় না
+          if (navigator.onLine === false) throw new Error('OFFLINE');
+          const tx = rtdb.ref('rtc_visa_files').transaction(cur => { finalList = mergeWith(cloudListOf(cur)); return JSON.parse(JSON.stringify(finalList)); });
+          await Promise.race([tx, new Promise((_, rej) => setTimeout(() => rej(new Error('TIMEOUT')), 25000))]);
+        } else {
+          const rr = await cloudFetch('/rtc_visa_files.json'); if (!rr.ok) throw new Error('SYNC_READ');
+          finalList = mergeWith(cloudListOf(await rr.json()));
+          const pr = await cloudFetch('/rtc_visa_files.json', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(finalList) });
+          if (!pr.ok) throw new Error('SYNC_WRITE');
+        }
+        const sent = snapFrom(finalList);
+        logChanges(ch, oldSnap);   // 🕘 কে কী বদলালো তার এন্ট্রি অ্যাক্টিভিটি লগে যায়
+        // লোকালে অন্যদের পরিবর্তন ঢোকানো (অবজেক্ট একই রেখে)
+        let remoteApplied = false; const localById = {}; visaFiles.forEach(f => { localById[f.id] = f; });
+        const finalIds = new Set(finalList.map(f => f.id)); const next = [];
+        finalList.forEach(m => {
+          const l = localById[m.id];
+          if (!l) { next.push(m); remoteApplied = true; return; }
+          if (l !== m && oldSnap[m.id] === JSON.stringify(l)) { replaceInPlace(l, m); remoteApplied = true; }
+          next.push(l);
+        });
+        const madeMeanwhile = visaFiles.filter(l => !finalIds.has(l.id) && oldSnap[l.id] === undefined);   // সিঙ্ক চলার সময় বানানো নতুন ফাইল
+        visaFiles.forEach(l => { if (!finalIds.has(l.id) && oldSnap[l.id] !== undefined) remoteApplied = true; });
+        visaFiles = madeMeanwhile.concat(next); cloudSnap = sent;
+        safeLocalSave(); populateWorkerDropdown();
+        st.innerText = 'Live Sync Ready';
+        if (remoteApplied && !(document.activeElement && document.activeElement.tagName === 'INPUT')) renderFiles();
+      } catch (e) { console.warn('sync error', e); st.innerText = (e && (e.message === 'PERMISSION' || /permission_denied|permission denied/i.test(e.message || ''))) ? 'Permission Denied' : 'Offline Mode'; }
+      setTimeout(driveSyncStatuses, 800);
     }
     async function fetchFromCloud(silent = false) {
       if (!cloudUrl) { if (!silent) showToast('রিফ্রেশ সম্পন্ন!'); renderFiles(); return; }
       if (cloudBusy > 0 || !auth.currentUser) return;
       try {
+        await syncChain; const gen = syncGen;   // চলমান সেভ শেষ হওয়ার পর পড়া হয়
         const res = await cloudFetch('/rtc_visa_files.json');
         if (res.ok) {
           const txt = await res.text();
+          if (gen !== syncGen || syncQueued > 0) return;   // পড়ার মাঝে সেভ হয়ে গেলে এই ডাটা পুরনো, পরের বারে নেওয়া হবে
           if (txt !== lastCloudText) {
             lastCloudText = txt; const data = JSON.parse(txt);
-            if (Array.isArray(data)) { visaFiles = data; safeLocalSave(); populateWorkerDropdown(); renderFiles(); }
+            if (data && typeof data === 'object') {
+              if (hasPendingChanges()) { await syncToCloud(); }   // সেভ না হওয়া লোকাল পরিবর্তন থাকলে মার্জ করে পাঠানো হয়, মুছে ফেলা হয় না
+              else { const list = cloudListOf(data); visaFiles = list; cloudSnap = snapFrom(list); safeLocalSave(); populateWorkerDropdown(); renderFiles(); setTimeout(driveSyncStatuses, 1500); }
+            }
           }
           document.getElementById('syncStatusText').innerText = 'Live Sync Ready'; if (!silent) showToast('ক্লাউড ডাটা লোড হয়েছে!');
         }
@@ -624,12 +723,21 @@
       try { isAdmin = !!user && ADMIN_HASHES.includes(await sha256Hex((user.email || '').toLowerCase())); } catch (e) { isAdmin = false; }
       applyAdminUI(); renderFiles();
     }
+        function updateOrganizeBox() {
+      const box = document.getElementById('driveOrganizeBox'); if (!box) return;
+      const n = visaFiles.filter(f => f.driveFolderId && !f.isDeleted && !f.driveStatus).length;
+      box.style.display = isAdmin ? '' : 'none';
+      const p = document.getElementById('driveOrganizePending'), d = document.getElementById('driveOrganizeDone'), c = document.getElementById('driveOrganizeCount');
+      if (p) p.style.display = n > 0 ? '' : 'none'; if (d) d.style.display = n > 0 ? 'none' : ''; if (c) c.innerText = n;
+    }
     function applyAdminUI() {
-      const t = document.getElementById('tab_RECYCLE'); if (t) t.style.display = isAdmin ? '' : 'none';
-      if (!isAdmin && activeTab === 'RECYCLE') switchTab('RUNNING');
+      const t = document.getElementById('tab_RECYCLE'); if (t) t.style.display = isAdmin ? '' : 'none'; updateOrganizeBox();
+      const ta = document.getElementById('tab_ACTIVITY'); if (ta) ta.style.display = isAdmin ? '' : 'none';
+      const bb = document.getElementById('backupBox'); if (bb) bb.style.display = isAdmin ? '' : 'none';
+      if (!isAdmin && (activeTab === 'RECYCLE' || activeTab === 'ACTIVITY')) switchTab('RUNNING');
     }
     function whoAmI() { return auth.currentUser ? (auth.currentUser.displayName || (auth.currentUser.email || '').split('@')[0]).toUpperCase() : ''; }
-    function stampNow() { return new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }); }
+    function stampNow() { return new Date().toLocaleString('en-GB', BD_TIME_OPTS); }
     function safeName(s) { return String(s || 'Unnamed').replace(/[\\\/:*?"<>|]/g, ' ').replace(/\s+/g, ' ').trim() || 'Unnamed'; }
     
     function readFileAsDataURL(file) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = (e) => res(e.target.result); r.onerror = () => rej(r.error); r.readAsDataURL(file); }); }
@@ -654,23 +762,27 @@
     let lastWarm = 0;
     function driveWarmUp() { if (!driveEnabled() || document.hidden || !auth.currentUser) return; if (Date.now() - lastWarm < 230000) return; lastWarm = Date.now(); fetch(DRIVE_SCRIPT_URL, { mode: 'no-cors' }).catch(() => { }); }
     setInterval(driveWarmUp, 240000);
+    // 🕛 বাংলাদেশ সময়ে রাত ১২টা পার হলেই (অ্যাপ খোলা থাকলে) মেয়াদ নতুন করে হিসাব হয় ও Drive এর নাম ঠিক হয়
+    let lastDayStr = getTodayStr();
+    setInterval(() => { const d = getTodayStr(); if (d !== lastDayStr) { lastDayStr = d; if (auth.currentUser) { renderFiles(); setTimeout(driveSyncStatuses, 500); } } }, 30000);
+    setInterval(() => { if (!document.hidden) driveSyncStatuses(); }, 60000);
     async function driveUploadApplicant(o) {
       const dataUrl = o.dataUrl || await readFileAsDataURL(o.file); const nm = safeName(o.name);
-      const fileName = driveExpectedName({ name: o.name }, o.idx);
-      const d = await driveCall({ action: 'upload', folderId: o.folderId || '', folderName: safeName(o.folderName), fileName: fileName, data: dataUrl.split(',')[1], replaceFileId: o.replaceFileId || '' });
-      return { folderId: d.folderId, folderName: d.folderName, fileId: d.fileId, fileName: fileName };
+      const fileName = o.fileName || driveExpectedName({ name: o.name }, o.idx);
+      const d = await driveCall({ action: 'upload', folderId: o.folderId || '', folderName: safeName(o.folderName), fileName: fileName, data: dataUrl.split(',')[1], replaceFileId: o.replaceFileId || '', status: o.status || 'Running' }); return { folderId: d.folderId, folderName: d.folderName, fileId: d.fileId, fileName: fileName };
     }
-    function driveExpectedName(a, idx) { const nm = safeName(a.name); return idx === 0 ? '1 - ' + nm + ' (MAIN BGD).pdf' : nm + ' (BGD).pdf'; }
+    function driveExpectedName(a, idx, f) { const nm = safeName(a.name); const core = idx === 0 ? '1 - ' + nm + ' (MAIN BGD)' : nm + ' (BGD)'; const exp = !!(f && expiryRelevant(f) && needsRenewal(a, f)); return (exp ? 'EXPIRED - ' : '') + core + '.pdf'; }
     async function driveSyncSet(f) {
       if (!driveEnabled() || !f || !f.applicants || !f.applicants.length) return;
-      const mainNm = safeName(f.applicants[0].name); const files = [];
-      f.applicants.forEach((a, i) => { if (a.driveFileId) { const want = driveExpectedName(a, i); if (a.driveFileName !== want) files.push({ fileId: a.driveFileId, name: want }); } });
-      const folderChange = !!f.driveFolderId && f.driveFolderName !== mainNm;
+      const wantFolder = driveFolderNameFor(f); const files = [];
+      f.applicants.forEach((a, i) => { if (a.driveFileId) { const want = driveExpectedName(a, i, f); if (a.driveFileName !== want) files.push({ fileId: a.driveFileId, name: want }); } });
+      if (f.invoiceFileId) { const wantInv = invoiceFileNameFor(f); if (f.invoiceFileName !== wantInv) files.push({ fileId: f.invoiceFileId, name: wantInv }); }
+      const folderChange = !!f.driveFolderId && f.driveFolderName !== wantFolder;
       if (!files.length && !folderChange) return;
       try {
-        await driveCall({ action: 'syncSet', folderId: folderChange ? f.driveFolderId : '', folderName: mainNm, files: files });
-        files.forEach(x => { const a = f.applicants.find(y => y.driveFileId === x.fileId); if (a) a.driveFileName = x.name; });
-        if (folderChange) f.driveFolderName = mainNm; syncToCloud();
+        await driveCall({ action: 'syncSet', folderId: folderChange ? f.driveFolderId : '', folderName: wantFolder, files: files });
+        files.forEach(x => { const a = f.applicants.find(y => y.driveFileId === x.fileId); if (a) a.driveFileName = x.name; if (f.invoiceFileId === x.fileId) f.invoiceFileName = x.name; });
+        if (folderChange) f.driveFolderName = wantFolder; syncToCloud();
       } catch (e) { console.warn('driveSyncSet failed', e); }
     }
     async function driveAfterMove(sFile, sRemoved, dest, moved) {
@@ -678,7 +790,8 @@
       cloudBusy++;
       try {
         if (moved.driveFileId) {
-          const r = await driveCall({ action: 'moveFile', fileId: moved.driveFileId, toFolderId: dest.driveFolderId || '', toFolderName: safeName(dest.applicants[0].name), fromFolderId: sFile.driveFolderId || '', trashFromIfEmpty: !!sRemoved });
+          const r = await driveCall({ action: 'moveFile', fileId: moved.driveFileId, toFolderId: dest.driveFolderId || '', toFolderName: safeName(dest.applicants[0].name), fromFolderId: sFile.driveFolderId || '', trashFromIfEmpty: !!sRemoved, status: driveStatusOf(dest) });
+          if (!dest.driveFolderId) dest.driveStatus = driveStatusOf(dest);
           dest.driveFolderId = r.folderId; dest.driveFolderName = r.folderName;
         } else if (sRemoved && sFile.driveFolderId) { await driveCall({ action: 'deleteFiles', fileIds: [], folderIdIfEmpty: sFile.driveFolderId }); }
       } catch (e) { console.warn('drive move failed', e); }
@@ -686,6 +799,61 @@
       await driveSyncSet(dest); if (!sRemoved) await driveSyncSet(sFile);
       syncToCloud();
     }
+        // ================= 📁 Drive ফোল্ডার: Running / Delivered / Returned =================
+    function needsRenewal(a, f) { return (!!a.renewing && !(a.isSubmitted && a.subDate)) || getBgdExpiryInfo(a, f).status === 'EXPIRED'; }
+    function expiryRelevant(f) { return !(f.isReturned || f.isDelivered || isAppt(f)); }
+    function expiredPeople(f) { return expiryRelevant(f) ? f.applicants.filter(a => needsRenewal(a, f)) : []; }
+    function driveFolderNameFor(f) {
+      const base = safeName(f.applicants[0] && f.applicants[0].name); const ex = expiredPeople(f);
+      return ex.length ? base + ' [EXPIRED - ' + ex.map(a => safeName(a.name)).join(', ') + ']' : base;
+    }
+    function driveStatusOf(f) {
+      if (f.isReturned) return 'Returned'; if (f.isDelivered) return 'Delivered';
+      // সবাই expired হলে তবেই Expired ফোল্ডার; একজনও কাজ চালানোর মতো থাকলে ফাইল Running এই থাকে (নাম/ট্যাগে expired বোঝা যায়)
+      if (!isAppt(f) && f.applicants.length && f.applicants.every(a => needsRenewal(a, f))) return 'Expired';
+      return 'Running';
+    }
+    let statusSyncBusy = false; const statusSyncTried = {};
+    const nameSyncTried = {};
+    function driveNamesDrift(f) {
+      if (f.driveFolderName !== driveFolderNameFor(f)) return true;
+      if (f.applicants.some((a, i) => a.driveFileId && a.driveFileName !== driveExpectedName(a, i, f))) return true;
+      return !!(f.invoiceFileId && f.invoiceFileName !== invoiceFileNameFor(f));
+    }
+    async function driveSyncStatuses() {
+      if (!driveEnabled() || !auth.currentUser || statusSyncBusy) return;
+      const organized = visaFiles.filter(f => f.driveFolderId && f.driveStatus && !f.isDeleted);
+      const todo = organized.filter(f => f.driveStatus !== driveStatusOf(f) && (Date.now() - (statusSyncTried[f.id] || 0) > 60000));
+      const drift = organized.filter(f => driveNamesDrift(f) && (Date.now() - (nameSyncTried[f.id] || 0) > 60000));
+      if (!todo.length && !drift.length) return;
+      statusSyncBusy = true; let changed = false;
+      try {
+        for (const f of todo) {
+          statusSyncTried[f.id] = Date.now(); const want = driveStatusOf(f);
+          try { await driveCall({ action: 'setStatus', folderId: f.driveFolderId, status: want }); f.driveStatus = want; changed = true; } catch (e) { console.warn('status folder move failed', e); }
+        }
+        for (const f of drift.slice(0, 12)) { nameSyncTried[f.id] = Date.now(); await driveSyncSet(f); }
+      } finally { statusSyncBusy = false; }
+      if (changed) syncToCloud();
+    }
+    async function organizeDriveFolders() {
+      if (!isAdmin) return; if (!driveEnabled()) { alert('Drive এর URL বসানো নেই!'); return; }
+      const todo = visaFiles.filter(f => f.driveFolderId && !f.isDeleted && !f.driveStatus);
+      if (!todo.length) { showToast('সাজানোর মতো পুরনো ফোল্ডার নেই ✅'); return; }
+      if (!confirm(todo.length + 'টি ফোল্ডার Running / Delivered / Returned ফোল্ডারে সাজানো হবে। ট্যাব বন্ধ করবেন না। চালাবেন?')) return;
+      cloudBusy++; let ok = 0, miss = 0;
+      try {
+        for (let i = 0; i < todo.length; i += 25) {
+          const batch = todo.slice(i, i + 25); showToast('⏳ সাজানো হচ্ছে... ' + Math.min(i + 25, todo.length) + '/' + todo.length);
+          const d = await driveCall({ action: 'organize', items: batch.map(f => ({ folderId: f.driveFolderId, status: driveStatusOf(f) })) });
+          batch.forEach(f => { if (d.done.includes(f.driveFolderId)) { f.driveStatus = driveStatusOf(f); ok++; } else miss++; });
+          await syncToCloud();
+        }
+      } catch (e) { alert('মাঝপথে থেমেছে (' + ok + 'টি সাজানো হয়েছে)।\n\nকারণ: ' + ((e && e.message) || e) + '\n\nআবার চাপলে বাকিগুলো সাজাবে।'); }
+      cloudBusy = Math.max(0, cloudBusy - 1); renderFiles();
+      showToast('✅ ' + ok + 'টি সাজানো হয়েছে' + (miss ? ', ' + miss + 'টি Drive এ পাওয়া যায়নি' : ''));
+    }
+
     function removeFormPdf(i) {
       syncTempInputs(); const t = tempApplicants[i]; if (!t) return;
       if (t.driveFileId) modalOrphanDriveIds.push(t.driveFileId);
@@ -705,48 +873,133 @@
     async function permanentDeleteFile(id) {
       if (!isAdmin) return; const f = visaFiles.find(x => x.id === id); if (!f) return;
       const nm = (f.applicants[0] && f.applicants[0].name) || 'Unnamed';
-      if (!confirm('⚠️ "' + nm + '" ফাইলটি সব জায়গা থেকে (Google Drive সহ) চিরতরে মুছে যাবে।\nএটি আর ফেরত আনা যাবে চৈতন্য। নিশ্চিত?')) return;
+      if (!confirm('⚠️ "' + nm + '" ফাইলটি সব জায়গা থেকে (Google Drive সহ) চিরতরে মুছে যাবে।\nএটি আর ফেরত আনা যাবে না। নিশ্চিত?')) return;
       cloudBusy++; showToast('⏳ মুছে ফেলা হচ্ছে...');
       try {
         let trashedOnly = 0;
         const driveIds = f.applicants.map(a => a.driveFileId).filter(Boolean);
         if (driveIds.length || f.driveFolderId) { const d = await driveCall({ action: 'deleteSet', fileIds: driveIds, folderId: f.driveFolderId || '' }); trashedOnly = d.trashedOnly || 0; }
-        visaFiles = visaFiles.filter(x => x.id !== id);
+        visaFiles = visaFiles.filter(x => x.id !== id); logHint = 'চিরতরে ডিলিট (Drive সহ)';
         cloudBusy--; renderFiles(); await syncToCloud();
         showToast(trashedOnly ? '🗑️ মুছে গেছে (Drive ট্র্যাশে ৩০ দিন থাকবে)' : '🗑️ সব জায়গা থেকে চিরতরে মুছে গেছে');
       } catch (e) { cloudBusy--; alert('সব জায়গা থেকে মোছা যায়নি (Drive কানেকশন চেক করুন), তাই ফাইলটি রিসাইকেল বিনেই আছে।'); }
     }
     function renderRecycleView(container, files) {
-      const fmt = (iso) => { try { return new Date(iso).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }); } catch (e) { return ''; } };
+      const fmt = (iso) => { try { return new Date(iso).toLocaleString('en-GB', BD_TIME_OPTS); } catch (e) { return ''; } };
       container.innerHTML = `<div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-x-auto"><table class="w-full text-left text-xs border-collapse">
         <thead><tr class="bg-slate-50 text-slate-500 font-extrabold border-b border-slate-200 uppercase tracking-wide"><th class="p-3.5">মেইন আবেদনকারী</th><th class="p-3.5">কে মুছেছে</th><th class="p-3.5">কখন</th><th class="p-3.5">PDF</th><th class="p-3.5">অ্যাকশন</th></tr></thead>
         <tbody class="divide-y divide-slate-100 font-medium">${files.map(f => `<tr class="hover:bg-[#f4f7fa] transition">
-          <td class="p-3.5"><div class="font-extrabold text-[#0b132b] text-sm">${(f.applicants[0] && f.applicants[0].name) || 'Unnamed'}</div><div class="text-[10px] text-slate-500 font-bold mt-0.5">মোট ${f.applicants.length} জন</div></td>
-          <td class="p-3.5 text-slate-600">${(f.deletedBy || '').split('@')[0]}</td><td class="p-3.5 text-slate-600">${fmt(f.deletedAt)}</td>
+          <td class="p-3.5"><div class="font-extrabold text-[#0b132b] text-sm">${escHtml((f.applicants[0] && f.applicants[0].name) || 'Unnamed')}</div><div class="text-[10px] text-slate-500 font-bold mt-0.5">মোট ${f.applicants.length} জন</div></td>
+          <td class="p-3.5 text-slate-600">${escHtml((f.deletedBy || '').split('@')[0])}</td><td class="p-3.5 text-slate-600">${fmt(f.deletedAt)}</td>
           <td class="p-3.5 text-slate-600">${f.applicants.filter(a => a.driveFileId).length}টি</td>
           <td class="p-3.5 space-x-1"><button onclick="restoreFile('${f.id}')" class="bg-white text-emerald-700 px-3 py-1 rounded-lg border border-emerald-200 font-bold shadow-sm hover:bg-emerald-50"><i class="fa-solid fa-rotate-left mr-1"></i>ফিরিয়ে আনুন</button><button onclick="permanentDeleteFile('${f.id}')" class="bg-rose-600 text-white px-3 py-1 rounded-lg font-bold shadow-sm hover:bg-rose-700"><i class="fa-solid fa-trash mr-1"></i>চিরতরে মুছুন</button></td></tr>`).join('')}</tbody></table></div>`;
     }
 
     function toggleDelivery(fileId) {
       const f = visaFiles.find(x => x.id === fileId); f.isDelivered = !f.isDelivered; if (f.isDelivered) f.isReturned = false;
-      f.updatedAt = new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }); f.updatedBy = whoAmI();
+      f.updatedAt = new Date().toLocaleString('en-GB', BD_TIME_OPTS); f.updatedBy = whoAmI();
       renderFiles(); syncToCloud(); showToast(f.isDelivered ? '📦 ডেলিভারি সম্পন্ন!' : '📂 রানিং বোর্ডে রিস্টোর হয়েছে');
+    }
+        function invoiceFileNameFor(f) { return 'INVOICE - ' + safeName(f.applicants[0] && f.applicants[0].name) + '.pdf'; }
+        // ================= 📱 SMS অ্যাপ =================
+    let smsFilter = '';
+    function escHtml(t) { return String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+    function smsOf(f) { return ((f && f.smsApp) || 'Rtcsms').trim() || 'Rtcsms'; }
+    function normSmsName(v) { const t = String(v || '').replace(/\s+/g, ' ').trim(); if (!t) return 'Rtcsms'; const k = t.toLowerCase(); if (k === 'rtcsms') return 'Rtcsms'; const hit = visaFiles.find(f => !f.isDeleted && f.smsApp && f.smsApp.trim().toLowerCase() === k); return hit ? hit.smsApp.trim() : t; }
+    function setSmsFilter(v) { smsFilter = (smsFilter === v) ? '' : v; if (activeTab === 'RECYCLE' || activeTab === 'ACTIVITY') { switchTab('RUNNING'); return; } renderFiles(); }
+    const TAB_TITLES = { 'RUNNING': '📂 রানিং ফাইল', 'EXPIRING': '⏳ মেয়াদ সতর্কতা', 'EXPIRED': '⛔ Expired (মেয়াদ শেষ)', 'SIGNED_UP': '🟣 সাইন-আপ সম্পন্ন', 'APPOINTMENT': '📅 অ্যাপয়েন্টমেন্ট', 'DELIVERED': '📦 ডেলিভারি', 'RETURNED': '🔙 ফেরত ফাইল', 'ALL': '📋 সব ফাইল', 'RECYCLE': '🗑️ রিসাইকেল বিন', 'ACTIVITY': '🕘 অ্যাক্টিভিটি লগ' };
+    function updateViewTitle() { const el = document.getElementById('currentViewTitle'); if (!el) return; el.innerText = (TAB_TITLES[activeTab] || '') + ((smsFilter && activeTab !== 'RECYCLE' && activeTab !== 'ACTIVITY') ? '  ·  📱 ' + smsFilter : ''); }
+    let smsMenuOpen = localStorage.getItem('rtc_sms_menu_open') !== '0';
+    function toggleSmsMenu() { smsMenuOpen = !smsMenuOpen; localStorage.setItem('rtc_sms_menu_open', smsMenuOpen ? '1' : '0'); renderSmsMenu(); }
+    // সাইডবার মেনু: কোন SMS অ্যাপে কতগুলো চলমান ফাইল (লাল সংখ্যা = ওই অ্যাপের Expired ফাইল)। ক্লিক করলে বর্তমান ট্যাবেই ফিল্টার হয়
+    function renderSmsMenu() {
+      const box = document.getElementById('smsMenuList'); if (!box) return;
+      const act = visaFiles.filter(f => !f.isDeleted && !f.isDelivered && !f.isReturned);
+      const stat = {}; act.forEach(f => { const k = smsOf(f); const o = stat[k] || (stat[k] = { n: 0, x: 0 }); o.n++; if (hasExpired(f)) o.x++; });
+      if (smsFilter && !(smsFilter in stat)) stat[smsFilter] = { n: 0, x: 0 };
+      const names = Object.keys(stat).sort((a, b) => stat[b].n - stat[a].n || a.localeCompare(b));
+      const bd = document.getElementById('badgeSmsApps'); if (bd) bd.innerText = names.length;
+      const ch = document.getElementById('smsMenuChevron'); if (ch) ch.className = 'fa-solid text-[10px] ' + (smsMenuOpen ? 'fa-chevron-up' : 'fa-chevron-down');
+      if (!smsMenuOpen) { box.innerHTML = ''; return; }
+      const row = (label, n, x, on, data) => `<button type="button" ${data} class="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl text-[11px] font-bold transition ${on ? 'bg-indigo-600 text-white' : 'text-slate-300 hover:bg-white/10'}"><span class="truncate text-left">${label}</span><span class="flex items-center gap-1.5 flex-shrink-0">${x ? `<span title="Expired ফাইল" class="bg-red-500 text-white px-1.5 rounded-full text-[10px]">⛔${x}</span>` : ''}<span class="bg-white/15 px-2 py-0.5 rounded-full text-[11px]">${n}</span></span></button>`;
+      box.innerHTML = row('📱 সব অ্যাপ', act.length, 0, !smsFilter, `onclick="smsFilter=''; if(activeTab==='RECYCLE'){switchTab('RUNNING')}else{renderFiles()}"`) +
+        names.map(n => row('📱 ' + escHtml(n), stat[n].n, stat[n].x, smsFilter === n, `data-sms="${escHtml(n)}" onclick="setSmsFilter(this.dataset.sms)"`)).join('');
+    }
+    function refreshSmsDatalist() {
+      const dl = document.getElementById('smsAppList'); if (!dl) return;
+      const set = new Set(['Rtcsms']); visaFiles.forEach(f => { if (!f.isDeleted && f.smsApp && f.smsApp.trim()) set.add(f.smsApp.trim()); });
+      dl.innerHTML = Array.from(set).map(n => `<option value="${escHtml(n)}"></option>`).join('');
+    }
+    function renderSmsChips(list) {
+      const box = document.getElementById('smsChips'); if (!box) return;
+      if (activeTab === 'RECYCLE' || !list.length && !smsFilter) { box.innerHTML = ''; return; }
+      const counts = {}; list.forEach(f => { const k = smsOf(f); counts[k] = (counts[k] || 0) + 1; });
+      if (smsFilter && !(smsFilter in counts)) counts[smsFilter] = 0;
+      const names = Object.keys(counts).sort((a, b) => counts[b] - counts[a] || a.localeCompare(b));
+      const base = 'px-3 py-1.5 rounded-xl text-xs font-extrabold border transition';
+      box.innerHTML = '<span class="text-[11px] font-extrabold text-slate-500 uppercase mr-1"><i class="fa-solid fa-comment-sms mr-1"></i>SMS অ্যাপ:</span>' +
+        `<button type="button" onclick="smsFilter=''; renderFiles()" class="${base} ${!smsFilter ? 'bg-[#0b132b] text-white border-[#0b132b]' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}">সব (${list.length})</button>` +
+        names.map(n => `<button type="button" data-sms="${escHtml(n)}" onclick="setSmsFilter(this.dataset.sms)" class="${base} ${smsFilter === n ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-indigo-700 border-indigo-200 hover:bg-indigo-50'}">${escHtml(n)} (${counts[n]})</button>`).join('');
+    }
+    function toggleCardAppointed(fileId) {
+      const f = visaFiles.find(x => x.id === fileId); if (!f) return;
+      const now = isAppt(f); f.isAppointed = !now; if (now) f.appointmentDate = '';
+      f.updatedAt = stampNow(); f.updatedBy = whoAmI(); renderFiles(); syncToCloud(); showToast(f.isAppointed ? '📅 Appointed করা হয়েছে!' : 'Appointed বাতিল করা হয়েছে');
+    }
+    function openInvoice(fileId) {
+      const f = visaFiles.find(x => x.id === fileId); if (!f || !f.invoiceFileId) { alert('Invoice পাওয়া যায়নি! আবার আপলোড করুন।'); return; }
+      window.open('https://drive.google.com/file/d/' + f.invoiceFileId + '/view', '_blank');
+    }
+    async function quickUploadInvoice(fileId, event) {
+      if (cloudBusy > 0) { alert('⏳ একটি আপলোড চলছে, শেষ হওয়া পর্যন্ত অপেক্ষা করুন!'); event.target.value = ''; return; }
+      const file = event.target.files[0]; if (!file) return;
+      if (file.size > 5 * 1024 * 1024) { alert('PDF ৫ মেগাবাইটের নিচে হতে হবে!'); event.target.value = ''; return; }
+      const f = visaFiles.find(x => x.id === fileId); if (!f) return;
+      if (!driveEnabled()) { alert('Drive সেট করা নেই!'); event.target.value = ''; return; }
+      if (!((f.applicants[0].name || '').trim())) { alert('আগে মেইন আবেদনকারীর নাম লিখে সেভ করুন, তারপর Invoice দিন।'); event.target.value = ''; return; }
+      if (f.invoiceFileId && !confirm('এই Invoice দিয়ে আগেরটা বদলাবেন?\nআগের Invoice Drive থেকে মুছে যাবে।')) { event.target.value = ''; return; }
+      cloudBusy++; showToast('⏳ Invoice আপলোড হচ্ছে...');
+      try {
+        const hadFolder = !!f.driveFolderId;
+        const res = await driveUploadApplicant({ folderId: f.driveFolderId || '', folderName: f.applicants[0].name, fileName: invoiceFileNameFor(f), file: file, replaceFileId: f.invoiceFileId || '', status: driveStatusOf(f) });
+        if (!hadFolder) f.driveStatus = driveStatusOf(f);
+        f.driveFolderId = res.folderId; f.driveFolderName = res.folderName;
+        f.invoiceFileId = res.fileId; f.invoiceFileName = res.fileName; f.invoiceName = file.name; f.invoiceBy = whoAmI(); f.invoiceAt = stampNow(); f.isAppointed = true;
+        f.updatedAt = stampNow(); f.updatedBy = whoAmI();
+        renderFiles(); await syncToCloud(); showToast('🧾 Invoice সেভ হয়েছে, Appointed হয়েছে!');
+      } catch (e) { console.error(e); alert('Invoice আপলোড হয়নি!\n\nকারণ: ' + ((e && e.message) || e)); }
+      finally { cloudBusy = Math.max(0, cloudBusy - 1); event.target.value = ''; }
+    }
+    function quickSaveSubDate(fileId, appIdx) {
+      const f = visaFiles.find(x => x.id === fileId); if (!f) return; const a = f.applicants[appIdx]; if (!a) return;
+      const el = document.getElementById(`quick_subdate_${fileId}_${appIdx}`); const v = el ? el.value : '';
+      if (!v) { showToast('তারিখ খালি রাখা যাবে না'); renderFiles(); return; }
+      a.subDate = v; a.isSubmitted = true; delete a.renewing; f.updatedAt = stampNow(); f.updatedBy = whoAmI(); delete nameSyncTried[f.id]; delete statusSyncTried[f.id];
+      renderFiles(); syncToCloud(); showToast('📅 তারিখ আপডেট হয়েছে!');
     }
     function toggleCardSignUp(fileId) {
       const f = visaFiles.find(x => x.id === fileId); f.isSignedUp = !f.isSignedUp;
-      f.updatedAt = new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }); f.updatedBy = whoAmI();
+      f.updatedAt = new Date().toLocaleString('en-GB', BD_TIME_OPTS); f.updatedBy = whoAmI();
       renderFiles(); syncToCloud(); showToast('স্ট্যাটাস আপডেট হয়েছে!');
     }
 
     function quickSavePersonData(fileId, appIdx, alsoCopyTemp = false) {
-      const f = visaFiles.find(x => x.id === fileId); const a = f.applicants[appIdx];
+      const f = visaFiles.find(x => x.id === fileId); if (!f) return; const a = f.applicants[appIdx]; if (!a) return;
       const tIn = document.getElementById(`quick_temp_${fileId}_${appIdx}`); const bIn = document.getElementById(`quick_bgd_${fileId}_${appIdx}`); const sCk = document.getElementById(`quick_sub_${fileId}_${appIdx}`);
+      // ⚠️ সাবমিট টিক তুলে দিলে তারিখ মুছে যায় ও মেয়াদ গোনা বন্ধ হয় — তাই আগে নিশ্চিত করা হয়; মেয়াদ শেষ থাকলে "নতুন BGD লাগবে" চিহ্ন থেকে যায়
+      const bgdTyped = bIn ? bIn.value.trim() : (a.bgdNo || ''); let markRenewal = false;
+      if (sCk && !sCk.checked && a.isSubmitted && a.subDate && !bgdTyped) {
+        const st = getBgdExpiryInfo(a, f).status;
+        if (!confirm('"' + (a.name || 'Unnamed') + '"-এর সাবমিট বাদ দিলে BGD জমার তারিখ মুছে যাবে ও মেয়াদ গোনা বন্ধ হবে।' + (st === 'EXPIRED' ? '\n(মেয়াদ শেষ, তাই "নতুন BGD লাগবে" চিহ্ন থেকে যাবে)' : '') + '\n\nনিশ্চিত?')) { renderFiles(); return; }
+        markRenewal = (st === 'EXPIRED');
+      }
       if (tIn) a.tempId = tIn.value.trim(); if (bIn) a.bgdNo = bIn.value.trim(); if (sCk) a.isSubmitted = sCk.checked;
-      if (a.bgdNo && !sCk.checked) a.isSubmitted = true;
+      if (a.bgdNo && sCk && !sCk.checked) a.isSubmitted = true;
       if (a.isSubmitted && !a.subDate) a.subDate = getTodayStr(); else if (!a.isSubmitted) a.subDate = '';
-      f.updatedAt = new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }); f.updatedBy = whoAmI();
+      if (markRenewal) a.renewing = true;
+      f.updatedAt = new Date().toLocaleString('en-GB', BD_TIME_OPTS); f.updatedBy = whoAmI();
       renderFiles(); syncToCloud();
-      if (alsoCopyTemp) copyPersonData(a.tempId, a.name, 'Temp ID'); else showToast('✅ সেভ হয়েছে!');
+      if (alsoCopyTemp) copyPersonData(a.tempId, a.name, 'Temp ID'); else showToast('✅ সেভ হয়েছে!');
     }
 
     async function quickUploadCardPdf(fileId, appIdx, event) {
@@ -756,16 +1009,18 @@
       if (file.size > 5 * 1024 * 1024) { alert('PDF ৫ মেগাবাইটের নিচে হতে হবে!'); return; }
       
       const f = visaFiles.find(x => x.id === fileId); if (!f) return; const a = f.applicants[appIdx];
+      if (a.driveFileId && !confirm('এই PDF দিয়ে আগেরটা বদলাবেন?\nআগের PDF Drive থেকে মুছে যাবে।')) { event.target.value = ''; return; }
       if (!driveEnabled()) { alert('PDF রাখার জায়গা সেট করা নেই!'); return; }
       if (!((f.applicants[0].name || '').trim()) || !((a.name || '').trim())) { alert('আগে মেইন আবেদনকারী ও এই আবেদনকারীর নাম লিখে সেভ করুন, তারপর PDF দিন।'); event.target.value = ''; return; }
       
       cloudBusy++; showToast('⏳ PDF আপলোড হচ্ছে...');
       try {
-        const res = await driveUploadApplicant({ folderId: f.driveFolderId || '', folderName: f.applicants[0].name, idx: appIdx, name: a.name, file: file, replaceFileId: a.driveFileId || '' });
-        f.driveFolderId = res.folderId; f.driveFolderName = res.folderName; a.driveFileId = res.fileId; a.driveFileName = res.fileName;
+        const hadFolder = !!f.driveFolderId;
+          const res = await driveUploadApplicant({ folderId: f.driveFolderId || '', folderName: f.applicants[0].name, idx: appIdx, name: a.name, file: file, replaceFileId: a.driveFileId || '', status: driveStatusOf(f) });
+          if (!hadFolder) f.driveStatus = driveStatusOf(f);
+          f.driveFolderId = res.folderId; f.driveFolderName = res.folderName; a.driveFileId = res.fileId; a.driveFileName = res.fileName;
         
-        a.pdfName = file.name; a.bgdUploadedBy = whoAmI(); a.bgdUploadedAt = stampNow(); a.isSubmitted = true; if (!a.subDate) a.subDate = getTodayStr();
-        f.updatedAt = stampNow(); f.updatedBy = whoAmI();
+        delete a.renewing; a.pdfName = file.name; a.bgdUploadedBy = whoAmI(); a.bgdUploadedAt = stampNow(); a.isSubmitted = true; if (!a.subDate || isDateExpired(a.subDate)) a.subDate = getTodayStr(); f.updatedAt = stampNow(); f.updatedBy = whoAmI();
         
         renderFiles(); 
         await syncToCloud(); // 🔥 FIX: Database-e save howar jonno wait korbe
@@ -774,32 +1029,37 @@
       finally { cloudBusy = Math.max(0, cloudBusy - 1); event.target.value = ''; }
     }
 
-    function hasExpiringOrExpiredBgd(fileSet) {
-      if (fileSet.isDelivered || fileSet.isReturned || fileSet.appointmentDate) return false;
-      return fileSet.applicants.some(a => { const i = getBgdExpiryInfo(a, fileSet); return i.status === 'EXPIRED' || i.status === 'WARNING'; });
-    }
+    // ⛔ Expired = মেয়াদ শেষ বা নতুন BGD লাগবে | ⏳ Warning = আর ৫ দিন বা কম বাকি
+    function hasExpired(f) { return expiredPeople(f).length > 0; }
+    function warningPeople(f) { return expiryRelevant(f) ? f.applicants.filter(a => !needsRenewal(a, f) && getBgdExpiryInfo(a, f).status === 'WARNING') : []; }
+    function hasWarning(f) { return warningPeople(f).length > 0; }
 
-    function renderFiles() {
+        function renderFiles() {
+      updateOrganizeBox(); updateViewTitle(); renderSmsMenu();
+
       const container = document.getElementById('fileListContainer');
       const search = document.getElementById('searchInput').value.toLowerCase().trim();
       const vType = document.getElementById('filterVisaType').value; const workerVal = document.getElementById('filterWorker').value;
 
-      let cntR = 0, cntE = 0, cntS = 0, cntA = 0, cntD = 0, cntRet = 0, cntDel = 0;
+      let cntR = 0, cntE = 0, cntX = 0, cntS = 0, cntA = 0, cntD = 0, cntRet = 0, cntDel = 0;
       visaFiles.forEach(f => {
         if (f.isDeleted) { cntDel++; return; }
         const isClosed = f.isDelivered || f.isReturned;
-        if (!isClosed) cntR++; if (hasExpiringOrExpiredBgd(f)) cntE++; if (f.isSignedUp && !isClosed) cntS++; if (f.appointmentDate && !isClosed) cntA++; if (f.isDelivered) cntD++; if (f.isReturned) cntRet++;
+        if (!isClosed) cntR++; if (hasWarning(f)) cntE++; if (hasExpired(f)) cntX++; if (f.isSignedUp && !isClosed) cntS++; if (isAppt(f) && !isClosed) cntA++; if (f.isDelivered) cntD++; if (f.isReturned) cntRet++;
       });
-      document.getElementById('badgeRunning').innerText = cntR; document.getElementById('badgeExpiring').innerText = cntE; document.getElementById('badgeSignedUp').innerText = cntS; document.getElementById('badgeAppointment').innerText = cntA; document.getElementById('badgeDelivered').innerText = cntD; document.getElementById('badgeReturned').innerText = cntRet; document.getElementById('badgeAll').innerText = visaFiles.length - cntDel; document.getElementById('badgeRecycle').innerText = cntDel;
+      document.getElementById('badgeRunning').innerText = cntR; document.getElementById('badgeExpiring').innerText = cntE; document.getElementById('badgeExpired').innerText = cntX; document.getElementById('badgeSignedUp').innerText = cntS; document.getElementById('badgeAppointment').innerText = cntA; document.getElementById('badgeDelivered').innerText = cntD; document.getElementById('badgeReturned').innerText = cntRet; document.getElementById('badgeAll').innerText = visaFiles.length - cntDel; document.getElementById('badgeRecycle').innerText = cntDel;
 
-      const filtered = visaFiles.filter(f => {
+      if (activeTab === 'ACTIVITY') { renderActivityView(container); return; }
+      const _passBase = (f) => {
         if (activeTab === 'RECYCLE') { if (!f.isDeleted || !isAdmin) return false; } else if (f.isDeleted) return false;
         const isClosed = f.isDelivered || f.isReturned;
-        if (activeTab === 'RUNNING' && isClosed) return false; if (activeTab === 'EXPIRING' && !hasExpiringOrExpiredBgd(f)) return false; if (activeTab === 'SIGNED_UP' && (!f.isSignedUp || isClosed)) return false; if (activeTab === 'APPOINTMENT' && (!f.appointmentDate || isClosed)) return false; if (activeTab === 'DELIVERED' && !f.isDelivered) return false; if (activeTab === 'RETURNED' && !f.isReturned) return false;
+        if (activeTab === 'RUNNING' && isClosed) return false; if (activeTab === 'EXPIRING' && !hasWarning(f)) return false; if (activeTab === 'EXPIRED' && !hasExpired(f)) return false; if (activeTab === 'SIGNED_UP' && (!f.isSignedUp || isClosed)) return false; if (activeTab === 'APPOINTMENT' && (!isAppt(f) || isClosed)) return false; if (activeTab === 'DELIVERED' && !f.isDelivered) return false; if (activeTab === 'RETURNED' && !f.isReturned) return false;
         if (vType !== 'ALL' && f.visaType !== vType) return false; if (workerVal !== 'ALL' && (f.worker || '').trim() !== workerVal) return false;
         if (!search) return true;
-        return (f.accountPhone || '').toLowerCase().includes(search) || (f.accountGmail || '').toLowerCase().includes(search) || (f.worker || '').toLowerCase().includes(search) || f.applicants.some(a => (a.name || '').toLowerCase().includes(search) || (a.tempId || '').toLowerCase().includes(search) || (a.bgdNo || '').toLowerCase().includes(search) || (a.passport || '').toLowerCase().includes(search));
-      });
+        return smsOf(f).toLowerCase().includes(search) || (f.border || '').toLowerCase().includes(search) || (f.accountPhone || '').toLowerCase().includes(search) || (f.accountGmail || '').toLowerCase().includes(search) || (f.worker || '').toLowerCase().includes(search) || f.applicants.some(a => (a.name || '').toLowerCase().includes(search) || (a.tempId || '').toLowerCase().includes(search) || (a.bgdNo || '').toLowerCase().includes(search) || (a.passport || '').toLowerCase().includes(search));
+      };
+      const baseList = visaFiles.filter(_passBase); renderSmsChips(baseList);
+      const filtered = baseList.filter(f => activeTab === 'RECYCLE' || !smsFilter || smsOf(f) === smsFilter);
 
       if (filtered.length === 0) {
         container.innerHTML = `<div class="bg-white rounded-3xl p-12 text-center border border-slate-200 shadow-sm"><div class="w-16 h-16 bg-[#f4f7fa] text-[#00b4d8] rounded-2xl mx-auto flex items-center justify-center text-3xl mb-4 border border-slate-100"><i class="fa-solid fa-folder-open"></i></div><h4 class="font-extrabold text-slate-700 text-base">কোনো ভিসা ফাইল পাওয়া যায়নি!</h4></div>`; return;
@@ -807,16 +1067,43 @@
       if (activeTab === 'RECYCLE') renderRecycleView(container, filtered); else if (viewMode === 'TABLE') renderTableView(container, filtered); else renderCardView(container, filtered);
     }
 
+    // ===== ব্যক্তি-ভিত্তিক স্ট্যাটাস: 🟢 BGD আপলোড | 🔴 Expired | 🔵 সাবমিট (PDF নেই) | ⚪ বাকি =====
+    function personState(a, f) {
+      if (expiryRelevant(f) && needsRenewal(a, f)) return 'EXPIRED';
+      if (a.driveFileId) return 'UPLOADED';
+      if (a.isSubmitted && a.subDate) return 'SUBMITTED';
+      return 'NONE';
+    }
+    function personPill(a, f) {
+      const st = personState(a, f);
+      if (st === 'EXPIRED') return '<span class="bg-red-600 text-white px-2 py-0.5 rounded text-[10px] font-extrabold">' + ((!!a.renewing && !(a.isSubmitted && a.subDate)) ? '⛔ নতুন BGD লাগবে' : '⛔ Expired') + '</span>';
+      if (st === 'UPLOADED') return '<span class="bg-emerald-600 text-white px-2 py-0.5 rounded text-[10px] font-extrabold">✅ BGD আপলোড</span>';
+      if (st === 'SUBMITTED') return '<span class="bg-sky-100 text-sky-700 border border-sky-200 px-2 py-0.5 rounded text-[10px] font-extrabold">📝 সাবমিট · PDF নেই</span>';
+      return '<span class="bg-slate-100 text-slate-500 px-2 py-0.5 rounded text-[10px] font-extrabold">⏳ BGD বাকি</span>';
+    }
+    function personBoxClass(st) {
+      return st === 'EXPIRED' ? 'bg-red-50/60 border-red-300 ring-2 ring-red-300' : (st === 'UPLOADED' ? 'bg-emerald-50/70 border-emerald-300' : (st === 'SUBMITTED' ? 'bg-sky-50/50 border-sky-200' : 'bg-white border-slate-200'));
+    }
+    function copyBgd(fileId, idx) { const f = visaFiles.find(x => x.id === fileId); const a = f && f.applicants[idx]; if (!a) return; copyPersonData(a.bgdNo, a.name, 'BGD'); }
+
     function renderTableView(container, files) {
       container.innerHTML = `<div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-x-auto"><table class="w-full text-left text-xs border-collapse">
-          <thead><tr class="bg-slate-50 text-slate-500 font-extrabold border-b border-slate-200 uppercase tracking-wide"><th class="p-3.5">মেইন আবেদনকারী</th><th class="p-3.5">ভিসা ও ডকুমেন্টস</th><th class="p-3.5">সাইন-আপ তথ্য</th><th class="p-3.5">আবেদনকারী ও Temp/BGD</th><th class="p-3.5">অ্যাকশন</th></tr></thead>
+          <thead><tr class="bg-slate-50 text-slate-500 font-extrabold border-b border-slate-200 uppercase tracking-wide"><th class="p-3.5">মেইন আবেদনকারী</th><th class="p-3.5">ভিসা ও ডকুমেন্টস</th><th class="p-3.5">সাইন-আপ তথ্য</th><th class="p-3.5">আবেদনকারী · Temp / BGD / মেয়াদ</th><th class="p-3.5">অ্যাকশন</th></tr></thead>
           <tbody class="divide-y divide-slate-100 font-medium">
             ${files.map(f => {
-              return `<tr class="hover:bg-[#f4f7fa] transition">
-                <td class="p-3.5"><div class="font-extrabold text-[#0b132b] text-sm">${f.applicants[0]?.name || 'Unnamed'}</div><div class="text-[10px] text-slate-500 font-bold uppercase mt-0.5">মোট ${f.applicants.length} জন</div>${f.updatedBy ? `<div class="text-[10px] text-slate-400 font-bold mt-0.5">শেষ আপডেট: ${f.updatedBy}${f.updatedAt ? ' · ' + f.updatedAt : ''}</div>` : ''}</td>
-                <td class="p-3.5 space-y-1.5"><span class="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-slate-100 text-slate-600">${f.visaType}</span><div class="flex flex-wrap gap-1 mt-1">${getDocChecklistBadges(f)}</div></td>
-                <td class="p-3.5"><div class="mono-type font-extrabold text-[#0b132b]">${f.accountPhone || 'N/A'}</div></td>
-                <td class="p-3.5 space-y-1">${f.applicants.map((a, i) => `<div class="flex flex-wrap items-center gap-1.5 text-[11px]"><span class="font-bold text-slate-600">${a.name}:</span><span class="mono-type font-bold text-[#00b4d8] bg-[#00b4d8]/10 px-1.5 rounded">${a.tempId || 'No-Temp'}</span></div>`).join('')}</td>
+              const exPpl = expiredPeople(f);
+              return `<tr class="hover:bg-[#f4f7fa] transition ${exPpl.length ? 'bg-red-50/40' : ''}">
+                <td class="p-3.5"><div class="font-extrabold text-[#0b132b] text-sm">${escHtml(f.applicants[0]?.name || 'Unnamed')}</div><div class="text-[10px] text-slate-500 font-bold uppercase mt-0.5">মোট ${f.applicants.length} জন</div>${f.updatedBy ? `<div class="text-[10px] text-slate-400 font-bold mt-0.5">শেষ আপডেট: ${escHtml(f.updatedBy)}${f.updatedAt ? ' · ' + escHtml(f.updatedAt) : ''}</div>` : ''}${exPpl.length ? `<div class="text-[10px] text-red-600 font-extrabold mt-0.5">⚠ Expired: ${exPpl.map(a => escHtml(a.name)).join(', ')}</div>` : ''}</td>
+                <td class="p-3.5 space-y-1.5"><span class="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-slate-100 text-slate-600">${escHtml(f.visaType)}</span><div class="flex flex-wrap gap-1 mt-1">${getDocChecklistBadges(f)}</div></td>
+                <td class="p-3.5"><div class="mono-type font-extrabold text-[#0b132b]">${escHtml(f.accountPhone || 'N/A')}</div>${f.border ? `<div class="text-[10px] text-indigo-600 font-bold mt-0.5">${escHtml(f.border)}</div>` : ''}<div class="text-[10px] text-slate-500 font-bold mt-0.5">📱 ${escHtml(smsOf(f))}</div></td>
+                <td class="p-3.5 space-y-1.5">${f.applicants.map((a, i) => {
+                  const st = personState(a, f); const exp = getBgdExpiryInfo(a, f);
+                  const box = st === 'EXPIRED' ? 'bg-red-50 border-red-200' : (st === 'UPLOADED' ? 'bg-emerald-50 border-emerald-200' : (st === 'SUBMITTED' ? 'bg-sky-50/60 border-sky-100' : 'bg-white border-slate-100'));
+                  return `<div class="rounded-lg border ${box} px-2 py-1.5 space-y-1">
+                    <div class="flex flex-wrap items-center gap-1.5 text-[11px]"><span class="font-extrabold ${st === 'EXPIRED' ? 'text-red-700' : 'text-slate-700'}">${i === 0 ? '⭐ ' : ''}${escHtml(a.name || 'Unnamed')}</span>${personPill(a, f)}${exp.badgeHtml}</div>
+                    <div class="flex flex-wrap items-center gap-1.5 text-[11px]"><span class="mono-type font-bold text-[#00b4d8] bg-[#00b4d8]/10 px-1.5 rounded">${escHtml(a.tempId || 'No-Temp')}</span><span class="mono-type font-bold px-1.5 rounded ${a.bgdNo ? 'text-emerald-700 bg-emerald-100' : 'text-slate-400 bg-slate-100'}">BGD: ${escHtml(a.bgdNo || '—')}</span>${(a.isSubmitted && a.subDate) ? `<span class="text-[10px] font-bold text-slate-500">📅 ${escHtml(a.subDate)}</span>` : ''}${a.driveFileId ? `<button onclick="openPdf('${f.id}', ${i})" class="bg-emerald-100 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded text-[10px] font-extrabold hover:bg-emerald-200"><i class="fa-solid fa-file-pdf"></i> PDF</button>` : ''}</div>
+                  </div>`;
+                }).join('')}</td>
                 <td class="p-3.5 space-x-1"><button onclick="openFileModal('${f.id}')" class="bg-white text-[#0077b6] px-3 py-1 rounded-lg border border-slate-200 font-bold shadow-sm hover:bg-slate-50">এডিট</button><button onclick="moveToRecycle('${f.id}')" title="রিসাইকেল বিনে পাঠান" class="bg-white text-rose-600 px-2.5 py-1 rounded-lg border border-rose-200 font-bold shadow-sm hover:bg-rose-50"><i class="fa-solid fa-trash"></i></button></td>
               </tr>`;
             }).join('')}
@@ -831,10 +1118,10 @@
           <div class="bg-white px-5 py-4 flex flex-wrap justify-between items-center gap-3 border-b border-slate-100">
             <div class="flex flex-wrap items-center gap-3">
               <span class="bg-slate-100 text-slate-600 border border-slate-200 px-2.5 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wide">${f.visaType}</span>
-              <h3 class="text-base font-extrabold text-[#0b132b] tracking-tight">${f.applicants[0]?.name || 'নাম লেখা হয়নি'}</h3>
+              <h3 class="text-base font-extrabold text-[#0b132b] tracking-tight">${escHtml(f.applicants[0]?.name || 'Unnamed')}</h3>
               <span class="bg-slate-50 text-slate-500 px-2 py-0.5 rounded text-[10px] font-bold border border-slate-200">${f.applicants.length > 1 ? `মোট ${f.applicants.length} জন` : 'সিঙ্গেল ফাইল'}</span>
-              ${f.worker ? `<span class="bg-[#00b4d8]/10 text-[#0077b6] px-2 py-0.5 rounded text-[10px] font-extrabold"><i class="fa-solid fa-user-gear mr-1"></i>${f.worker}</span>` : ''}
-              ${f.updatedBy ? `<span class="bg-slate-100 text-slate-500 px-2 py-0.5 rounded text-[10px] font-bold"><i class="fa-regular fa-clock mr-1"></i>শেষ আপডেট: ${f.updatedBy}${f.updatedAt ? ' · ' + f.updatedAt : ''}</span>` : ''}
+              ${f.worker ? `<span class="bg-[#00b4d8]/10 text-[#0077b6] px-2 py-0.5 rounded text-[10px] font-extrabold"><i class="fa-solid fa-user-gear mr-1"></i>${escHtml(f.worker)}</span>` : ''}
+              ${f.updatedBy ? `<span class="bg-slate-100 text-slate-500 px-2 py-0.5 rounded text-[10px] font-bold"><i class="fa-regular fa-clock mr-1"></i>শেষ আপডেট: ${escHtml(f.updatedBy)}${f.updatedAt ? ' · ' + escHtml(f.updatedAt) : ''}</span>` : ''}
             </div>
             <div class="flex flex-wrap items-center gap-2 text-xs">
               <button onclick="openQuickReturnModal('${f.id}')" class="px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1 ${f.isReturned ? 'bg-slate-100 text-rose-600 hover:bg-slate-200' : 'bg-white text-rose-500 border border-rose-200 hover:bg-rose-50'}"><i class="fa-solid fa-rotate-left"></i>${f.isReturned ? 'রানিং' : 'ফেরত'}</button>
@@ -847,24 +1134,30 @@
           <div class="px-5 py-3.5 ${f.isSignedUp ? 'bg-purple-50/50' : 'bg-rose-50/30'} flex flex-wrap items-center justify-between gap-3 text-xs border-b border-slate-100">
             <div class="flex flex-wrap items-center gap-3">
               <button onclick="toggleCardSignUp('${f.id}')" class="px-3 py-1.5 rounded-xl font-extrabold shadow-sm transition flex items-center gap-1.5 ${f.isSignedUp ? 'bg-purple-600 text-white' : 'bg-rose-500 text-white'}"><i class="fa-solid ${f.isSignedUp ? 'fa-circle-check' : 'fa-circle-exclamation'}"></i>${f.isSignedUp ? 'SIGNED UP' : 'NOT SIGNED UP'}</button>
-              <div class="bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm"><span class="text-[10px] font-extrabold text-slate-400 block uppercase">ফোন</span><span class="mono-type text-sm font-extrabold text-slate-700">${f.accountPhone || '---'}</span></div>
-              <div class="bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm"><span class="text-[10px] font-extrabold text-slate-400 block uppercase">জিমেইল</span><span class="mono-type text-sm font-extrabold text-[#0077b6]">${f.accountGmail || '---'}</span></div>
-              <div class="bg-white px-3 py-1.5 rounded-xl border ${isDiffPass ? 'border-red-400 bg-red-50' : 'border-slate-200'} shadow-sm"><span class="text-[10px] font-extrabold text-slate-400 block uppercase">পাসওয়ার্ড ${isDiffPass ? '<b class="text-red-500">(আলাদা)</b>' : ''}</span><span class="mono-type text-sm font-extrabold ${isDiffPass ? 'text-red-600' : 'text-slate-700'}">${f.accountPassword || '---'}</span></div>
+ <button onclick="toggleCardAppointed('${f.id}')" class="px-3 py-1.5 rounded-xl font-extrabold shadow-sm transition flex items-center gap-1.5 ${isAppt(f) ? 'bg-sky-600 text-white' : 'bg-white text-slate-500 border border-slate-200'}"><i class="fa-solid ${isAppt(f) ? 'fa-calendar-check' : 'fa-calendar'}"></i>${isAppt(f) ? 'APPOINTED' : 'NOT APPOINTED'}</button>
+ ${f.invoiceFileId ? `<button onclick="openInvoice('${f.id}')" class="px-3 py-1.5 rounded-xl font-bold bg-sky-50 text-sky-700 border border-sky-200 hover:bg-sky-100 transition flex items-center gap-1.5"><i class="fa-solid fa-file-invoice"></i> Invoice ওপেন</button><label title="নতুন Invoice দিয়ে বদলান" class="cursor-pointer px-2.5 py-1.5 rounded-xl font-bold bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition flex items-center gap-1"><i class="fa-solid fa-arrows-rotate"></i> রি-আপলোড<input type="file" accept="application/pdf" onchange="quickUploadInvoice('${f.id}', event)" class="hidden"></label>` : `<label class="cursor-pointer px-3 py-1.5 rounded-xl font-bold bg-white text-sky-700 border border-sky-200 hover:bg-sky-50 transition flex items-center gap-1.5"><i class="fa-solid fa-file-invoice"></i> Invoice আপলোড<input type="file" accept="application/pdf" onchange="quickUploadInvoice('${f.id}', event)" class="hidden"></label>`}
+ ${f.invoiceFileId && f.invoiceBy ? `<span class="text-[9px] text-slate-400 font-bold">Invoice: ${escHtml(f.invoiceBy)}${f.invoiceAt ? ' · ' + escHtml(f.invoiceAt) : ''}</span>` : ''}
+              <div class="bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm"><span class="text-[10px] font-extrabold text-slate-400 block uppercase">ফোন</span><span class="mono-type text-sm font-extrabold text-slate-700">${escHtml(f.accountPhone || '---')}</span></div>
+              <div class="bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm"><span class="text-[10px] font-extrabold text-slate-400 block uppercase">জিমেইল</span><span class="mono-type text-sm font-extrabold text-[#0077b6]">${escHtml(f.accountGmail || '---')}</span></div>
+              <div class="bg-white px-3 py-1.5 rounded-xl border ${isDiffPass ? 'border-red-400 bg-red-50' : 'border-slate-200'} shadow-sm"><span class="text-[10px] font-extrabold text-slate-400 block uppercase">পাসওয়ার্ড ${isDiffPass ? '<b class="text-red-500">(আলাদা)</b>' : ''}</span><span class="mono-type text-sm font-extrabold ${isDiffPass ? 'text-red-600' : 'text-slate-700'}">${escHtml(f.accountPassword || '---')}</span></div>
+ <div class="bg-white px-3 py-1.5 rounded-xl border ${f.border ? 'border-indigo-200' : 'border-slate-200'} shadow-sm"><span class="text-[10px] font-extrabold text-slate-400 block uppercase">বর্ডার</span><span class="text-xs font-extrabold ${f.border ? 'text-indigo-700' : 'text-slate-400'}">${escHtml(f.border || '---')}</span></div>
+ <div class="bg-white px-3 py-1.5 rounded-xl border border-indigo-100 shadow-sm"><span class="text-[10px] font-extrabold text-slate-400 block uppercase">SMS অ্যাপ</span><span class="text-xs font-extrabold text-indigo-700">${escHtml(smsOf(f))}</span></div>
             </div>
           </div>
 
+          ${(() => { const ex = expiredPeople(f); if (!ex.length) return ''; const ok = f.applicants.length - ex.length; const all = ok === 0; return `<div class="px-5 py-2.5 ${all ? 'bg-red-100' : 'bg-red-50'} border-b border-red-100 text-[11px] font-extrabold text-red-700 flex flex-wrap items-center gap-x-2 gap-y-1"><i class="fa-solid fa-triangle-exclamation"></i><span>মেয়াদ শেষ / নতুন BGD লাগবে: <b>${ex.map(a => escHtml(a.name || 'Unnamed')).join(', ')}</b></span>${all ? '<span class="bg-red-600 text-white px-2 py-0.5 rounded">পুরো ফাইল Expired</span>' : `<span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded">বাকি ${ok} জন ঠিক আছে ✅ (ফাইল Running এ আছে)</span>`}</div>`; })()}
           ${getDocChecklistBadges(f) ? `<div class="px-5 py-3 bg-slate-50 border-b border-slate-100 flex flex-wrap items-center gap-2"><span class="text-[10px] font-extrabold text-slate-400 uppercase mr-1">চেকলিস্ট:</span>${getDocChecklistBadges(f)}</div>` : ''}
 
           <div class="p-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-${Math.min(f.applicants.length, 4)} gap-4">
             ${f.applicants.map((a, idx) => {
               const exp = getBgdExpiryInfo(a, f);
               return `
-              <div class="rounded-2xl border ${exp.status === 'EXPIRED' ? 'bg-red-50/50 border-red-200' : (a.isSubmitted ? 'bg-emerald-50/40 border-emerald-200' : 'bg-white border-slate-200')} p-4 flex flex-col justify-between shadow-sm">
+              <div class="rounded-2xl border ${personBoxClass(personState(a, f))} p-4 flex flex-col justify-between shadow-sm">
                 <div>
                   <div class="flex justify-between items-start gap-1 pb-2 border-b border-slate-100">
                     <div>
                       <span class="text-[9px] font-extrabold uppercase tracking-wide text-slate-500">${idx === 0 ? '⭐ মেইন ফাইল' : '👥 কো-অ্যাপ্লিক্যান্ট #' + idx}</span>
-                      <h4 class="font-extrabold text-sm text-[#0b132b] mt-0.5">${a.name || 'Unnamed'}</h4>
+                      <h4 class="font-extrabold text-sm text-[#0b132b] mt-0.5">${escHtml(a.name || 'Unnamed')}</h4><div class="mt-1">${personPill(a, f)}</div>
                     </div>
                     <div class="flex flex-col items-end gap-1.5">
                       <label class="inline-flex items-center cursor-pointer px-2.5 py-1 rounded text-[10px] font-bold ${a.isSubmitted ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'}">
@@ -878,23 +1171,25 @@
                   </div>
 
                   ${a.isSubmitted ? `<div class="mt-2.5 flex items-center justify-between gap-1 bg-white p-2 rounded-xl border border-slate-100 shadow-sm"><div>${exp.badgeHtml}</div>${(exp.status === 'EXPIRED' || exp.status === 'WARNING') ? `<button onclick="reApplyApplicant('${f.id}',${idx})" class="bg-rose-50 text-rose-600 px-2 py-1 rounded text-[10px] font-bold"><i class="fa-solid fa-rotate-right"></i> Re-Apply</button>` : ''}</div>` : ''}
+              ${(!a.isSubmitted && a.renewing) ? `<div class="mt-2.5 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl px-2 py-1.5 text-[10px] font-extrabold flex items-center gap-1"><i class="fa-solid fa-rotate-right"></i> নতুন BGD লাগবে (এখনো আপলোড হয়নি)</div>` : ''}
 
                   <div class="mt-3">
                     <div class="flex justify-between items-center mb-1"><span class="text-[10px] font-extrabold text-slate-500 uppercase">Temp ID</span><button onclick="quickSavePersonData('${f.id}',${idx})" class="text-[10px] text-blue-600 font-bold hover:underline">সেভ</button></div>
-                    <input type="text" id="quick_temp_${f.id}_${idx}" value="${a.tempId || ''}" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 mono-type text-xs font-bold text-slate-800 bg-slate-50 focus:border-[#00b4d8] focus:bg-white focus:outline-none mb-2">
+                    <input type="text" id="quick_temp_${f.id}_${idx}" value="${escHtml(a.tempId)}" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 mono-type text-xs font-bold text-slate-800 bg-slate-50 focus:border-[#00b4d8] focus:bg-white focus:outline-none mb-2">
                     <button onclick="quickSavePersonData('${f.id}',${idx}, true)" class="w-full bg-white border border-slate-200 hover:border-[#00b4d8] text-slate-700 hover:text-[#0077b6] py-1.5 px-2 rounded-lg text-xs font-bold flex justify-center gap-1 shadow-sm transition"><i class="fa-regular fa-copy"></i> কপি Temp ID</button>
                   </div>
 
                   <div class="mt-3">
-                    <div class="flex justify-between items-center mb-1"><span class="text-[10px] font-extrabold text-slate-500 uppercase">BGD Number</span>${a.bgdNo ? `<button onclick="copyPersonData('${a.bgdNo}', '${a.name}', 'BGD')" class="text-[10px] text-emerald-600 font-bold hover:underline">কপি</button>` : ''}</div>
-                    <div class="flex gap-1.5"><input type="text" id="quick_bgd_${f.id}_${idx}" value="${a.bgdNo || ''}" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 mono-type text-xs font-bold text-slate-800 bg-slate-50 focus:border-emerald-400 focus:bg-white focus:outline-none"><button onclick="quickSavePersonData('${f.id}',${idx})" class="bg-slate-800 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-slate-700">সেভ</button></div>
+                    <div class="flex justify-between items-center mb-1"><span class="text-[10px] font-extrabold text-slate-500 uppercase">BGD Number</span>${a.bgdNo ? `<button onclick="copyBgd('${f.id}', ${idx})" class="text-[10px] text-emerald-600 font-bold hover:underline">কপি</button>` : ''}</div>
+                    <div class="flex gap-1.5"><input type="text" id="quick_bgd_${f.id}_${idx}" value="${escHtml(a.bgdNo)}" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 mono-type text-xs font-bold text-slate-800 bg-slate-50 focus:border-emerald-400 focus:bg-white focus:outline-none"><button onclick="quickSavePersonData('${f.id}',${idx})" class="bg-slate-800 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-slate-700">সেভ</button></div>
                   </div>
+ ${a.isSubmitted ? `<div class="mt-3"><div class="flex justify-between items-center mb-1"><span class="text-[10px] font-extrabold text-slate-500 uppercase">BGD জমার তারিখ (৩০ দিন এখান থেকে)</span></div><input type="date" id="quick_subdate_${f.id}_${idx}" value="${a.subDate || ''}" onchange="quickSaveSubDate('${f.id}', ${idx})" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-bold text-slate-800 bg-slate-50 focus:border-[#00b4d8] focus:bg-white focus:outline-none"></div>` : ''}
                 </div>
 
                 <div class="mt-4 flex gap-1.5">
-                  ${(a.driveFileId) ? `<button onclick="openPdf('${f.id}', ${idx})" class="flex-1 bg-emerald-50 text-emerald-700 border border-emerald-200 py-1.5 px-2 rounded-xl text-xs font-bold hover:bg-emerald-100 transition"><i class="fa-solid fa-file-pdf"></i> PDF ওপেন</button>` : `<label class="w-full cursor-pointer bg-slate-50 text-slate-600 border border-slate-200 py-1.5 px-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1 hover:bg-slate-100 transition"><i class="fa-solid fa-upload"></i> PDF রাখুন<input type="file" accept="application/pdf" onchange="quickUploadCardPdf('${f.id}', ${idx}, event)" class="hidden"></label>`}
+                  ${(a.driveFileId) ? `<button onclick="openPdf('${f.id}', ${idx})" class="flex-1 bg-emerald-50 text-emerald-700 border border-emerald-200 py-1.5 px-2 rounded-xl text-xs font-bold hover:bg-emerald-100 transition"><i class="fa-solid fa-file-pdf"></i> PDF ওপেন</button><label title="নতুন PDF দিয়ে বদলান" class="cursor-pointer bg-amber-50 text-amber-700 border border-amber-200 py-1.5 px-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1 hover:bg-amber-100 transition"><i class="fa-solid fa-arrows-rotate"></i> রি-আপলোড / বদলান<input type="file" accept="application/pdf" onchange="quickUploadCardPdf('${f.id}', ${idx}, event)" class="hidden"></label>` : `<label class="w-full cursor-pointer bg-slate-50 text-slate-600 border border-slate-200 py-1.5 px-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1 hover:bg-slate-100 transition"><i class="fa-solid fa-upload"></i> PDF রাখুন<input type="file" accept="application/pdf" onchange="quickUploadCardPdf('${f.id}', ${idx}, event)" class="hidden"></label>`}
                 </div>
-                ${(a.bgdUploadedBy && a.driveFileId) ? `<div class="text-[9px] text-slate-400 font-bold mt-1.5"><i class="fa-solid fa-cloud-arrow-up mr-1"></i>আপলোড: ${a.bgdUploadedBy}${a.bgdUploadedAt ? ' · ' + a.bgdUploadedAt : ''}</div>` : ''}
+                ${(a.bgdUploadedBy && a.driveFileId) ? `<div class="text-[9px] text-slate-400 font-bold mt-1.5"><i class="fa-solid fa-cloud-arrow-up mr-1"></i>আপলোড: ${escHtml(a.bgdUploadedBy)}${a.bgdUploadedAt ? ' · ' + escHtml(a.bgdUploadedAt) : ''}</div>` : ''}
               </div>`;
             }).join('')}
           </div>
@@ -904,17 +1199,17 @@
 
     function openFileModal(fileId = null) {
       document.getElementById('fileModal').classList.remove('hidden');
-      modalNewDriveIds = []; modalOrphanDriveIds = []; modalDriveFolderId = ''; modalDriveFolderName = '';
+      modalNewDriveIds = []; modalOrphanDriveIds = []; modalDriveFolderId = ''; modalDriveFolderName = ''; modalFolderNew = false; modalStatusAtCreate = '';
       if (fileId) {
         const f = visaFiles.find(x => x.id === fileId); modalDriveFolderId = f.driveFolderId || ''; modalDriveFolderName = f.driveFolderName || '';
         document.getElementById('editFileId').value = f.id; document.getElementById('visaType').value = f.visaType || 'Medical';
-        document.getElementById('workerName').value = f.worker || ''; document.getElementById('isSignedUp').checked = !!f.isSignedUp;
+        document.getElementById('workerName').value = f.worker || ''; document.getElementById('isSignedUp').checked = !!f.isSignedUp; document.getElementById('entryBorder').value = f.border || ''; document.getElementById('smsApp').value = f.smsApp || 'Rtcsms'; refreshSmsDatalist();
         document.getElementById('isDelivered').checked = !!f.isDelivered; document.getElementById('isReturned').checked = !!f.isReturned;
         document.getElementById('accountPhone').value = f.accountPhone || ''; document.getElementById('accountGmail').value = f.accountGmail || '';
-        document.getElementById('accountPassword').value = f.accountPassword || defaultPass || 'Prachi2019@';
+        document.getElementById('accountPassword').value = f.accountPassword || defaultPass || '';
         document.getElementById('docTrade').value = f.docTrade || 'NONE'; document.getElementById('docNoc').value = f.docNoc || 'NONE'; document.getElementById('docBank').value = f.docBank || 'CUSTOMER';
         document.getElementById('docPassportHeld').value = f.docPassportHeld || 'CUSTOMER'; document.getElementById('feeStatus').value = f.feeStatus || 'UNPAID';
-        document.getElementById('appointmentDate').value = f.appointmentDate || ''; 
+        document.getElementById('isAppointed').checked = !!(f.isAppointed || f.appointmentDate); 
         
         // Load fee values
         document.getElementById('baseVisaFee').value = f.baseVisaFee !== undefined ? f.baseVisaFee : 1500;
@@ -933,10 +1228,10 @@
         let currentWorker = auth.currentUser ? (auth.currentUser.displayName || auth.currentUser.email.split('@')[0]) : '';
         document.getElementById('workerName').value = currentWorker.toUpperCase();
         
-        document.getElementById('isSignedUp').checked = false; document.getElementById('isDelivered').checked = false; document.getElementById('isReturned').checked = false;
-        document.getElementById('accountPhone').value = ''; document.getElementById('accountGmail').value = ''; document.getElementById('accountPassword').value = defaultPass || 'Prachi2019@';
+        document.getElementById('isSignedUp').checked = false; document.getElementById('entryBorder').value = ''; document.getElementById('smsApp').value = 'Rtcsms'; refreshSmsDatalist(); document.getElementById('isDelivered').checked = false; document.getElementById('isReturned').checked = false;
+        document.getElementById('accountPhone').value = ''; document.getElementById('accountGmail').value = ''; document.getElementById('accountPassword').value = defaultPass || '';
         document.getElementById('docTrade').value = 'NONE'; document.getElementById('docNoc').value = 'NONE'; document.getElementById('docBank').value = 'CUSTOMER';
-        document.getElementById('docPassportHeld').value = 'CUSTOMER'; document.getElementById('feeStatus').value = 'UNPAID'; document.getElementById('appointmentDate').value = '';
+        document.getElementById('docPassportHeld').value = 'CUSTOMER'; document.getElementById('feeStatus').value = 'UNPAID'; document.getElementById('isAppointed').checked = false;
         
         // Reset fee values
         document.getElementById('baseVisaFee').value = 1500; baseFeeManual = false;
@@ -957,7 +1252,7 @@
       if (driveEnabled() && (modalNewDriveIds.length || (isNewSet && modalDriveFolderId))) { driveCall({ action: 'deleteFiles', fileIds: modalNewDriveIds, folderIdIfEmpty: isNewSet ? modalDriveFolderId : '' }).catch(() => { }); }
       modalNewDriveIds = []; modalOrphanDriveIds = []; modalDriveFolderId = ''; modalDriveFolderName = '';
     }
-    function fillDefaultPass() { document.getElementById('accountPassword').value = defaultPass || 'Prachi2019@'; }
+    function fillDefaultPass() { document.getElementById('accountPassword').value = defaultPass || ''; }
 
     function syncTempInputs() {
       tempApplicants.forEach((a, i) => {
@@ -984,12 +1279,15 @@
       cloudBusy++; showToast('⏳ PDF আপলোড হচ্ছে...');
       try {
         const t0 = tempApplicants[idx];
-        const res = await driveUploadApplicant({ folderId: modalDriveFolderId, folderName: tempApplicants[0].name, idx: idx, name: t0 ? t0.name : '', file: file });
+        const stNow = document.getElementById('isReturned').checked ? 'Returned' : (document.getElementById('isDelivered').checked ? 'Delivered' : 'Running');
+          const wasNew = !modalDriveFolderId;
+          const res = await driveUploadApplicant({ folderId: modalDriveFolderId, folderName: tempApplicants[0].name, idx: idx, name: t0 ? t0.name : '', file: file, status: stNow });
+          if (wasNew) { modalFolderNew = true; modalStatusAtCreate = stNow; }
         modalDriveFolderId = res.folderId; modalDriveFolderName = res.folderName; modalNewDriveIds.push(res.fileId);
         if (t0 && t0.driveFileId) modalOrphanDriveIds.push(t0.driveFileId);
         const patch = { driveFileId: res.fileId, driveFileName: res.fileName };
         syncTempInputs(); const t = tempApplicants[idx];
-        if (t) { Object.assign(t, patch); t.pdfName = file.name; t.bgdUploadedBy = whoAmI(); t.bgdUploadedAt = stampNow(); t.isSubmitted = true; if (!t.subDate) t.subDate = getTodayStr(); }
+        if (t) { Object.assign(t, patch); delete t.renewing; t.pdfName = file.name; t.bgdUploadedBy = whoAmI(); t.bgdUploadedAt = stampNow(); t.isSubmitted = true; if (!t.subDate || isDateExpired(t.subDate)) t.subDate = getTodayStr(); }
         
         renderApplicantForms(); 
         await syncToCloud(); // 🔥 FIX: Database-e save howar jonno wait korbe
@@ -1012,16 +1310,16 @@
             </div>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
-            <div><label class="block text-[11px] font-extrabold text-slate-500 mb-1">নাম (Name) *</label><input type="text" id="app_name_${i}" value="${a.name || ''}" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold bg-slate-50 focus:bg-white focus:border-[#00b4d8] focus:outline-none"></div>
-            <div><label class="block text-[11px] font-extrabold text-slate-500 mb-1">Temp ID</label><input type="text" id="app_temp_${i}" value="${a.tempId || ''}" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-slate-50 mono-type text-xs font-bold focus:bg-white focus:border-[#00b4d8] focus:outline-none"></div>
-            <div><label class="block text-[11px] font-extrabold text-slate-500 mb-1">BGD Number</label><input type="text" id="app_bgd_${i}" value="${a.bgdNo || ''}" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-slate-50 mono-type text-xs font-bold focus:bg-white focus:border-emerald-400 focus:outline-none"></div>
+            <div><label class="block text-[11px] font-extrabold text-slate-500 mb-1">নাম (Name) *</label><input type="text" id="app_name_${i}" value="${escHtml(a.name)}" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold bg-slate-50 focus:bg-white focus:border-[#00b4d8] focus:outline-none"></div>
+            <div><label class="block text-[11px] font-extrabold text-slate-500 mb-1">Temp ID</label><input type="text" id="app_temp_${i}" value="${escHtml(a.tempId)}" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-slate-50 mono-type text-xs font-bold focus:bg-white focus:border-[#00b4d8] focus:outline-none"></div>
+            <div><label class="block text-[11px] font-extrabold text-slate-500 mb-1">BGD Number</label><input type="text" id="app_bgd_${i}" value="${escHtml(a.bgdNo)}" class="w-full px-3 py-2 rounded-xl border border-slate-300 bg-slate-50 mono-type text-xs font-bold focus:bg-white focus:border-emerald-400 focus:outline-none"></div>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-4 gap-3 pt-3 border-t border-slate-100">
-            <div><label class="block text-[10px] font-bold text-slate-400 mb-1">পাসপোর্ট</label><input type="text" id="app_pp_${i}" value="${a.passport || ''}" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs mono-type font-bold bg-slate-50"></div>
-            <div><label class="block text-[10px] font-bold text-slate-400 mb-1">DOB</label><input type="text" id="app_dob_${i}" value="${a.dob || ''}" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-bold bg-slate-50"></div>
-            <div><label class="block text-[10px] font-bold text-slate-400 mb-1">NID</label><input type="text" id="app_nid_${i}" value="${a.nid || ''}" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs mono-type font-bold bg-slate-50"></div>
+            <div><label class="block text-[10px] font-bold text-slate-400 mb-1">পাসপোর্ট</label><input type="text" id="app_pp_${i}" value="${escHtml(a.passport)}" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs mono-type font-bold bg-slate-50"></div>
+            <div><label class="block text-[10px] font-bold text-slate-400 mb-1">DOB</label><input type="text" id="app_dob_${i}" value="${escHtml(a.dob)}" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-bold bg-slate-50"></div>
+            <div><label class="block text-[10px] font-bold text-slate-400 mb-1">NID</label><input type="text" id="app_nid_${i}" value="${escHtml(a.nid)}" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs mono-type font-bold bg-slate-50"></div>
             <div><label class="block text-[10px] font-bold text-[#0077b6] mb-1">BGD PDF ফাইল</label>
-              <div class="flex items-center gap-1.5"><label class="cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold flex-1 text-center truncate transition"><i class="fa-solid fa-upload"></i> ${a.pdfName ? a.pdfName : 'PDF আপলোড'}<input type="file" accept="application/pdf" onchange="handlePdfUpload(${i}, event)" class="hidden"></label>${(a.driveFileId) ? `<button type="button" onclick="removeFormPdf(${i})" class="text-rose-500 bg-rose-50 px-2 py-1.5 rounded-lg text-xs hover:bg-rose-500 hover:text-white transition"><i class="fa-solid fa-xmark"></i></button>` : ''}</div>
+              <div class="flex items-center gap-1.5"><label class="cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold flex-1 text-center truncate transition"><i class="fa-solid fa-upload"></i> ${a.driveFileId ? 'রি-আপলোড / বদলান' : 'PDF আপলোড'}<input type="file" accept="application/pdf" onchange="handlePdfUpload(${i}, event)" class="hidden"></label>${(a.driveFileId) ? `<button type="button" onclick="removeFormPdf(${i})" class="text-rose-500 bg-rose-50 px-2 py-1.5 rounded-lg text-xs hover:bg-rose-500 hover:text-white transition"><i class="fa-solid fa-xmark"></i></button>` : ''}</div>
             </div>
           </div>
         </div>
@@ -1035,9 +1333,9 @@
         id: editId || 'SET_' + Date.now(),
         visaType: document.getElementById('visaType').value, worker: document.getElementById('workerName').value.trim(),
         isSignedUp: document.getElementById('isSignedUp').checked, isDelivered: document.getElementById('isDelivered').checked, isReturned: document.getElementById('isReturned').checked,
-        accountPhone: document.getElementById('accountPhone').value.trim(), accountGmail: document.getElementById('accountGmail').value.trim(), accountPassword: document.getElementById('accountPassword').value.trim(),
+        border: document.getElementById('entryBorder').value, smsApp: normSmsName(document.getElementById('smsApp').value), accountPhone: document.getElementById('accountPhone').value.trim(), accountGmail: document.getElementById('accountGmail').value.trim(), accountPassword: document.getElementById('accountPassword').value.trim(),
         docTrade: document.getElementById('docTrade').value, docNoc: document.getElementById('docNoc').value, docBank: document.getElementById('docBank').value, docPassportHeld: document.getElementById('docPassportHeld').value,
-        feeStatus: document.getElementById('feeStatus').value, appointmentDate: document.getElementById('appointmentDate').value,
+        feeStatus: document.getElementById('feeStatus').value, isAppointed: document.getElementById('isAppointed').checked,
         
         baseVisaFee: parseFloat(document.getElementById('baseVisaFee').value) || 1500,
         softwareCharge: parseFloat(document.getElementById('softwareCharge').value) || 0,
@@ -1045,34 +1343,33 @@
         billTotal: parseFloat(document.getElementById('billTotal').value) || 0, billAdvance: parseFloat(document.getElementById('billAdvance').value) || 0, billDue: parseFloat(document.getElementById('billDue').value) || 0,
         keptCharge: parseFloat(document.getElementById('keptCharge').value) || 0, refundAmount: parseFloat(document.getElementById('refundAmount').value) || 0, returnReason: document.getElementById('returnReason').value.trim(),
         note: document.getElementById('fileNote').value.trim(), applicants: tempApplicants, driveFolderId: modalDriveFolderId, driveFolderName: modalDriveFolderName,
-        updatedAt: new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }), updatedBy: whoAmI()
+        updatedAt: new Date().toLocaleString('en-GB', BD_TIME_OPTS), updatedBy: whoAmI()
       };
+            const prevSet = editId ? visaFiles.find(x => x.id === editId) : null;
+      fileObj.driveStatus = modalFolderNew ? modalStatusAtCreate : (prevSet ? (prevSet.driveStatus || '') : '');
+      if (prevSet && expiryRelevant(prevSet)) tempApplicants.forEach(a => { if (a.isSubmitted || a.renewing || !(a.name || '').trim()) return; const pv = prevSet.applicants.find(p => (p.name || '') === a.name); if (pv && needsRenewal(pv, prevSet)) a.renewing = true; });
+      delete nameSyncTried[fileObj.id]; delete statusSyncTried[fileObj.id];
+      if (prevSet) { fileObj.invoiceFileId = prevSet.invoiceFileId || ''; fileObj.invoiceFileName = prevSet.invoiceFileName || ''; fileObj.invoiceName = prevSet.invoiceName || ''; fileObj.invoiceBy = prevSet.invoiceBy || ''; fileObj.invoiceAt = prevSet.invoiceAt || ''; }
       if (driveEnabled()) {
         const orphans = modalOrphanDriveIds.filter(id => !tempApplicants.some(a => a.driveFileId === id));
         if (orphans.length) driveCall({ action: 'deleteFiles', fileIds: orphans }).catch(() => { });
       }
       if (editId) { const idx = visaFiles.findIndex(x => x.id === editId); if (idx > -1) visaFiles[idx] = fileObj; } else visaFiles.unshift(fileObj);
-      modalNewDriveIds = []; modalOrphanDriveIds = []; modalDriveFolderId = ''; modalDriveFolderName = '';
+            modalNewDriveIds = []; modalOrphanDriveIds = []; modalDriveFolderId = ''; modalDriveFolderName = ''; modalFolderNew = false; modalStatusAtCreate = '';
       closeFileModal(); renderFiles(); syncToCloud(); showToast('সেভ সম্পন্ন!'); driveSyncSet(fileObj);
     }
 
     function openPdf(fileId, appIdx) {
-      const f = visaFiles.find(x => x.id === fileId);
-      const a = f && f.applicants[appIdx];
-      
-      if (!a || !a.driveFileId) {
-        alert('PDF Drive-e pawa jayni! Doya kore abar PDF upload korun.');
-        return;
-      }
-
-      // Sorasori Google Drive-er viewer link open hobe (0 second delay, no atob error)
-      window.open(`https://drive.google.com/file/d/${a.driveFileId}/view`, '_blank');
+      const f = visaFiles.find(x => x.id === fileId); const a = f && f.applicants[appIdx];
+      if (!a || !a.driveFileId) { alert('PDF Drive এ পাওয়া যায়নি! আবার PDF আপলোড করুন।'); return; }
+      window.open('https://drive.google.com/file/d/' + a.driveFileId + '/view', '_blank');
     }
 
     function openSettingsModal() { 
       document.getElementById('settingDefaultPass').value = defaultPass; 
       document.getElementById('settingCloudUrl').value = cloudUrl; 
       document.getElementById('settingsModal').classList.remove('hidden'); 
+      refreshBackupStatus();
     }
     
     function closeSettingsModal() { 
@@ -1091,7 +1388,207 @@
     }
     
     function exportBackup() { const dl = document.createElement('a'); dl.setAttribute("href", "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(visaFiles, null, 2))); dl.setAttribute("download", `RTC_Visa_${new Date().toISOString().slice(0,10)}.json`); dl.click(); }
-    function importBackup(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (e) => { try { const imported = JSON.parse(e.target.result); if (Array.isArray(imported)) { visaFiles = imported; renderFiles(); syncToCloud(); closeSettingsModal(); showToast('রিস্টোর হয়েছে!'); } } catch (err) { alert('ভুল ব্যাকআপ!'); } }; reader.readAsText(file); }
+    function importBackup(event) {
+      const file = event.target.files[0]; if (!file) return; const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const imported = JSON.parse(e.target.result); const list = Array.isArray(imported) ? imported : (imported && Array.isArray(imported.files) ? imported.files : null);
+          if (!list) { alert('ভুল ব্যাকআপ!'); return; }
+          if (!confirm('বর্তমান সব ডাটা এই ফাইলের ' + list.length + 'টি সেট দিয়ে বদলে যাবে। নিশ্চিত?')) return;
+          applyRestore(list, 'ফাইল থেকে রিস্টোর'); closeSettingsModal(); showToast('রিস্টোর হয়েছে!');
+        } catch (err) { alert('ভুল ব্যাকআপ!'); }
+      };
+      reader.readAsText(file); event.target.value = '';
+    }
+
+    // ================= 🕘 অ্যাক্টিভিটি লগ (কে কী করেছে, কখন) =================
+    // প্রতিবার সফল সিঙ্কের পর, আগের অবস্থার সাথে তুলনা করে কী বদলেছে তার এন্ট্রি Firebase এর rtc_activity_log এ জমা হয় (শুধু নতুন এন্ট্রি যোগ হয়, কিছু বদলায় না)
+    const LOG_FIELDS = [
+      ['visaType', 'ভিসা টাইপ'], ['worker', 'ওয়ার্কার'], ['isSignedUp', 'সাইন-আপ', 'bool'], ['isDelivered', 'ডেলিভারি', 'bool'], ['isReturned', 'ফেরত', 'bool'], ['isAppointed', 'অ্যাপয়েন্টমেন্ট', 'bool'], ['appointmentDate', 'অ্যাপয়েন্টমেন্ট তারিখ'],
+      ['border', 'বর্ডার'], ['smsApp', 'SMS অ্যাপ'], ['accountPhone', 'ফোন', 'label'], ['accountGmail', 'জিমেইল', 'label'], ['accountPassword', 'পাসওয়ার্ড', 'label'],
+      ['docTrade', 'ট্রেড ডক'], ['docNoc', 'NOC'], ['docBank', 'ব্যাংক ডক'], ['docPassportHeld', 'পাসপোর্ট জমা'], ['feeStatus', 'ফি স্ট্যাটাস'],
+      ['baseVisaFee', 'ভিসা ফি', 'num'], ['softwareCharge', 'সফটওয়্যার চার্জ', 'num'], ['billTotal', 'মোট বিল', 'num'], ['billAdvance', 'অ্যাডভান্স', 'num'], ['billDue', 'বাকি', 'num'], ['keptCharge', 'রাখা চার্জ', 'num'], ['refundAmount', 'ফেরত টাকা', 'num'],
+      ['returnReason', 'ফেরতের কারণ', 'label'], ['note', 'নোট', 'label']
+    ];
+    const LOG_PERSON_FIELDS = [['passport', 'পাসপোর্ট'], ['dob', 'জন্মতারিখ'], ['nid', 'NID'], ['tempId', 'Temp ID'], ['bgdNo', 'BGD নম্বর'], ['isSubmitted', 'সাবমিট'], ['subDate', 'সাবমিট তারিখ'], ['prevBgd', 'আগের BGD'], ['driveFileId', 'PDF']];
+    let logQueue = []; try { logQueue = JSON.parse(localStorage.getItem('rtc_log_queue') || '[]'); } catch (e) { logQueue = []; }
+    let logFlushing = false; let logDenied = false; let logHint = ''; let logOverride = null;
+    function saveLogQueue() { if (logQueue.length > 500) logQueue = logQueue.slice(-500); try { localStorage.setItem('rtc_log_queue', JSON.stringify(logQueue)); } catch (e) { } }
+    function mainNameOf(f) { return (f && f.applicants && f.applicants[0] && f.applicants[0].name) || 'Unnamed'; }
+    function logVal(v, kind) { if (kind === 'bool') return v ? 'হ্যাঁ' : 'না'; if (kind === 'num') return String(v || 0); const s = String(v == null ? '' : v); return s ? (s.length > 28 ? s.slice(0, 28) + '…' : s) : '(খালি)'; }
+    function diffEntry(old, f) {
+      if (!old) return { type: 'create', setId: f.id, name: mainNameOf(f), detail: 'নতুন সেট (' + (f.applicants ? f.applicants.length : 0) + ' জন)' };
+      if (!!old.isDeleted !== !!f.isDeleted) return { type: f.isDeleted ? 'delete' : 'restore', setId: f.id, name: mainNameOf(f), detail: f.isDeleted ? 'রিসাইকেল বিনে পাঠানো হয়েছে' : 'রিসাইকেল বিন থেকে ফিরিয়ে আনা হয়েছে' };
+      const parts = [];
+      LOG_FIELDS.forEach(function (d) {
+        const a = old[d[0]], b = f[d[0]]; if ((a == null ? '' : a) === (b == null ? '' : b)) return;
+        if (d[2] === 'label') parts.push(d[1] + ' বদল'); else parts.push(d[1] + ': ' + logVal(a, d[2]) + ' → ' + logVal(b, d[2]));
+      });
+      const oa = old.applicants || [], na = f.applicants || [];
+      const oNames = oa.map(function (p) { return p.name || ''; }), nNames = na.map(function (p) { return p.name || ''; });
+      const added = nNames.filter(function (n) { return oNames.indexOf(n) < 0; }), removed = oNames.filter(function (n) { return nNames.indexOf(n) < 0; });
+      if (added.length === 1 && removed.length === 1) parts.push('নাম বদল: ' + (removed[0] || '(খালি)') + ' → ' + (added[0] || '(খালি)'));
+      else { if (added.length) parts.push('যোগ: ' + added.join(', ')); if (removed.length) parts.push('বাদ: ' + removed.join(', ')); }
+      na.forEach(function (p) {
+        const q = oa.find(function (x) { return (x.name || '') === (p.name || ''); }); if (!q) return;
+        const ch = LOG_PERSON_FIELDS.filter(function (d) { return (q[d[0]] == null ? '' : q[d[0]]) !== (p[d[0]] == null ? '' : p[d[0]]); }).map(function (d) { return d[1]; });
+        if (ch.length) parts.push((p.name || 'নামহীন') + ': ' + ch.join(', '));
+      });
+      if ((old.invoiceFileId || '') !== (f.invoiceFileId || '')) parts.push('ইনভয়েস PDF ' + (f.invoiceFileId ? 'আপলোড/বদল' : 'মোছা'));
+      if (!parts.length) return null;
+      return { type: 'edit', setId: f.id, name: mainNameOf(f), detail: parts.join(' · ') };
+    }
+    function logChanges(ch, oldSnap) {
+      try {
+        if (logOverride) { const o = logOverride; logOverride = null; pushLog(o); return; }
+        ch.changed.forEach(function (f) { const old = oldSnap[f.id] ? JSON.parse(oldSnap[f.id]) : null; const e = diffEntry(old, f); if (e) pushLog(e); });
+        ch.deleted.forEach(function (id) { const old = oldSnap[id] ? JSON.parse(oldSnap[id]) : null; pushLog({ type: 'purge', setId: id, name: mainNameOf(old), detail: logHint || 'সেটটি সিস্টেম থেকে সরানো হয়েছে' }); });
+        logHint = '';
+      } catch (e) { console.warn('log error', e); }
+    }
+    function pushLog(e) { e.t = e.t || Date.now(); e.by = e.by || whoAmI(); e.name = e.name || ''; e.detail = e.detail || ''; logQueue.push(e); saveLogQueue(); flushLogQueue(); }
+    async function flushLogQueue() {
+      if (logFlushing || !logQueue.length || !cloudUrl || !auth.currentUser) return;
+      logFlushing = true;
+      try {
+        const token = await auth.currentUser.getIdToken();
+        while (logQueue.length) {
+          const r = await fetch(cloudUrl.replace(/\/$/, '') + '/rtc_activity_log.json?auth=' + encodeURIComponent(token), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(logQueue[0]) });
+          if (r.status === 401 || r.status === 403) { logDenied = true; break; }
+          if (!r.ok) break;
+          logDenied = false; logQueue.shift(); saveLogQueue();
+        }
+      } catch (e) { } finally { logFlushing = false; }
+    }
+    setInterval(flushLogQueue, 60000);
+
+    let activityCache = []; let activityLoaded = false; let activityLoading = false; let activityError = ''; let activityFilterUser = '';
+    const ACTIVITY_LIMIT = 500;
+    async function loadActivity(silent) {
+      if (!cloudUrl || !auth.currentUser || !isAdmin || activityLoading) return;
+      activityLoading = true; activityError = ''; if (!silent) renderActivityView();
+      try {
+        const token = await auth.currentUser.getIdToken();
+        const r = await fetch(cloudUrl.replace(/\/$/, '') + '/rtc_activity_log.json?orderBy=' + encodeURIComponent('"$key"') + '&limitToLast=' + ACTIVITY_LIMIT + '&auth=' + encodeURIComponent(token));
+        if (r.status === 401 || r.status === 403) activityError = 'PERMISSION';
+        else if (!r.ok) activityError = 'HTTP ' + r.status;
+        else {
+          const d = await r.json();
+          activityCache = d && typeof d === 'object' ? Object.keys(d).map(function (k) { return Object.assign({ k: k }, d[k]); }).filter(function (x) { return x && x.t; }).sort(function (a, b) { return (b.t || 0) - (a.t || 0); }) : [];
+          activityLoaded = true;
+        }
+      } catch (e) { activityError = 'NETWORK'; }
+      activityLoading = false; if (activeTab === 'ACTIVITY') renderActivityView();
+    }
+    setInterval(function () { if (activeTab === 'ACTIVITY' && !document.hidden && auth.currentUser) loadActivity(true); }, 45000);
+    const ACT_TYPES = {
+      create: ['নতুন', 'bg-emerald-100 text-emerald-700'], edit: ['এডিট', 'bg-sky-100 text-sky-700'], delete: ['ডিলিট', 'bg-rose-100 text-rose-700'], restore: ['ফিরিয়ে আনা', 'bg-emerald-100 text-emerald-700'],
+      purge: ['চিরতরে ডিলিট', 'bg-red-600 text-white'], backup: ['ব্যাকআপ', 'bg-amber-100 text-amber-800'], restore_backup: ['ব্যাকআপ রিস্টোর', 'bg-purple-100 text-purple-700']
+    };
+    function bdDayKey(t) { return new Date(t).toLocaleDateString('en-CA', { timeZone: 'Asia/Dhaka' }); }
+    function bdDayLabel(t) {
+      const k = bdDayKey(t), today = bdDayKey(Date.now()), yest = bdDayKey(Date.now() - 86400000);
+      const full = new Date(t).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Dhaka' });
+      return k === today ? 'আজ · ' + full : (k === yest ? 'গতকাল · ' + full : full);
+    }
+    function bdTimeLabel(t) { return new Date(t).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Dhaka' }); }
+    function renderActivityView(container) {
+      container = container || document.getElementById('fileListContainer');
+      const chips = document.getElementById('smsChips'); if (chips) chips.innerHTML = '';
+      if (!isAdmin) { container.innerHTML = ''; return; }
+      const q = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+      const users = Array.from(new Set(activityCache.map(function (x) { return x.by; }).filter(Boolean))).sort();
+      const list = activityCache.filter(function (x) { return (!activityFilterUser || x.by === activityFilterUser) && (!q || ((x.name || '') + ' ' + (x.detail || '') + ' ' + (x.by || '')).toLowerCase().indexOf(q) >= 0); });
+      let html = '<div class="flex flex-wrap items-center gap-2 mb-4"><select onchange="activityFilterUser=this.value;renderActivityView()" class="px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-700 bg-white shadow-sm focus:outline-none"><option value="">সব ইউজার</option>'
+        + users.map(function (u) { return '<option value="' + escHtml(u) + '"' + (u === activityFilterUser ? ' selected' : '') + '>' + escHtml(u) + '</option>'; }).join('')
+        + '</select><button onclick="loadActivity()" class="bg-white hover:bg-slate-50 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-bold border border-slate-200 shadow-sm"><i class="fa-solid fa-arrows-rotate text-[#00b4d8] mr-1"></i> রিফ্রেশ</button>'
+        + '<span class="text-[11px] text-slate-400 font-bold">' + (activityLoading ? 'লোড হচ্ছে...' : list.length + 'টি এন্ট্রি (সর্বশেষ ' + ACTIVITY_LIMIT + 'টির মধ্যে)') + '</span></div>';
+      if (activityError === 'PERMISSION') html += '<div class="bg-amber-50 border border-amber-200 text-amber-900 rounded-2xl p-4 text-xs font-bold mb-4">⚠️ লগ পড়ার পারমিশন নেই। Firebase Realtime Database এর Rules এ <span class="mono-type">rtc_activity_log</span> যোগ করুন (ধাপগুলো আমার মেসেজে দেওয়া আছে)।</div>';
+      else if (activityError) html += '<div class="bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl p-4 text-xs font-bold mb-4">লগ আনা যায়নি (' + escHtml(activityError) + ')। রিফ্রেশ করে দেখুন।</div>';
+      if (logDenied) html += '<div class="bg-amber-50 border border-amber-200 text-amber-900 rounded-2xl p-4 text-xs font-bold mb-4">⚠️ লগ লেখার পারমিশন নেই, তাই ' + logQueue.length + 'টি এন্ট্রি এই ডিভাইসে অপেক্ষায় আছে। Rules ঠিক করলে নিজে নিজেই জমা হবে।</div>';
+      if (!list.length && !activityLoading && !activityError) html += '<div class="bg-white rounded-3xl p-12 text-center border border-slate-200 shadow-sm"><h4 class="font-extrabold text-slate-700 text-base">' + (activityLoaded ? 'কোনো অ্যাক্টিভিটি পাওয়া যায়নি' : 'লোড হচ্ছে...') + '</h4><p class="text-[11px] text-slate-400 mt-1">লগ চালু হওয়ার পর থেকে এখানে জমা হবে।</p></div>';
+      let lastDay = '';
+      html += '<div class="space-y-1.5">' + list.map(function (x) {
+        const dk = bdDayKey(x.t); let head = '';
+        if (dk !== lastDay) { lastDay = dk; head = '<div class="pt-3 pb-1 text-[11px] font-extrabold text-slate-500 uppercase tracking-wide">' + escHtml(bdDayLabel(x.t)) + '</div>'; }
+        const ty = ACT_TYPES[x.type] || [x.type || 'অন্যান্য', 'bg-slate-100 text-slate-600'];
+        return head + '<div class="bg-white rounded-xl border border-slate-200 px-3.5 py-2.5 flex flex-wrap items-start gap-x-3 gap-y-1 shadow-sm">'
+          + '<span class="mono-type text-[11px] font-bold text-slate-400 w-12 flex-shrink-0 pt-0.5">' + escHtml(bdTimeLabel(x.t)) + '</span>'
+          + '<span class="text-[10px] font-extrabold px-2 py-0.5 rounded-md ' + ty[1] + ' flex-shrink-0">' + escHtml(ty[0]) + '</span>'
+          + '<span class="text-[11px] font-extrabold text-[#0077b6] flex-shrink-0"><i class="fa-regular fa-user mr-1"></i>' + escHtml(x.by || '?') + '</span>'
+          + '<div class="min-w-0 flex-1 basis-60"><span class="text-xs font-extrabold text-[#0b132b]">' + escHtml(x.name || '') + '</span>' + (x.detail ? '<div class="text-[11px] text-slate-500 font-medium break-words">' + escHtml(x.detail) + '</div>' : '') + '</div></div>';
+      }).join('') + '</div>';
+      container.innerHTML = html;
+    }
+
+    // ================= 🛡️ Google Drive অটো ব্যাকআপ =================
+    const BACKUP_EVERY_MS = 20 * 3600 * 1000;
+    function fmtBD(t) { return new Date(t).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Dhaka' }); }
+    // অ্যাপ খুললে (ডাটা লোড হওয়ার পর) শেষ ব্যাকআপ ২০ ঘণ্টার পুরনো হলে নিজে নিজেই নতুন ব্যাকআপ নেয়
+    async function autoBackupCheck() {
+      try {
+        if (!driveEnabled() || !auth.currentUser || !visaFiles.length) return;
+        if (document.getElementById('syncStatusText').innerText !== 'Live Sync Ready') return;
+        const tried = Number(localStorage.getItem('rtc_backup_try') || 0); if (Date.now() - tried < 3600 * 1000) return;
+        localStorage.setItem('rtc_backup_try', String(Date.now()));
+        const s = await driveCall({ action: 'backupStatus' });
+        if (s.last && Date.now() - s.last.at < BACKUP_EVERY_MS) return;
+        await driveCall({ action: 'backupSave', kind: 'auto', files: visaFiles });
+        refreshBackupStatus();
+      } catch (e) { console.warn('auto backup skipped', e); }
+    }
+    async function refreshBackupStatus() {
+      const el = document.getElementById('backupLastText'); if (!el || !isAdmin || !driveEnabled()) return;
+      try { const s = await driveCall({ action: 'backupStatus' }); el.innerText = s.last ? ('সর্বশেষ: ' + fmtBD(s.last.at) + ' · ' + s.last.count + 'টি সেট · ' + (s.last.by || '')) : 'এখনো কোনো ব্যাকআপ নেই'; }
+      catch (e) { el.innerText = 'স্ট্যাটাস আনা যায়নি (Apps Script নতুন ভার্শন ডিপ্লয় হয়েছে কি?)'; }
+    }
+    async function backupNow() {
+      if (!visaFiles.length) { alert('ব্যাকআপ নেওয়ার মতো ডাটা নেই!'); return; }
+      showToast('⏳ ব্যাকআপ নেওয়া হচ্ছে...');
+      try { const d = await driveCall({ action: 'backupSave', kind: 'manual', files: visaFiles }); showToast('✅ ব্যাকআপ হয়েছে (' + d.count + 'টি সেট)'); pushLog({ type: 'backup', detail: d.count + 'টি সেট Drive এ ব্যাকআপ (ম্যানুয়াল)' }); refreshBackupStatus(); }
+      catch (e) { alert('ব্যাকআপ হয়নি: ' + (e.message || e)); }
+    }
+    async function loadBackupList() {
+      const box = document.getElementById('backupListBox'); if (!box) return;
+      box.innerHTML = '<p class="text-[11px] text-amber-700">লোড হচ্ছে...</p>';
+      try {
+        const d = await driveCall({ action: 'backupList' });
+        box.innerHTML = d.items.length ? d.items.map(function (x) {
+          return '<div class="flex items-center justify-between gap-2 bg-white border border-amber-200 rounded-lg px-2.5 py-1.5"><div class="min-w-0"><div class="text-[11px] font-bold text-slate-700 truncate">' + escHtml(fmtBD(x.at)) + ' · ' + x.count + 'টি' + (x.low ? ' ⚠️ কম ডাটা' : '') + '</div><div class="text-[10px] text-slate-400">' + escHtml(x.by || '') + ' · ' + (x.kind === 'manual' ? 'ম্যানুয়াল' : 'অটো') + '</div></div><button type="button" onclick="restoreFromBackup(\'' + escHtml(x.id) + '\')" class="bg-rose-600 hover:bg-rose-700 text-white px-2.5 py-1 rounded-md text-[11px] font-bold flex-shrink-0">রিস্টোর</button></div>';
+        }).join('') : '<p class="text-[11px] text-amber-700">কোনো ব্যাকআপ নেই</p>';
+      } catch (e) { box.innerHTML = '<p class="text-[11px] text-rose-600">তালিকা আনা যায়নি: ' + escHtml(e.message || e) + '</p>'; }
+    }
+    async function restoreFromBackup(fileId) {
+      if (!isAdmin) return;
+      if (!confirm('⚠️ এই ব্যাকআপ থেকে রিস্টোর করলে বর্তমান সব ডাটা ব্যাকআপের ডাটা দিয়ে বদলে যাবে।\nনিশ্চিত?')) return;
+      try {
+        if (visaFiles.length) { try { await driveCall({ action: 'backupSave', kind: 'manual', files: visaFiles }); } catch (e) { if (!confirm('রিস্টোরের আগে বর্তমান ডাটার সেফটি ব্যাকআপ নেওয়া যায়নি। তবুও এগোবেন?')) return; } }
+        showToast('⏳ রিস্টোর হচ্ছে...');
+        const d = await driveCall({ action: 'backupGet', fileId: fileId });
+        const obj = JSON.parse(d.text); const list = Array.isArray(obj) ? obj : (obj && Array.isArray(obj.files) ? obj.files : null);
+        if (!list || !list.length) { alert('এই ব্যাকআপে কোনো ডাটা নেই!'); return; }
+        applyRestore(list, 'Drive ব্যাকআপ ' + (obj.savedAtBD || '')); closeSettingsModal(); showToast('♻️ রিস্টোর হয়েছে!');
+      } catch (e) { alert('রিস্টোর হয়নি: ' + (e.message || e)); }
+    }
+    function applyRestore(list, label) {
+      logOverride = { type: 'restore_backup', detail: label + ' (' + list.length + 'টি সেট)' };
+      visaFiles = list; safeLocalSave(); renderFiles(); syncToCloud();
+    }
+  </script>
+  <script>
+    // 📱 অ্যাপ হিসেবে ইনস্টল করার সাপোর্ট (PWA)
+    if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => { }); }); }
+    let deferredInstall = null;
+    const isStandalone = () => window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    function showInstallBtn(on) { const b = document.getElementById('btnInstallApp'); if (b) b.style.display = on ? '' : 'none'; }
+    window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredInstall = e; if (!isStandalone()) showInstallBtn(true); });
+    window.addEventListener('appinstalled', () => { deferredInstall = null; showInstallBtn(false); });
+    if (isIOS && !isStandalone()) showInstallBtn(true);
+    async function installApp() {
+      if (deferredInstall) { deferredInstall.prompt(); try { await deferredInstall.userChoice; } catch (e) { } deferredInstall = null; showInstallBtn(false); return; }
+      if (isIOS) alert('iPhone এ ইনস্টল করতে: Safari তে নিচের Share (⬆️) বাটনে চাপ দিয়ে "Add to Home Screen" বেছে নিন।');
+    }
   </script>
 </body>
 </html>
