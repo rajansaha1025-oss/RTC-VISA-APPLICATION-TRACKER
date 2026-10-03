@@ -18,6 +18,18 @@
     body { font-family: 'Plus Jakarta Sans', 'Hind Siliguri', sans-serif; background: #f4f7fa; }
     .mono-type { font-family: 'JetBrains Mono', monospace; }
     .sidebar-gradient { background: linear-gradient(180deg, #0b132b 0%, #1c2541 100%); }
+    /* পুরো অ্যাপ স্ক্রিনের সমান উচ্চতা (ফোনের অ্যাড্রেস বারসহ ঠিক থাকে); শুধু কার্ড অংশ স্ক্রল হয় */
+    /* flex:none জরুরি: না দিলে (flex-1 এর কারণে) পুরো পেজ কার্ডের সমান লম্বা হয়ে যায় আর সাইডবারও সাথে স্ক্রল হয়ে নিচে ফাঁকা দেখায় */
+    #mainAppContent { flex: none; height: 100vh; height: 100dvh; }
+    #sidebarToggleBtn { display: none; }
+    #sidebarBackdrop { display: none; }
+    @media (max-width: 767px) {
+      /* ফোনে সাইডবার একটা ড্রয়ার: ☰ চাপলে বাম থেকে আসে, বাইরে চাপলে বা মেনু বাছলে বন্ধ হয় */
+      #sidebarToggleBtn { display: flex; }
+      #appSidebar { position: fixed; top: 0; bottom: 0; left: 0; width: 18rem; max-width: 85vw; height: 100vh; height: 100dvh; transform: translateX(-100%); transition: transform .2s ease; z-index: 40; }
+      #appSidebar.open { transform: translateX(0); }
+      #sidebarBackdrop.open { display: block; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 35; }
+    }
     .topbar-gradient { background: linear-gradient(90deg, #0b132b 0%, #111827 100%); }
     .btn-primary-rtc { background: linear-gradient(135deg, #00b4d8 0%, #0077b6 100%); }
     .btn-accent-rtc { background: linear-gradient(135deg, #ff7b00 0%, #d90429 100%); }
@@ -64,7 +76,7 @@
 
   <!-- MAIN APP LAYOUT -->
   <div id="mainAppContent" class="flex-1 flex flex-col md:flex-row hidden h-screen overflow-hidden">
-    <aside class="sidebar-gradient text-white md:w-64 flex-shrink-0 flex flex-col justify-between shadow-xl z-20">
+    <aside id="appSidebar" class="sidebar-gradient text-white md:w-64 flex-shrink-0 flex flex-col justify-between shadow-xl z-20">
       <div id="sidebarScroll" class="flex-1 min-h-0 overflow-y-auto">
         <div class="p-6 flex items-center gap-3.5 border-b border-white/10">
           <label class="relative group cursor-pointer" title="লোগো পরিবর্তন করুন">
@@ -104,10 +116,12 @@
         <button onclick="lockApp()" class="w-full bg-rose-500/10 hover:bg-rose-500 text-rose-400 hover:text-white py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 transition border border-rose-500/20"><i class="fa-solid fa-lock"></i> সিস্টেম লক করুন</button>
       </div>
     </aside>
+    <div id="sidebarBackdrop" onclick="closeSidebar()"></div>
 
-    <div class="flex-1 flex flex-col min-w-0 bg-[#f4f7fa]">
+    <div class="flex-1 flex flex-col min-w-0 min-h-0 bg-[#f4f7fa]">
       <header class="bg-white px-6 py-4 flex flex-wrap justify-between items-center gap-4 shadow-sm border-b border-slate-200 z-10">
         <div class="flex items-center gap-3">
+          <button id="sidebarToggleBtn" type="button" onclick="toggleSidebar()" aria-label="মেনু" class="bg-[#0b132b] text-white w-10 h-10 rounded-xl items-center justify-center shadow"><i class="fa-solid fa-bars"></i></button>
           <span class="text-sm bg-slate-100 px-4 py-2 rounded-xl text-[#0b132b] font-extrabold uppercase tracking-wide border border-slate-200" id="currentViewTitle">📂 রানিং ফাইল</span>
           <div class="bg-slate-100 p-1 rounded-xl flex border border-slate-200 shadow-inner">
             <button onclick="setViewMode('CARD')" id="btnViewCard" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-[#0077b6] shadow-sm transition"><i class="fa-solid fa-table-cells-large mr-1"></i> Card</button>
@@ -1564,6 +1578,17 @@
       }).join('') + '</div>';
       container.innerHTML = html;
     }
+
+    // ================= 📱 ফোনে সাইডবার ড্রয়ার =================
+    function toggleSidebar() { document.getElementById('appSidebar').classList.toggle('open'); document.getElementById('sidebarBackdrop').classList.toggle('open'); }
+    function closeSidebar() { document.getElementById('appSidebar').classList.remove('open'); document.getElementById('sidebarBackdrop').classList.remove('open'); }
+    // মেনু/SMS অ্যাপ বাছলে ড্রয়ার বন্ধ হবে ("SMS অ্যাপ" ড্রপডাউন খোলা-বন্ধ বা লক বাটনে নয়)
+    document.getElementById('appSidebar').addEventListener('click', function (e) {
+      const b = e.target.closest('button'); if (!b) return;
+      const oc = b.getAttribute('onclick') || '';
+      if ((b.id && b.id.indexOf('tab_') === 0) || b.hasAttribute('data-sms') || oc.indexOf("smsFilter=''") === 0) closeSidebar();
+    });
+    window.addEventListener('resize', function () { if (window.innerWidth >= 768) closeSidebar(); });
 
     // ================= 🛡️ Google Drive অটো ব্যাকআপ =================
     const BACKUP_EVERY_MS = 20 * 3600 * 1000;
