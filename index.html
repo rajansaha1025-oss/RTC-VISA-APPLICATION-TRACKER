@@ -236,6 +236,10 @@
             <label class="block text-[11px] font-bold text-slate-500 mb-1">📱 SMS অ্যাপ (ডিফল্ট Rtcsms, চাইলে নিজে লিখে বদলান)</label>
             <input type="text" id="smsApp" list="smsAppList" placeholder="Rtcsms" autocomplete="off" class="w-full md:w-1/2 px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold bg-slate-50 focus:bg-white focus:outline-none focus:border-[#8b5cf6]">
             <datalist id="smsAppList"></datalist>
+            <label class="inline-flex items-center cursor-pointer bg-indigo-50 px-4 py-2.5 rounded-xl border border-indigo-200 mt-2.5 hover:bg-indigo-100 transition">
+              <input type="checkbox" id="appGiven" class="w-4 h-4 accent-indigo-600">
+              <span class="ml-2.5 text-xs font-extrabold text-indigo-900">📲 অ্যাপ কাস্টমারকে দেওয়া হয়েছে</span>
+            </label>
           </div>
         </div>
 
@@ -1121,7 +1125,7 @@
               return `<tr class="hover:bg-[#f4f7fa] transition ${exPpl.length ? 'bg-red-50/40' : ''}">
                 <td class="p-3.5">${f.serial ? '<div class="mb-1">' + serialBadge(f) + '</div>' : ''}<div class="font-extrabold text-[#0b132b] text-sm">${escHtml(f.applicants[0]?.name || 'Unnamed')}</div><div class="text-[10px] text-slate-500 font-bold uppercase mt-0.5">মোট ${f.applicants.length} জন</div>${f.updatedBy ? `<div class="text-[10px] text-slate-400 font-bold mt-0.5">শেষ আপডেট: ${escHtml(f.updatedBy)}${f.updatedAt ? ' · ' + escHtml(f.updatedAt) : ''}</div>` : ''}${exPpl.length ? `<div class="text-[10px] text-red-600 font-extrabold mt-0.5">⚠ Expired: ${exPpl.map(a => escHtml(a.name)).join(', ')}</div>` : ''}</td>
                 <td class="p-3.5 space-y-1.5"><span class="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-slate-100 text-slate-600">${escHtml(f.visaType)}</span><div class="flex flex-wrap gap-1 mt-1">${getDocChecklistBadges(f)}</div></td>
-                <td class="p-3.5"><div class="mono-type font-extrabold text-[#0b132b]">${escHtml(f.accountPhone || 'N/A')}</div>${f.border ? `<div class="text-[10px] text-indigo-600 font-bold mt-0.5">${escHtml(f.border)}</div>` : ''}<div class="text-[10px] text-slate-500 font-bold mt-0.5">📱 ${escHtml(smsOf(f))}</div></td>
+                <td class="p-3.5"><div class="mono-type font-extrabold text-[#0b132b]">${escHtml(f.accountPhone || 'N/A')}</div>${f.border ? `<div class="text-[10px] text-indigo-600 font-bold mt-0.5">${escHtml(f.border)}</div>` : ''}<div class="text-[10px] text-slate-500 font-bold mt-0.5">📱 ${escHtml(smsOf(f))}</div><div class="text-[10px] font-extrabold mt-0.5 ${f.appGiven ? 'text-emerald-600' : 'text-amber-600'}">${f.appGiven ? '✅ অ্যাপ দেওয়া হয়েছে' : '⚠️ অ্যাপ দেওয়া হয়নি'}</div></td>
                 <td class="p-3.5 space-y-1.5">${f.applicants.map((a, i) => {
                   const st = personState(a, f); const exp = getBgdExpiryInfo(a, f);
                   const box = st === 'EXPIRED' ? 'bg-red-50 border-red-200' : (st === 'UPLOADED' ? 'bg-emerald-50 border-emerald-200' : (st === 'SUBMITTED' ? 'bg-sky-50/60 border-sky-100' : 'bg-white border-slate-100'));
@@ -1168,7 +1172,7 @@
               <div class="bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm"><span class="text-[10px] font-extrabold text-slate-400 block uppercase">জিমেইল</span><span class="mono-type text-sm font-extrabold text-[#0077b6]">${escHtml(f.accountGmail || '---')}</span></div>
               <div class="bg-white px-3 py-1.5 rounded-xl border ${isDiffPass ? 'border-red-400 bg-red-50' : 'border-slate-200'} shadow-sm"><span class="text-[10px] font-extrabold text-slate-400 block uppercase">পাসওয়ার্ড ${isDiffPass ? '<b class="text-red-500">(আলাদা)</b>' : ''}</span><span class="mono-type text-sm font-extrabold ${isDiffPass ? 'text-red-600' : 'text-slate-700'}">${escHtml(f.accountPassword || '---')}</span></div>
  <div class="bg-white px-3 py-1.5 rounded-xl border ${f.border ? 'border-indigo-200' : 'border-slate-200'} shadow-sm"><span class="text-[10px] font-extrabold text-slate-400 block uppercase">বর্ডার</span><span class="text-xs font-extrabold ${f.border ? 'text-indigo-700' : 'text-slate-400'}">${escHtml(f.border || '---')}</span></div>
- <div class="bg-white px-3 py-1.5 rounded-xl border border-indigo-100 shadow-sm"><span class="text-[10px] font-extrabold text-slate-400 block uppercase">SMS অ্যাপ</span><span class="text-xs font-extrabold text-indigo-700">${escHtml(smsOf(f))}</span></div>
+ <div class="bg-white px-3 py-1.5 rounded-xl border border-indigo-100 shadow-sm"><span class="text-[10px] font-extrabold text-slate-400 block uppercase">SMS অ্যাপ</span><span class="text-xs font-extrabold text-indigo-700">${escHtml(smsOf(f))}</span><span class="block text-[10px] font-extrabold mt-0.5 ${f.appGiven ? 'text-emerald-600' : 'text-amber-600'}">${f.appGiven ? '✅ অ্যাপ দেওয়া হয়েছে' : '⚠️ অ্যাপ দেওয়া হয়নি'}</span></div>
             </div>
           </div>
 
@@ -1230,7 +1234,7 @@
       if (fileId) {
         const f = visaFiles.find(x => x.id === fileId); modalDriveFolderId = f.driveFolderId || ''; modalDriveFolderName = f.driveFolderName || '';
         document.getElementById('editFileId').value = f.id; document.getElementById('visaType').value = f.visaType || 'Medical'; document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-folder-plus text-[#00b4d8]"></i> ভিসা ফাইল প্রসেসিং' + (f.serial ? ' <span class="bg-white/15 px-2.5 py-0.5 rounded-lg mono-type text-base">#' + escHtml(String(f.serial)) + '</span>' : '');
-        document.getElementById('workerName').value = f.worker || ''; document.getElementById('isSignedUp').checked = !!f.isSignedUp; document.getElementById('entryBorder').value = f.border || ''; document.getElementById('smsApp').value = f.smsApp || 'Rtcsms'; refreshSmsDatalist();
+        document.getElementById('workerName').value = f.worker || ''; document.getElementById('isSignedUp').checked = !!f.isSignedUp; document.getElementById('entryBorder').value = f.border || ''; document.getElementById('smsApp').value = f.smsApp || 'Rtcsms'; document.getElementById('appGiven').checked = !!f.appGiven; refreshSmsDatalist();
         document.getElementById('isDelivered').checked = !!f.isDelivered; document.getElementById('isReturned').checked = !!f.isReturned;
         document.getElementById('accountPhone').value = f.accountPhone || ''; document.getElementById('accountGmail').value = f.accountGmail || '';
         document.getElementById('accountPassword').value = f.accountPassword || defaultPass || '';
@@ -1255,7 +1259,7 @@
         let currentWorker = auth.currentUser ? (auth.currentUser.displayName || auth.currentUser.email.split('@')[0]) : '';
         document.getElementById('workerName').value = currentWorker.toUpperCase();
         
-        document.getElementById('isSignedUp').checked = false; document.getElementById('entryBorder').value = ''; document.getElementById('smsApp').value = 'Rtcsms'; refreshSmsDatalist(); document.getElementById('isDelivered').checked = false; document.getElementById('isReturned').checked = false;
+        document.getElementById('isSignedUp').checked = false; document.getElementById('entryBorder').value = ''; document.getElementById('smsApp').value = 'Rtcsms'; document.getElementById('appGiven').checked = false; refreshSmsDatalist(); document.getElementById('isDelivered').checked = false; document.getElementById('isReturned').checked = false;
         document.getElementById('accountPhone').value = ''; document.getElementById('accountGmail').value = ''; document.getElementById('accountPassword').value = defaultPass || '';
         document.getElementById('docTrade').value = 'NONE'; document.getElementById('docNoc').value = 'NONE'; document.getElementById('docBank').value = 'CUSTOMER';
         document.getElementById('docPassportHeld').value = 'CUSTOMER'; document.getElementById('feeStatus').value = 'UNPAID'; document.getElementById('isAppointed').checked = false;
@@ -1389,7 +1393,7 @@
         id: editId || 'SET_' + Date.now(),
         visaType: document.getElementById('visaType').value, worker: document.getElementById('workerName').value.trim(),
         isSignedUp: document.getElementById('isSignedUp').checked, isDelivered: document.getElementById('isDelivered').checked, isReturned: document.getElementById('isReturned').checked,
-        border: document.getElementById('entryBorder').value, smsApp: normSmsName(document.getElementById('smsApp').value), accountPhone: document.getElementById('accountPhone').value.trim(), accountGmail: document.getElementById('accountGmail').value.trim(), accountPassword: document.getElementById('accountPassword').value.trim(),
+        border: document.getElementById('entryBorder').value, smsApp: normSmsName(document.getElementById('smsApp').value), appGiven: document.getElementById('appGiven').checked, accountPhone: document.getElementById('accountPhone').value.trim(), accountGmail: document.getElementById('accountGmail').value.trim(), accountPassword: document.getElementById('accountPassword').value.trim(),
         docTrade: document.getElementById('docTrade').value, docNoc: document.getElementById('docNoc').value, docBank: document.getElementById('docBank').value, docPassportHeld: document.getElementById('docPassportHeld').value,
         feeStatus: document.getElementById('feeStatus').value, isAppointed: document.getElementById('isAppointed').checked,
         
@@ -1463,7 +1467,7 @@
     // প্রতিবার সফল সিঙ্কের পর, আগের অবস্থার সাথে তুলনা করে কী বদলেছে তার এন্ট্রি Firebase এর rtc_activity_log এ জমা হয় (শুধু নতুন এন্ট্রি যোগ হয়, কিছু বদলায় না)
     const LOG_FIELDS = [
       ['visaType', 'ভিসা টাইপ'], ['worker', 'ওয়ার্কার'], ['isSignedUp', 'সাইন-আপ', 'bool'], ['isDelivered', 'ডেলিভারি', 'bool'], ['isReturned', 'ফেরত', 'bool'], ['isAppointed', 'অ্যাপয়েন্টমেন্ট', 'bool'], ['appointmentDate', 'অ্যাপয়েন্টমেন্ট তারিখ'],
-      ['border', 'বর্ডার'], ['smsApp', 'SMS অ্যাপ'], ['accountPhone', 'ফোন', 'label'], ['accountGmail', 'জিমেইল', 'label'], ['accountPassword', 'পাসওয়ার্ড', 'label'],
+      ['border', 'বর্ডার'], ['smsApp', 'SMS অ্যাপ'], ['appGiven', 'অ্যাপ দেওয়া হয়েছে', 'bool'], ['accountPhone', 'ফোন', 'label'], ['accountGmail', 'জিমেইল', 'label'], ['accountPassword', 'পাসওয়ার্ড', 'label'],
       ['docTrade', 'ট্রেড ডক'], ['docNoc', 'NOC'], ['docBank', 'ব্যাংক ডক'], ['docPassportHeld', 'পাসপোর্ট জমা'], ['feeStatus', 'ফি স্ট্যাটাস'],
       ['baseVisaFee', 'ভিসা ফি', 'num'], ['softwareCharge', 'সফটওয়্যার চার্জ', 'num'], ['billTotal', 'মোট বিল', 'num'], ['billAdvance', 'অ্যাডভান্স', 'num'], ['billDue', 'বাকি', 'num'], ['keptCharge', 'রাখা চার্জ', 'num'], ['refundAmount', 'ফেরত টাকা', 'num'],
       ['returnReason', 'ফেরতের কারণ', 'label'], ['note', 'নোট', 'label']
