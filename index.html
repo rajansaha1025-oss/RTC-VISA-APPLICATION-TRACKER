@@ -385,7 +385,7 @@
       <p class="text-xs text-slate-500 font-bold mb-1">💡 নোট:</p>
       <p class="text-[11px] text-slate-400">কমন পাসওয়ার্ড সেভ করলে তা ক্লাউডে (শুধু লগইন করা ইউজারদের জন্য) সেভ থাকবে।</p>
     </div>
-      <div id="driveOrganizeBox" style="display:none" class="bg-emerald-50 p-4 rounded-xl border border-emerald-200 text-center"><p class="text-xs text-emerald-800 font-bold mb-1">📁 Drive ফোল্ডার সাজান</p><div id="driveOrganizePending" style="display:none"><p class="text-[11px] text-emerald-700 mb-2">পুরনো <b id="driveOrganizeCount">0</b>টি ফোল্ডার এখনো সাজানো হয়নি (একবারই লাগে)</p><button type="button" onclick="organizeDriveFolders()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-bold">এখনই সাজান</button></div><p id="driveOrganizeDone" class="text-[11px] text-emerald-700">✅ সব ফোল্ডার সাজানো আছে। নতুন ফোল্ডার ও স্ট্যাটাস বদল নিজে নিজেই ঠিক জায়গায় যাবে।</p></div>
+      <div id="driveOrganizeBox" style="display:none" class="bg-emerald-50 p-4 rounded-xl border border-emerald-200 text-center"><p class="text-xs text-emerald-800 font-bold mb-1">📁 Drive ফোল্ডার সাজান</p><div id="driveOrganizePending" style="display:none"><p class="text-[11px] text-emerald-700 mb-2">পুরনো <b id="driveOrganizeCount">0</b>টি ফোল্ডার এখনো সাজানো হয়নি (একবারই লাগে)</p><button type="button" onclick="organizeDriveFolders()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-bold">এখনই সাজান</button></div><p id="driveOrganizeDone" class="text-[11px] text-emerald-700">✅ সব ফোল্ডার সাজানো আছে। নতুন ফোল্ডার ও স্ট্যাটাস বদল নিজে নিজেই ঠিক জায়গায় যাবে।</p><div class="mt-3 pt-3 border-t border-emerald-200"><p class="text-[11px] text-emerald-700 mb-2">একই নামের ডুপ্লিকেট ফোল্ডার থাকলে একটা রেখে বাকিটা পরিষ্কার হবে (ফাইল হারায় না, ট্র্যাশে যায়)। একই মেইন নামে ২টা কার্ড থাকলে কিছু মোছে না। প্রতি রাতে নিজে নিজেও চলে।</p><button type="button" id="dupCleanBtn" onclick="cleanDriveDuplicates()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-bold">🧹 ডুপ্লিকেট ফোল্ডার পরিষ্কার</button></div></div>
       <div id="backupBox" style="display:none" class="bg-amber-50 p-4 rounded-xl border border-amber-200"><p class="text-xs text-amber-900 font-bold mb-1">🛡️ Drive অটো ব্যাকআপ</p><p id="backupLastText" class="text-[11px] text-amber-800 mb-2">লোড হচ্ছে...</p><div class="flex gap-2 flex-wrap"><button type="button" onclick="backupNow()" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold">এখনই ব্যাকআপ নিন</button><button type="button" onclick="loadBackupList()" class="bg-white border border-amber-300 text-amber-800 px-3 py-1.5 rounded-lg text-xs font-bold">ব্যাকআপ তালিকা / রিস্টোর</button></div><div id="backupListBox" class="mt-2 space-y-1 max-h-48 overflow-y-auto"></div></div>
     <div class="bg-slate-50 p-4 rounded-xl border border-slate-200"><label class="block font-bold text-slate-600 mb-1">🔑 কমন পাসওয়ার্ড</label><input type="text" id="settingDefaultPass" class="w-full px-3 py-2 rounded-lg border border-slate-300 font-bold mono-type"></div><div class="bg-slate-50 p-4 rounded-xl border border-slate-200"><label class="block font-bold text-slate-600 mb-1">🌐 Firebase Cloud URL (লাইভ সিঙ্ক)</label><input type="url" id="settingCloudUrl" class="w-full px-3 py-2 rounded-lg border border-slate-300"></div><div class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex justify-between items-center"><div><p class="font-bold text-slate-700">📂 রিস্টোর</p></div><label class="cursor-pointer bg-slate-800 text-white px-3 py-1.5 rounded-lg font-bold">ফাইল দিন <input type="file" accept=".json" onchange="importBackup(event)" class="hidden"></label></div></div><div class="bg-slate-50 px-6 py-3.5 flex justify-end gap-2 border-t border-slate-200"><button onclick="closeSettingsModal()" class="px-4 py-2 rounded-xl border bg-white font-bold">বন্ধ</button><button onclick="saveSettings()" class="btn-primary-rtc text-white px-5 py-2 rounded-xl font-bold shadow">সেভ করুন</button></div></div></div>
 
@@ -424,7 +424,7 @@
     const DRIVE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw9zJgVEYhe0wFFbNYnkNoyPRGH7GcpCOEg4Jh3SwJBrYtGNlRai9iMgg84855bekxI/exec";
     const ADMIN_HASHES = ['5d1960914a680f8650fdae52e5b520e50ab3e91d3935d0a42e460dd3f9202342', '77a3013bd4968ef24c67b8d9e9090705de858ed888c6050222f6bf09e49518f8'];
     const VISA_FEE_PER_PERSON = 1500; let baseFeeManual = false;
-    let isAdmin = false; let modalFolderNew = false; let modalStatusAtCreate = ''; let modalDriveFolderId = ''; let modalDriveFolderName = ''; let modalNewDriveIds = []; let modalOrphanDriveIds = [];
+    let isAdmin = false; let modalFolderNew = false; let modalStatusAtCreate = ''; let modalDriveFolderId = ''; let modalDriveFolderName = ''; let modalNewDriveIds = []; let modalOrphanDriveIds = []; let modalSetKey = '';
     const driveEnabled = () => !DRIVE_SCRIPT_URL.startsWith('PASTE');
 
     let activeTab = 'RUNNING'; let viewMode = localStorage.getItem('rtc_view_mode') || 'CARD'; let tempApplicants = [];
@@ -658,6 +658,7 @@
     }
 
     let cloudBusy = 0; let lastCloudText = '';
+    window.addEventListener('beforeunload', function (e) { if (cloudBusy > 0) { e.preventDefault(); e.returnValue = ''; return ''; } });   // আপলোড চলার সময় ট্যাব বন্ধ/রিফ্রেশ করতে গেলে সতর্ক করে
     // 🔄 সেফ সিঙ্ক: একজনের সেভ অন্যজনের পরিবর্তন মুছে দেয় না। সেভের সময় ক্লাউডের লেটেস্ট কপি এনে ফাইল ধরে ধরে মার্জ করে তারপর লেখা হয়
     function snapFrom(list) { const m = {}; (list || []).forEach(f => { if (f && f.id) m[f.id] = JSON.stringify(f); }); return m; }
     let cloudSnap = snapFrom(visaFiles);   // ক্লাউডের সাথে সর্বশেষ মিলানো অবস্থা (ফাইল-আইডি → JSON)
@@ -775,14 +776,14 @@
     async function driveCall(payload) {
       if (!driveEnabled()) throw new Error('NO_DRIVE_URL');
       const user = auth.currentUser; if (!user) throw new Error('AUTH');
-      const maxTry = (payload.action === 'get' || payload.action === 'syncSet') ? 3 : 1;
+      const maxTry = (payload.action === 'get' || payload.action === 'syncSet' || (payload.action === 'upload' && payload.reqId)) ? 3 : 1;   // upload এর রিট্রাই নিরাপদ: একই reqId তে সার্ভার দ্বিতীয় ফাইল বানায় না
       let lastErr;
       for (let i = 0; i < maxTry; i++) {
         try {
           payload.idToken = await user.getIdToken();
           let r; try { r = await fetch(DRIVE_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) }); } catch (e) { throw Object.assign(new Error('DRIVE_NETWORK: ' + (e.message || e)), { retry: true }); }
           const txt = await r.text(); let d; try { d = JSON.parse(txt); } catch (e) { throw Object.assign(new Error('DRIVE_BAD_RESPONSE: ' + txt.replace(/\s+/g, ' ').slice(0, 160)), { retry: true }); }
-          if (!d.ok) throw new Error(d.error || ('DRIVE_ERROR, সার্ভারের উত্তর: ' + txt.replace(/\s+/g, ' ').slice(0, 200)));
+          if (!d.ok) throw Object.assign(new Error(d.error || ('DRIVE_ERROR, সার্ভারের উত্তর: ' + txt.replace(/\s+/g, ' ').slice(0, 200))), { retry: /SERVER_BUSY/.test(d.error || '') });
           return d;
         } catch (e) { lastErr = e; if (!e.retry || i === maxTry - 1) throw e; await new Promise(res => setTimeout(res, 1500 * (i + 1))); }
       }
@@ -799,7 +800,8 @@
     async function driveUploadApplicant(o) {
       const dataUrl = o.dataUrl || await readFileAsDataURL(o.file); const nm = safeName(o.name);
       const fileName = o.fileName || driveExpectedName({ name: o.name }, o.idx);
-      const d = await driveCall({ action: 'upload', folderId: o.folderId || '', folderName: safeName(o.folderName), fileName: fileName, data: dataUrl.split(',')[1], replaceFileId: o.replaceFileId || '', status: o.status || 'Running', sms: o.sms || '', visaType: o.visaType || '' }); return { folderId: d.folderId, folderName: d.folderName, fileId: d.fileId, fileName: fileName };
+      const reqId = 'u' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+      const d = await driveCall({ action: 'upload', reqId: reqId, setKey: o.setKey || '', folderId: o.folderId || '', folderName: safeName(o.folderName), fileName: fileName, data: dataUrl.split(',')[1], replaceFileId: o.replaceFileId || '', status: o.status || 'Running', sms: o.sms || '', visaType: o.visaType || '' }); return { folderId: d.folderId, folderName: d.folderName, fileId: d.fileId, fileName: fileName };
     }
     function driveExpectedName(a, idx, f) { const nm = safeName(a.name); const core = idx === 0 ? '1 - ' + nm + ' (MAIN BGD)' : nm + ' (BGD)'; const exp = !!(f && expiryRelevant(f) && needsRenewal(a, f)); return (exp ? 'EXPIRED - ' : '') + core + '.pdf'; }
     async function driveSyncSet(f) {
@@ -821,7 +823,7 @@
       cloudBusy++;
       try {
         if (moved.driveFileId) {
-          const r = await driveCall({ action: 'moveFile', fileId: moved.driveFileId, toFolderId: dest.driveFolderId || '', toFolderName: safeName(dest.applicants[0].name), fromFolderId: sFile.driveFolderId || '', trashFromIfEmpty: !!sRemoved, status: driveStatusOf(dest), sms: smsOf(dest), visaType: dest.visaType });
+          const r = await driveCall({ action: 'moveFile', setKey: dest.id, fileId: moved.driveFileId, toFolderId: dest.driveFolderId || '', toFolderName: safeName(dest.applicants[0].name), fromFolderId: sFile.driveFolderId || '', trashFromIfEmpty: !!sRemoved, status: driveStatusOf(dest), sms: smsOf(dest), visaType: dest.visaType });
           if (!dest.driveFolderId) dest.driveStatus = driveLocOf(dest);
           dest.driveFolderId = r.folderId; dest.driveFolderName = r.folderName;
         } else if (sRemoved && sFile.driveFolderId) { await driveCall({ action: 'deleteFiles', fileIds: [], folderIdIfEmpty: sFile.driveFolderId }); }
@@ -870,6 +872,34 @@
         for (const f of drift.slice(0, 12)) { nameSyncTried[f.id] = Date.now(); await driveSyncSet(f); }
       } finally { statusSyncBusy = false; }
       if (changed) syncToCloud();
+    }
+    // 🧹 ডুপ্লিকেট ফোল্ডার পরিষ্কার: কার্ডে যে ফোল্ডার/ফাইলের আইডি আছে সেগুলোই "আসল"; একই নামের বাড়তি ফোল্ডার সার্ভার মিলিয়ে ট্র্যাশে পাঠায়
+    function collectDriveRefs() {
+      const folders = new Set(), files = new Set();
+      (function walk(o) {
+        if (!o || typeof o !== 'object') return;
+        if (Array.isArray(o)) { o.forEach(walk); return; }
+        Object.keys(o).forEach(k => { const v = o[k]; if (typeof v === 'string' && v) { if (k === 'driveFolderId') folders.add(v); else if (/FileId$/.test(k)) files.add(v); } else if (v && typeof v === 'object') walk(v); });
+      })(visaFiles);
+      return { folders: Array.from(folders), files: Array.from(files), names: visaFiles.map(f => safeName(f.applicants && f.applicants[0] && f.applicants[0].name)) };   // names: প্রতিটি কার্ডের মেইন নাম (রিসাইকেল বিনসহ), একই নামে ২টা কার্ড থাকলে সার্ভার কিছু মোছে না
+    }
+    async function cleanDriveDuplicates() {
+      if (!isAdmin) return;
+      if (!driveEnabled()) { alert('Drive সেট করা নেই!'); return; }
+      if (cloudBusy > 0) { alert('⏳ একটি কাজ চলছে, শেষ হওয়ার পর আবার চাপুন।'); return; }
+      if (!confirm('একই নামের ডুপ্লিকেট ফোল্ডার খুঁজে পরিষ্কার করা হবে।\n\n• কার্ডে যে ফোল্ডার আছে সেটা থাকবে\n• একই মেইন নামে ২টা কার্ড থাকলে কিছুই মোছা হবে না\n• বাড়তি ফোল্ডারের একই ফাইল ট্র্যাশে যাবে (৩০ দিন ফেরত আনা যায়)\n• আলাদা নামের ফাইল থাকলে আসল ফোল্ডারে সরিয়ে দেবে\n\n১-২ মিনিট লাগতে পারে, ট্যাব বন্ধ করবেন না। চালাবেন?')) return;
+      const btn = document.getElementById('dupCleanBtn'); if (btn) { btn.disabled = true; btn.innerText = '⏳ পরিষ্কার হচ্ছে...'; }
+      try {
+        await fetchFromCloud(true);   // সবার সর্বশেষ কার্ড নিয়ে নেয়, যাতে কারো ফোল্ডার ভুলে "ডুপ্লিকেট" না ধরা হয়
+        if (!visaFiles.length) throw new Error('ডাটা লোড হয়নি');
+        cloudBusy++;
+        const refs = collectDriveRefs();
+        const d = await driveCall({ action: 'dedupe', refFolders: refs.folders, refFiles: refs.files, refNames: refs.names });
+        showToast(d.foldersTrashed ? ('✅ ' + d.foldersTrashed + 'টি ডুপ্লিকেট ফোল্ডার পরিষ্কার (' + d.filesTrashed + 'টি কপি ট্র্যাশে, ' + d.filesMoved + 'টি ফাইল আসল ফোল্ডারে সরানো)') : '✅ কোনো ডুপ্লিকেট ফোল্ডার পাওয়া যায়নি');
+        if (d.partial || d.ambiguous || d.skippedBusy || d.sameNameSkipped) alert('কিছু অংশ বাকি আছে/এড়ানো হয়েছে' + (d.partial ? ' (সময় শেষ, আবার চাপলে বাকিটা হবে)' : '') + (d.sameNameSkipped ? '\n• ' + d.sameNameSkipped + 'টি বাড়তি ফোল্ডারে হাত দেওয়া হয়নি, কারণ একই নামে একাধিক কার্ড আছে (কোনটার ফোল্ডার বোঝা যায় না, Drive এ নিজে দেখে নিন)' : '') + (d.ambiguous ? '\n• ' + d.ambiguous + 'টি ফোল্ডারে একাধিক আসল ফোল্ডার মিলেছে, নিজে দেখে নিন' : '') + (d.skippedBusy ? '\n• ' + d.skippedBusy + 'টি ব্যস্ততার কারণে বাদ, আবার চাপুন' : ''));
+      } catch (e) { alert('ডুপ্লিকেট পরিষ্কার হয়নি।\n\nকারণ: ' + ((e && e.message) === 'UNKNOWN_ACTION' ? 'Apps Script এর নতুন ভার্শন (v12) ডিপ্লয় করুন' : (e && e.message) === 'NO_NAMES' ? 'index.html এর নতুন ভার্শন আপলোড করুন' : ((e && e.message) || e))); }
+      cloudBusy = Math.max(0, cloudBusy - 1);
+      if (btn) { btn.disabled = false; btn.innerText = '🧹 ডুপ্লিকেট ফোল্ডার পরিষ্কার'; }
     }
     async function organizeDriveFolders() {
       if (!isAdmin) return; if (!driveEnabled()) { alert('Drive এর URL বসানো নেই!'); return; }
@@ -1001,7 +1031,7 @@
       cloudBusy++; showToast('⏳ Invoice আপলোড হচ্ছে...');
       try {
         const hadFolder = !!f.driveFolderId;
-        const res = await driveUploadApplicant({ folderId: f.driveFolderId || '', folderName: f.applicants[0].name, fileName: invoiceFileNameFor(f), file: file, replaceFileId: f.invoiceFileId || '', status: driveStatusOf(f), sms: smsOf(f), visaType: f.visaType });
+        const res = await driveUploadApplicant({ setKey: f.id, folderId: f.driveFolderId || '', folderName: f.applicants[0].name, fileName: invoiceFileNameFor(f), file: file, replaceFileId: f.invoiceFileId || '', status: driveStatusOf(f), sms: smsOf(f), visaType: f.visaType });
         if (!hadFolder) f.driveStatus = driveStatusOf(f);
         f.driveFolderId = res.folderId; f.driveFolderName = res.folderName;
         f.invoiceFileId = res.fileId; f.invoiceFileName = res.fileName; f.invoiceName = file.name; f.invoiceBy = whoAmI(); f.invoiceAt = stampNow(); f.isAppointed = true;
@@ -1056,7 +1086,7 @@
       cloudBusy++; showToast('⏳ PDF আপলোড হচ্ছে...');
       try {
         const hadFolder = !!f.driveFolderId;
-          const res = await driveUploadApplicant({ folderId: f.driveFolderId || '', folderName: f.applicants[0].name, idx: appIdx, name: a.name, file: file, replaceFileId: a.driveFileId || '', status: driveStatusOf(f), sms: smsOf(f), visaType: f.visaType });
+          const res = await driveUploadApplicant({ setKey: f.id, folderId: f.driveFolderId || '', folderName: f.applicants[0].name, idx: appIdx, name: a.name, file: file, replaceFileId: a.driveFileId || '', status: driveStatusOf(f), sms: smsOf(f), visaType: f.visaType });
           if (!hadFolder) f.driveStatus = driveStatusOf(f);
           f.driveFolderId = res.folderId; f.driveFolderName = res.folderName; a.driveFileId = res.fileId; a.driveFileName = res.fileName;
         
@@ -1289,7 +1319,7 @@
       cloudBusy++; showToast('⏳ Letter আপলোড হচ্ছে...');
       try {
         const hadFolder = !!f.driveFolderId;
-        const res = await driveUploadApplicant({ folderId: f.driveFolderId || '', folderName: f.applicants[0].name, fileName: letterFileNameFor(f, k), file: file, replaceFileId: f[k + 'FileId'] || '', status: driveStatusOf(f), sms: smsOf(f), visaType: f.visaType });
+        const res = await driveUploadApplicant({ setKey: f.id, folderId: f.driveFolderId || '', folderName: f.applicants[0].name, fileName: letterFileNameFor(f, k), file: file, replaceFileId: f[k + 'FileId'] || '', status: driveStatusOf(f), sms: smsOf(f), visaType: f.visaType });
         if (!hadFolder) f.driveStatus = driveLocOf(f);
         f.driveFolderId = res.folderId; f.driveFolderName = res.folderName;
         f[k + 'FileId'] = res.fileId; f[k + 'FileName'] = res.fileName; f[k + 'Name'] = file.name; f[k + 'By'] = whoAmI(); f[k + 'At'] = stampNow(); f[k + 'Received'] = true;
@@ -1344,7 +1374,7 @@
         const stNow = document.getElementById('isReturned').checked ? 'Returned' : (document.getElementById('isDelivered').checked ? 'Delivered' : 'Running');
         const smsNow = ((document.getElementById('smsApp').value || '').trim()) || 'Rtcsms'; const vt = document.getElementById('visaType').value; const wasNew = !modalDriveFolderId;
         const fakeF = { applicants: [{ name: tempApplicants[0].name }], letterMode: modalLet.mode };
-        const res = await driveUploadApplicant({ folderId: modalDriveFolderId, folderName: tempApplicants[0].name, fileName: letterFileNameFor(fakeF, k), file: file, status: stNow, sms: smsNow, visaType: vt });
+        const res = await driveUploadApplicant({ setKey: modalKey(), folderId: modalDriveFolderId, folderName: tempApplicants[0].name, fileName: letterFileNameFor(fakeF, k), file: file, status: stNow, sms: smsNow, visaType: vt });
         if (wasNew) { modalFolderNew = true; modalStatusAtCreate = locFor(stNow, smsNow, vt); }
         modalDriveFolderId = res.folderId; modalDriveFolderName = res.folderName; modalNewDriveIds.push(res.fileId);
         if (modalLet[k] && modalLet[k].fileId) modalOrphanDriveIds.push(modalLet[k].fileId);
@@ -1354,9 +1384,11 @@
       finally { cloudBusy = Math.max(0, cloudBusy - 1); event.target.value = ''; }
     }
 
+    // 🔑 সেটের পরিচয়-কী: নতুন সেটে মডাল খোলার সময়েই আইডি ঠিক হয় (সেভের সময় এটাই কার্ডের আইডি হয়)। সার্ভার এই কী দিয়ে একই সেটের আপলোড একই ফোল্ডারে রাখে, তাই ডুপ্লিকেট ফোল্ডার হয় না
+    function modalKey() { return document.getElementById('editFileId').value || modalSetKey; }
     function openFileModal(fileId = null) {
       document.getElementById('fileModal').classList.remove('hidden');
-      modalNewDriveIds = []; modalOrphanDriveIds = []; modalDriveFolderId = ''; modalDriveFolderName = ''; modalFolderNew = false; modalStatusAtCreate = '';
+      modalNewDriveIds = []; modalOrphanDriveIds = []; modalDriveFolderId = ''; modalDriveFolderName = ''; modalFolderNew = false; modalStatusAtCreate = ''; modalSetKey = fileId ? '' : 'SET_' + Date.now();
       if (fileId) {
         const f = visaFiles.find(x => x.id === fileId); modalDriveFolderId = f.driveFolderId || ''; modalDriveFolderName = f.driveFolderName || '';
         document.getElementById('editFileId').value = f.id; document.getElementById('visaType').value = f.visaType || 'Medical'; document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-folder-plus text-[#00b4d8]"></i> ভিসা ফাইল প্রসেসিং' + (f.serial ? ' <span class="bg-white/15 px-2.5 py-0.5 rounded-lg mono-type text-base">#' + escHtml(String(f.serial)) + '</span>' : '');
@@ -1441,7 +1473,7 @@
         const stNow = document.getElementById('isReturned').checked ? 'Returned' : (document.getElementById('isDelivered').checked ? 'Delivered' : 'Running');
         const smsNow = ((document.getElementById('smsApp').value || '').trim()) || 'Rtcsms';
           const wasNew = !modalDriveFolderId;
-          const res = await driveUploadApplicant({ folderId: modalDriveFolderId, folderName: tempApplicants[0].name, idx: idx, name: t0 ? t0.name : '', file: file, status: stNow, sms: smsNow, visaType: document.getElementById('visaType').value });
+          const res = await driveUploadApplicant({ setKey: modalKey(), folderId: modalDriveFolderId, folderName: tempApplicants[0].name, idx: idx, name: t0 ? t0.name : '', file: file, status: stNow, sms: smsNow, visaType: document.getElementById('visaType').value });
           if (wasNew) { modalFolderNew = true; modalStatusAtCreate = locFor(stNow, smsNow, document.getElementById('visaType').value); }
         modalDriveFolderId = res.folderId; modalDriveFolderName = res.folderName; modalNewDriveIds.push(res.fileId);
         if (t0 && t0.driveFileId) modalOrphanDriveIds.push(t0.driveFileId);
@@ -1519,7 +1551,7 @@
         savingSet = false; syncTempInputs();
       }
       const fileObj = {
-        id: editId || 'SET_' + Date.now(),
+        id: editId || modalSetKey || 'SET_' + Date.now(),
         visaType: document.getElementById('visaType').value, worker: document.getElementById('workerName').value.trim(),
         isSignedUp: document.getElementById('isSignedUp').checked, isDelivered: document.getElementById('isDelivered').checked, isReturned: document.getElementById('isReturned').checked,
         border: document.getElementById('entryBorder').value, smsApp: normSmsName(document.getElementById('smsApp').value), appGiven: document.getElementById('appGiven').checked, accountPhone: document.getElementById('accountPhone').value.trim(), accountGmail: document.getElementById('accountGmail').value.trim(), accountPassword: document.getElementById('accountPassword').value.trim(),
