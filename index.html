@@ -1386,9 +1386,15 @@
 
     // 🔑 সেটের পরিচয়-কী: নতুন সেটে মডাল খোলার সময়েই আইডি ঠিক হয় (সেভের সময় এটাই কার্ডের আইডি হয়)। সার্ভার এই কী দিয়ে একই সেটের আপলোড একই ফোল্ডারে রাখে, তাই ডুপ্লিকেট ফোল্ডার হয় না
     function modalKey() { return document.getElementById('editFileId').value || modalSetKey; }
+    // নতুন সেটের কী ব্রাউজারে মনে রাখা হয়: আপলোড চলার সময় রিফ্রেশ/ট্যাব বন্ধ হলেও পরের বার একই কী পায়, তাই সার্ভার একই ফোল্ডারেই ফাইল রাখে (নতুন ফোল্ডার হয় না)। সেভ বা বাতিল করলে মুছে যায়
+    function pendingSetKey() {
+      try { const p = JSON.parse(localStorage.getItem('rtc_pending_setkey') || 'null'); if (p && p.k && Date.now() - p.t < 6 * 3600 * 1000) return p.k; } catch (e) { }
+      const k = 'SET_' + Date.now(); try { localStorage.setItem('rtc_pending_setkey', JSON.stringify({ k: k, t: Date.now() })); } catch (e) { } return k;
+    }
+    function clearPendingSetKey() { try { localStorage.removeItem('rtc_pending_setkey'); } catch (e) { } }
     function openFileModal(fileId = null) {
       document.getElementById('fileModal').classList.remove('hidden');
-      modalNewDriveIds = []; modalOrphanDriveIds = []; modalDriveFolderId = ''; modalDriveFolderName = ''; modalFolderNew = false; modalStatusAtCreate = ''; modalSetKey = fileId ? '' : 'SET_' + Date.now();
+      modalNewDriveIds = []; modalOrphanDriveIds = []; modalDriveFolderId = ''; modalDriveFolderName = ''; modalFolderNew = false; modalStatusAtCreate = ''; modalSetKey = fileId ? '' : pendingSetKey();
       if (fileId) {
         const f = visaFiles.find(x => x.id === fileId); modalDriveFolderId = f.driveFolderId || ''; modalDriveFolderName = f.driveFolderName || '';
         document.getElementById('editFileId').value = f.id; document.getElementById('visaType').value = f.visaType || 'Medical'; document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-folder-plus text-[#00b4d8]"></i> ভিসা ফাইল প্রসেসিং' + (f.serial ? ' <span class="bg-white/15 px-2.5 py-0.5 rounded-lg mono-type text-base">#' + escHtml(String(f.serial)) + '</span>' : '');
@@ -1437,7 +1443,10 @@
       setTimeout(calcDue, 50); // Instantly update profit visual
     }
 
-    function closeFileModal() {
+    function closeFileModal(force) {
+      // PDF আপলোড চলার সময় বন্ধ করলে সার্ভারে ফোল্ডার তৈরি হয়ে যায় কিন্তু অ্যাপ জানতে পারে না, তাই ডুপ্লিকেট হয়। শেষ না হওয়া পর্যন্ত বন্ধ হবে না
+      if (!force && cloudBusy > 0) { alert('⏳ PDF আপলোড চলছে। শেষ হওয়া পর্যন্ত অপেক্ষা করুন, তারপর বন্ধ করুন।'); return; }
+      clearPendingSetKey();
       document.getElementById('fileModal').classList.add('hidden');
       const isNewSet = !document.getElementById('editFileId').value;
       if (driveEnabled() && (modalNewDriveIds.length || (isNewSet && modalDriveFolderId))) { driveCall({ action: 'deleteFiles', fileIds: modalNewDriveIds, folderIdIfEmpty: isNewSet ? modalDriveFolderId : '' }).catch(() => { }); }
@@ -1540,6 +1549,7 @@
 
     async function saveVisaFileSet() {
       if (savingSet) return;
+      if (cloudBusy > 0) { alert('⏳ PDF আপলোড চলছে। শেষ হওয়া পর্যন্ত অপেক্ষা করে তারপর সেভ করুন।'); return; }
       syncTempInputs();
       if (document.getElementById('visaType').value === 'Medical' && !(document.getElementById('hospitalName').value || '').trim() && !confirm('🏥 Medical ভিসা — হাসপাতালের নাম দেওয়া হয়নি।\nতবুও সেভ করবেন?')) return;
       const editId = document.getElementById('editFileId').value;
@@ -1578,7 +1588,7 @@
       }
       if (editId) { const idx = visaFiles.findIndex(x => x.id === editId); if (idx > -1) visaFiles[idx] = fileObj; } else visaFiles.unshift(fileObj);
             modalNewDriveIds = []; modalOrphanDriveIds = []; modalDriveFolderId = ''; modalDriveFolderName = ''; modalFolderNew = false; modalStatusAtCreate = '';
-      closeFileModal(); renderFiles(); syncToCloud(); showToast('সেভ সম্পন্ন!'); driveSyncSet(fileObj);
+      closeFileModal(true); renderFiles(); syncToCloud(); showToast('সেভ সম্পন্ন!'); driveSyncSet(fileObj);
       if (newSerial) showSerialModal(newSerial, (fileObj.applicants[0] && fileObj.applicants[0].name) || '');
     }
 
