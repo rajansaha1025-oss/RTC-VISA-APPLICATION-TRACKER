@@ -536,6 +536,7 @@
       const sFile = visaFiles.find(x => x.id === sId); if (!sFile) return;
       if (tId !== 'NEW') { const tChk = visaFiles.find(x => x.id === tId); if (!tChk) return; if (tChk.applicants.length >= 4) { alert('ফাইলে ৪ জন পূর্ণ!'); return; } }
       const sOldCount = sFile.applicants.length; const appToMove = sFile.applicants.splice(aIdx, 1)[0];
+      if (sFile.serial) { appToMove.prevSerials = (appToMove.prevSerials || []).filter(s => String(s) !== String(sFile.serial)).concat(String(sFile.serial)); }   // আগের ফাইলের নম্বর মনে রাখা (ফিজিক্যাল ফাইলের নম্বর দিয়ে খোঁজার জন্য)
       const now = new Date().toLocaleString('en-GB', BD_TIME_OPTS);
       let dest;
       if (tId === 'NEW') {
@@ -546,6 +547,7 @@
         tFile.applicants.push(appToMove); tFile.updatedAt = now; tFile.updatedBy = whoAmI();
         if (tFile.baseVisaFee === VISA_FEE_PER_PERSON * tOld) tFile.baseVisaFee = VISA_FEE_PER_PERSON * tFile.applicants.length; dest = tFile;
       }
+      if (dest && dest.serial) appToMove.prevSerials = (appToMove.prevSerials || []).filter(s => String(s) !== String(dest.serial));
       const sRemoved = sFile.applicants.length === 0;
       if (sRemoved) { visaFiles = visaFiles.filter(x => x.id !== sId); logHint = 'ট্রান্সফারের পর সেটটি ফাঁকা হয়ে সরে গেছে'; }
       else { sFile.updatedAt = now; sFile.updatedBy = whoAmI(); if (sFile.baseVisaFee === VISA_FEE_PER_PERSON * sOldCount) sFile.baseVisaFee = VISA_FEE_PER_PERSON * sFile.applicants.length; }
@@ -1126,8 +1128,9 @@
         if (activeTab === 'RUNNING' && isClosed) return false; if (activeTab === 'EXPIRING' && !hasWarning(f)) return false; if (activeTab === 'EXPIRED' && !hasExpired(f)) return false; if (activeTab === 'SIGNED_UP' && (!f.isSignedUp || isClosed)) return false; if (activeTab === 'APPOINTMENT' && (!isAppt(f) || isClosed)) return false; if (activeTab === 'DELIVERED' && !f.isDelivered) return false; if (activeTab === 'RETURNED' && !f.isReturned) return false;
         if (vType !== 'ALL' && f.visaType !== vType) return false; if (workerVal !== 'ALL' && (f.worker || '').trim() !== workerVal) return false;
         if (!search) return true;
-        if (search.startsWith('#')) return String(f.serial || '') === search.slice(1).trim();
+        if (search.startsWith('#')) { const q = search.slice(1).trim(); return String(f.serial || '') === q || hasPrevSerial(f, q); }
         if (f.serial && String(f.serial) === search) return true;
+        if (hasPrevSerial(f, search)) return true;
         return smsOf(f).toLowerCase().includes(search) || (f.note || '').toLowerCase().includes(search) || (f.hospitalName || '').toLowerCase().includes(search) || (f.border || '').toLowerCase().includes(search) || (f.accountPhone || '').toLowerCase().includes(search) || (f.accountGmail || '').toLowerCase().includes(search) || (f.worker || '').toLowerCase().includes(search) || f.applicants.some(a => (a.name || '').toLowerCase().includes(search) || (a.tempId || '').toLowerCase().includes(search) || (a.bgdNo || '').toLowerCase().includes(search) || (a.passport || '').toLowerCase().includes(search));
       };
       const baseList = visaFiles.filter(_passBase); renderSmsChips(baseList);
@@ -1172,7 +1175,7 @@
                   const st = personState(a, f); const exp = getBgdExpiryInfo(a, f);
                   const box = st === 'EXPIRED' ? 'bg-red-50 border-red-200' : (st === 'UPLOADED' ? 'bg-emerald-50 border-emerald-200' : (st === 'SUBMITTED' ? 'bg-sky-50/60 border-sky-100' : 'bg-white border-slate-100'));
                   return `<div class="rounded-lg border ${box} px-2 py-1.5 space-y-1">
-                    <div class="flex flex-wrap items-center gap-1.5 text-[11px]"><span class="font-extrabold ${st === 'EXPIRED' ? 'text-red-700' : 'text-slate-700'}">${i === 0 ? '⭐ ' : ''}${escHtml(a.name || 'Unnamed')}</span>${personPill(a, f)}${exp.badgeHtml}</div>
+                    <div class="flex flex-wrap items-center gap-1.5 text-[11px]"><span class="font-extrabold ${st === 'EXPIRED' ? 'text-red-700' : 'text-slate-700'}">${i === 0 ? '⭐ ' : ''}${escHtml(a.name || 'Unnamed')}</span>${prevSerialBadge(a)}${personPill(a, f)}${exp.badgeHtml}</div>
                     <div class="flex flex-wrap items-center gap-1.5 text-[11px]"><span class="mono-type font-bold text-[#00b4d8] bg-[#00b4d8]/10 px-1.5 rounded">${escHtml(a.tempId || 'No-Temp')}</span><span class="mono-type font-bold px-1.5 rounded ${a.bgdNo ? 'text-emerald-700 bg-emerald-100' : 'text-slate-400 bg-slate-100'}">BGD: ${escHtml(a.bgdNo || '—')}</span>${(a.isSubmitted && a.subDate) ? `<span class="text-[10px] font-bold text-slate-500">📅 ${escHtml(a.subDate)}</span>` : ''}${a.driveFileId ? `<button onclick="openPdf('${f.id}', ${i})" class="bg-emerald-100 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded text-[10px] font-extrabold hover:bg-emerald-200"><i class="fa-solid fa-file-pdf"></i> PDF</button>` : ''}</div>
                   </div>`;
                 }).join('')}</td>
@@ -1232,7 +1235,7 @@
                   <div class="flex justify-between items-start gap-1 pb-2 border-b border-slate-100">
                     <div>
                       <span class="text-[9px] font-extrabold uppercase tracking-wide text-slate-500">${idx === 0 ? '⭐ মেইন ফাইল' : '👥 কো-অ্যাপ্লিক্যান্ট #' + idx}</span>
-                      <h4 class="font-extrabold text-sm text-[#0b132b] mt-0.5">${escHtml(a.name || 'Unnamed')}</h4><div class="mt-1">${personPill(a, f)}</div>
+                      <h4 class="font-extrabold text-sm text-[#0b132b] mt-0.5">${escHtml(a.name || 'Unnamed')}</h4><div class="mt-1">${prevSerialBadge(a)}</div><div class="mt-1">${personPill(a, f)}</div>
                     </div>
                     <div class="flex flex-col items-end gap-1.5">
                       <label class="inline-flex items-center cursor-pointer px-2.5 py-1 rounded text-[10px] font-bold ${a.isSubmitted ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'}">
@@ -1538,6 +1541,8 @@
       if (!res.committed) throw new Error('NOT_COMMITTED');
       return Number(res.snapshot.val());
     }
+    function hasPrevSerial(f, q) { return (f.applicants || []).some(a => (a.prevSerials || []).some(s => String(s) === String(q))); }
+    function prevSerialBadge(a) { return (a && a.prevSerials && a.prevSerials.length) ? a.prevSerials.map(s => '<span title="আগে এই নম্বরের ফাইলে ছিল (ফিজিক্যাল ফাইলের নম্বর)" class="bg-amber-100 text-amber-800 border border-amber-300 px-1.5 py-0.5 rounded text-[10px] font-extrabold mono-type">↩ আগে #' + escHtml(String(s)) + '</span>').join(' ') : ''; }
     function serialBadge(f) { return (f && f.serial) ? '<span title="ফাইল নম্বর" class="bg-[#0b132b] text-white px-2 py-0.5 rounded text-[11px] font-extrabold mono-type">#' + escHtml(String(f.serial)) + '</span>' : ''; }
     function showSerialModal(no, name) {
       document.getElementById('serialModalNo').innerText = '#' + no;
