@@ -141,7 +141,7 @@
           <input type="text" id="searchInput" oninput="renderFiles()" placeholder="নাম, ফোন, Temp ID, BGD, পাসপোর্ট বা #ফাইল-নম্বর দিয়ে খুঁজুন..." class="w-full pl-11 pr-4 py-2.5 rounded-xl border border-slate-300 text-sm font-bold focus:border-[#00b4d8] focus:ring-2 focus:ring-[#00b4d8]/20 focus:outline-none transition shadow-sm">
         </div>
         <div class="flex flex-wrap gap-2.5">
-          <select id="filterVisaType" onchange="renderFiles()" class="px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-700 bg-white shadow-sm focus:outline-none"><option value="ALL">সব ক্যাটাগরি</option><option value="Medical">🏥 Medical Visa</option><option value="Tourist">🏖️ Tourist Visa</option><option value="Double Entry">🔄 Double Entry</option><option value="Business">💼 Business Visa</option><option value="Entry">🚪 Entry Visa</option><option value="Student">🎓 Student Visa</option></select>
+          <select id="filterVisaType" onchange="renderFiles()" class="px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-700 bg-white shadow-sm focus:outline-none"><option value="ALL">সব ক্যাটাগরি</option><option value="Medical">🏥 Medical Visa</option><option value="Tourist">🏖️ Tourist Visa</option><option value="Double Entry">🔄 Double Entry</option><option value="Business">💼 Business Visa</option><option value="Entry">🚪 Entry Visa</option><option value="Student">🎓 Student Visa</option><option value="Other">❓ টাইপ নেই (Other)</option></select>
           <select id="filterWorker" onchange="renderFiles()" class="px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-700 bg-white shadow-sm focus:outline-none"><option value="ALL">সব ওয়ার্কার</option></select>
         </div>
       </div>
@@ -169,6 +169,7 @@
           <div>
             <label class="block text-[11px] font-extrabold text-slate-500 uppercase mb-1.5">ভিসা ক্যাটাগরি *</label>
             <select id="visaType" onchange="toggleMedicalBox()" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-extrabold text-[#0b132b] bg-slate-50 focus:border-[#00b4d8] focus:bg-white focus:outline-none">
+              <option value="">— ভিসা টাইপ সিলেক্ট করুন —</option>
               <option value="Medical">🏥 Medical Visa</option>
               <option value="Tourist">🏖️ Tourist Visa</option>
               <option value="Double Entry">🔄 Double Entry</option>
@@ -825,7 +826,7 @@
       cloudBusy++;
       try {
         if (moved.driveFileId) {
-          const r = await driveCall({ action: 'moveFile', setKey: dest.id, fileId: moved.driveFileId, toFolderId: dest.driveFolderId || '', toFolderName: safeName(dest.applicants[0].name), fromFolderId: sFile.driveFolderId || '', trashFromIfEmpty: !!sRemoved, status: driveStatusOf(dest), sms: smsOf(dest), visaType: dest.visaType });
+          const r = await driveCall({ action: 'moveFile', setKey: dest.id, fileId: moved.driveFileId, toFolderId: dest.driveFolderId || '', toFolderName: safeName(dest.applicants[0].name), fromFolderId: sFile.driveFolderId || '', trashFromIfEmpty: !!sRemoved, status: driveStatusOf(dest), sms: smsOf(dest), visaType: visaTypeOf(dest) });
           if (!dest.driveFolderId) dest.driveStatus = driveLocOf(dest);
           dest.driveFolderId = r.folderId; dest.driveFolderName = r.folderName;
         } else if (sRemoved && sFile.driveFolderId) { await driveCall({ action: 'deleteFiles', fileIds: [], folderIdIfEmpty: sFile.driveFolderId }); }
@@ -849,9 +850,42 @@
       return 'Running';
     }
     // Running ফোল্ডারের ভেতরে SMS অ্যাপের নামে সাব-ফোল্ডার (Code.gs এর SMS_STATUSES এর সাথে মিল রাখুন)
+    // ভিসা টাইপ সবসময় ঠিক নামে (Tourist, Medical...)। ফাঁকা/ভিন্ন বানান হলেও Drive এ 'Other' হবে না
+    const VISA_TYPES = ['Medical', 'Tourist', 'Double Entry', 'Business', 'Entry', 'Student'];
+    function canonVisaType(v) { const k = String(v || '').toLowerCase().replace(/\bvisa\b/g, '').replace(/[^a-z]/g, ''); return VISA_TYPES.find(t => t.toLowerCase().replace(/[^a-z]/g, '') === k) || ''; }
+    function visaTypeOf(f) { return canonVisaType(f && f.visaType) || 'Other'; }
+    // নতুন BGD দিলে ওই আবেদনকারীর মেয়াদ নতুন হবে, তাই আপলোডের সময়ই সেই হিসাবে স্ট্যাটাস (Expired -> Running) পাঠানো হয়
+    function driveStatusIfRenewed(f, idx) {
+      const g = Object.assign({}, f, { applicants: f.applicants.map((x, i) => i !== idx ? x : Object.assign({}, x, { renewing: false, isSubmitted: true, subDate: (!x.subDate || isDateExpired(x.subDate)) ? getTodayStr() : x.subDate })) });
+      return driveStatusOf(g);
+    }
+    // টাইপ না থাকলে আপলোডের আগে জোর করে সিলেক্ট করানো হয় (Medical ডিফল্ট নেই)
+    function ensureVisaType(f) {
+      const c = canonVisaType(f.visaType); if (c) { if (c !== f.visaType) f.visaType = c; return true; }
+      const a = prompt('এই ফাইলে ভিসা টাইপ দেওয়া নেই। নম্বর লিখুন:\n' + VISA_TYPES.map((t, i) => (i + 1) + ' = ' + t).join('\n'));
+      const t = VISA_TYPES[parseInt(a, 10) - 1];
+      if (!t) { alert('ভিসা টাইপ সিলেক্ট না করলে PDF আপলোড হবে না!'); return false; }
+      f.visaType = t; f.updatedAt = stampNow(); f.updatedBy = whoAmI(); return true;
+    }
+    // 🔧 একবার: আগের 'Other' ফোল্ডারগুলো কার্ডের ভিসা টাইপ অনুযায়ী সঠিক জায়গায় সরানো
+    let otherFixRunning = false;
+    async function driveFixOtherOnce() {
+      if (otherFixRunning || localStorage.getItem('rtc_other_fix_v1')) return;
+      const todo = visaFiles.filter(f => f.driveFolderId && !f.isDeleted && canonVisaType(f.visaType)); if (!todo.length) return;
+      otherFixRunning = true;
+      try {
+        for (let i = 0; i < todo.length; i += 25) {
+          const batch = todo.slice(i, i + 25);
+          const d = await driveCall({ action: 'organize', items: batch.map(f => ({ folderId: f.driveFolderId, status: driveStatusOf(f), sms: smsOf(f), visaType: visaTypeOf(f) })) });
+          if (d.layout !== 2) throw new Error('OLD_SCRIPT');
+          batch.forEach(f => { if (d.done.includes(f.driveFolderId)) f.driveStatus = driveLocOf(f); });
+        }
+        localStorage.setItem('rtc_other_fix_v1', '1'); syncToCloud(); showToast('✅ Drive ফোল্ডার ভিসা টাইপ অনুযায়ী সাজানো হয়েছে');
+      } catch (e) { console.warn('other fix failed', e); } finally { otherFixRunning = false; }
+    }
     const SMS_FOLDER_STATUSES = ['Running'];
     function locFor(st, sms, vt) { return SMS_FOLDER_STATUSES.includes(st) ? st + '/' + safeName(sms) + '/' + safeName(vt || 'Other') : st; }
-    function driveLocOf(f) { return locFor(driveStatusOf(f), smsOf(f), f.visaType); }
+    function driveLocOf(f) { return locFor(driveStatusOf(f), smsOf(f), visaTypeOf(f)); }
     let statusSyncBusy = false; const statusSyncTried = {};
     const nameSyncTried = {};
     function driveNamesDrift(f) {
@@ -860,7 +894,7 @@
       return !!(f.invoiceFileId && f.invoiceFileName !== invoiceFileNameFor(f)) || LETTER_KEYS.some(k => f[k + 'FileId'] && f[k + 'FileName'] !== letterFileNameFor(f, k));
     }
     async function driveSyncStatuses() {
-      if (!driveEnabled() || !auth.currentUser || statusSyncBusy) return;
+      if (!driveEnabled() || !auth.currentUser || statusSyncBusy) return; driveFixOtherOnce();
       const organized = visaFiles.filter(f => f.driveFolderId && f.driveStatus && !f.isDeleted);
       const todo = organized.filter(f => f.driveStatus !== driveLocOf(f) && (Date.now() - (statusSyncTried[f.id] || 0) > 60000));
       const drift = organized.filter(f => driveNamesDrift(f) && (Date.now() - (nameSyncTried[f.id] || 0) > 60000));
@@ -869,7 +903,7 @@
       try {
         for (const f of todo.slice(0, 30)) {
           statusSyncTried[f.id] = Date.now(); const want = driveLocOf(f);
-          try { const dd = await driveCall({ action: 'setStatus', folderId: f.driveFolderId, status: driveStatusOf(f), sms: smsOf(f), visaType: f.visaType }); if (!dd || dd.layout !== 2) throw new Error('OLD_SCRIPT: Apps Script এর v11 ডিপ্লয় করুন'); f.driveStatus = want; changed = true; } catch (e) { console.warn('status folder move failed', e); }
+          try { const dd = await driveCall({ action: 'setStatus', folderId: f.driveFolderId, status: driveStatusOf(f), sms: smsOf(f), visaType: visaTypeOf(f) }); if (!dd || dd.layout !== 2) throw new Error('OLD_SCRIPT: Apps Script এর v11 ডিপ্লয় করুন'); f.driveStatus = want; changed = true; } catch (e) { console.warn('status folder move failed', e); }
         }
         for (const f of drift.slice(0, 12)) { nameSyncTried[f.id] = Date.now(); await driveSyncSet(f); }
       } finally { statusSyncBusy = false; }
@@ -912,7 +946,7 @@
       try {
         for (let i = 0; i < todo.length; i += 25) {
           const batch = todo.slice(i, i + 25); showToast('⏳ সাজানো হচ্ছে... ' + Math.min(i + 25, todo.length) + '/' + todo.length);
-          const d = await driveCall({ action: 'organize', items: batch.map(f => ({ folderId: f.driveFolderId, status: driveStatusOf(f), sms: smsOf(f), visaType: f.visaType })) });
+          const d = await driveCall({ action: 'organize', items: batch.map(f => ({ folderId: f.driveFolderId, status: driveStatusOf(f), sms: smsOf(f), visaType: visaTypeOf(f) })) });
           if (d.layout !== 2) throw new Error('Apps Script এর নতুন ভার্শন (v11) ডিপ্লয় করুন'); batch.forEach(f => { if (d.done.includes(f.driveFolderId)) { f.driveStatus = driveLocOf(f); ok++; } else miss++; });
           await syncToCloud();
         }
@@ -1029,12 +1063,13 @@
       const f = visaFiles.find(x => x.id === fileId); if (!f) return;
       if (!driveEnabled()) { alert('Drive সেট করা নেই!'); event.target.value = ''; return; }
       if (!((f.applicants[0].name || '').trim())) { alert('আগে মেইন আবেদনকারীর নাম লিখে সেভ করুন, তারপর Invoice দিন।'); event.target.value = ''; return; }
+      if (!ensureVisaType(f)) { event.target.value = ''; return; }
       if (f.invoiceFileId && !confirm('এই Invoice দিয়ে আগেরটা বদলাবেন?\nআগের Invoice Drive থেকে মুছে যাবে।')) { event.target.value = ''; return; }
       cloudBusy++; showToast('⏳ Invoice আপলোড হচ্ছে...');
       try {
         const hadFolder = !!f.driveFolderId;
-        const res = await driveUploadApplicant({ setKey: f.id, folderId: f.driveFolderId || '', folderName: f.applicants[0].name, fileName: invoiceFileNameFor(f), file: file, replaceFileId: f.invoiceFileId || '', status: driveStatusOf(f), sms: smsOf(f), visaType: f.visaType });
-        if (!hadFolder) f.driveStatus = driveStatusOf(f);
+        const res = await driveUploadApplicant({ setKey: f.id, folderId: f.driveFolderId || '', folderName: f.applicants[0].name, fileName: invoiceFileNameFor(f), file: file, replaceFileId: f.invoiceFileId || '', status: driveStatusOf(f), sms: smsOf(f), visaType: visaTypeOf(f) });
+        if (!hadFolder) f.driveStatus = driveLocOf(f);
         f.driveFolderId = res.folderId; f.driveFolderName = res.folderName;
         f.invoiceFileId = res.fileId; f.invoiceFileName = res.fileName; f.invoiceName = file.name; f.invoiceBy = whoAmI(); f.invoiceAt = stampNow(); f.isAppointed = true;
         f.updatedAt = stampNow(); f.updatedBy = whoAmI();
@@ -1084,15 +1119,16 @@
       if (a.driveFileId && !confirm('এই PDF দিয়ে আগেরটা বদলাবেন?\nআগের PDF Drive থেকে মুছে যাবে।')) { event.target.value = ''; return; }
       if (!driveEnabled()) { alert('PDF রাখার জায়গা সেট করা নেই!'); return; }
       if (!((f.applicants[0].name || '').trim()) || !((a.name || '').trim())) { alert('আগে মেইন আবেদনকারী ও এই আবেদনকারীর নাম লিখে সেভ করুন, তারপর PDF দিন।'); event.target.value = ''; return; }
+      if (!ensureVisaType(f)) { event.target.value = ''; return; }
       
       cloudBusy++; showToast('⏳ PDF আপলোড হচ্ছে...');
       try {
         const hadFolder = !!f.driveFolderId;
-          const res = await driveUploadApplicant({ setKey: f.id, folderId: f.driveFolderId || '', folderName: f.applicants[0].name, idx: appIdx, name: a.name, file: file, replaceFileId: a.driveFileId || '', status: driveStatusOf(f), sms: smsOf(f), visaType: f.visaType });
-          if (!hadFolder) f.driveStatus = driveStatusOf(f);
+          const res = await driveUploadApplicant({ setKey: f.id, folderId: f.driveFolderId || '', folderName: f.applicants[0].name, idx: appIdx, name: a.name, file: file, replaceFileId: a.driveFileId || '', status: driveStatusIfRenewed(f, appIdx), sms: smsOf(f), visaType: visaTypeOf(f) });
+          if (!hadFolder) f.driveStatus = driveLocOf(f);
           f.driveFolderId = res.folderId; f.driveFolderName = res.folderName; a.driveFileId = res.fileId; a.driveFileName = res.fileName;
         
-        delete a.renewing; a.pdfName = file.name; a.bgdUploadedBy = whoAmI(); a.bgdUploadedAt = stampNow(); a.isSubmitted = true; if (!a.subDate || isDateExpired(a.subDate)) a.subDate = getTodayStr(); f.updatedAt = stampNow(); f.updatedBy = whoAmI();
+        delete a.renewing; a.pdfName = file.name; a.bgdUploadedBy = whoAmI(); a.bgdUploadedAt = stampNow(); a.isSubmitted = true; if (!a.subDate || isDateExpired(a.subDate)) a.subDate = getTodayStr(); f.updatedAt = stampNow(); f.updatedBy = whoAmI(); f.driveStatus = driveLocOf(f);
         
         renderFiles(); 
         await syncToCloud(); // 🔥 FIX: Database-e save howar jonno wait korbe
@@ -1126,7 +1162,7 @@
         if (activeTab === 'RECYCLE') { if (!f.isDeleted || !isAdmin) return false; } else if (f.isDeleted) return false;
         const isClosed = f.isDelivered || f.isReturned;
         if (activeTab === 'RUNNING' && isClosed) return false; if (activeTab === 'EXPIRING' && !hasWarning(f)) return false; if (activeTab === 'EXPIRED' && !hasExpired(f)) return false; if (activeTab === 'SIGNED_UP' && (!f.isSignedUp || isClosed)) return false; if (activeTab === 'APPOINTMENT' && (!isAppt(f) || isClosed)) return false; if (activeTab === 'DELIVERED' && !f.isDelivered) return false; if (activeTab === 'RETURNED' && !f.isReturned) return false;
-        if (vType !== 'ALL' && f.visaType !== vType) return false; if (workerVal !== 'ALL' && (f.worker || '').trim() !== workerVal) return false;
+        if (vType !== 'ALL' && visaTypeOf(f) !== vType) return false; if (workerVal !== 'ALL' && (f.worker || '').trim() !== workerVal) return false;
         if (!search) return true;
         if (search.startsWith('#')) { const q = search.slice(1).trim(); return String(f.serial || '') === q || hasPrevSerial(f, q); }
         if (f.serial && String(f.serial) === search) return true;
@@ -1318,11 +1354,12 @@
       const f = visaFiles.find(x => x.id === fileId); if (!f) return;
       if (!driveEnabled()) { alert('Drive সেট করা নেই!'); event.target.value = ''; return; }
       if (!((f.applicants[0].name || '').trim())) { alert('আগে মেইন আবেদনকারীর নাম লিখে সেভ করুন।'); event.target.value = ''; return; }
+      if (!ensureVisaType(f)) { event.target.value = ''; return; }
       if (f[k + 'FileId'] && !confirm('এই Letter দিয়ে আগেরটা বদলাবেন?\nআগেরটা Drive থেকে মুছে যাবে।')) { event.target.value = ''; return; }
       cloudBusy++; showToast('⏳ Letter আপলোড হচ্ছে...');
       try {
         const hadFolder = !!f.driveFolderId;
-        const res = await driveUploadApplicant({ setKey: f.id, folderId: f.driveFolderId || '', folderName: f.applicants[0].name, fileName: letterFileNameFor(f, k), file: file, replaceFileId: f[k + 'FileId'] || '', status: driveStatusOf(f), sms: smsOf(f), visaType: f.visaType });
+        const res = await driveUploadApplicant({ setKey: f.id, folderId: f.driveFolderId || '', folderName: f.applicants[0].name, fileName: letterFileNameFor(f, k), file: file, replaceFileId: f[k + 'FileId'] || '', status: driveStatusOf(f), sms: smsOf(f), visaType: visaTypeOf(f) });
         if (!hadFolder) f.driveStatus = driveLocOf(f);
         f.driveFolderId = res.folderId; f.driveFolderName = res.folderName;
         f[k + 'FileId'] = res.fileId; f[k + 'FileName'] = res.fileName; f[k + 'Name'] = file.name; f[k + 'By'] = whoAmI(); f[k + 'At'] = stampNow(); f[k + 'Received'] = true;
@@ -1372,6 +1409,7 @@
       if (file.size > 5 * 1024 * 1024) { alert('PDF ৫ মেগাবাইটের নিচে হতে হবে!'); event.target.value = ''; return; }
       if (!driveEnabled()) { alert('PDF রাখার জায়গা সেট করা নেই!'); event.target.value = ''; return; }
       if (!((tempApplicants[0].name || '').trim())) { alert('আগে মেইন আবেদনকারীর নাম লিখুন, তারপর PDF দিন।'); event.target.value = ''; return; }
+      if (!document.getElementById('visaType').value) { alert('আগে ভিসা টাইপ সিলেক্ট করুন, তারপর PDF দিন।'); event.target.value = ''; return; }
       cloudBusy++; showToast('⏳ Letter আপলোড হচ্ছে...');
       try {
         const stNow = document.getElementById('isReturned').checked ? 'Returned' : (document.getElementById('isDelivered').checked ? 'Delivered' : 'Running');
@@ -1400,7 +1438,7 @@
       modalNewDriveIds = []; modalOrphanDriveIds = []; modalDriveFolderId = ''; modalDriveFolderName = ''; modalFolderNew = false; modalStatusAtCreate = ''; modalSetKey = fileId ? '' : pendingSetKey();
       if (fileId) {
         const f = visaFiles.find(x => x.id === fileId); modalDriveFolderId = f.driveFolderId || ''; modalDriveFolderName = f.driveFolderName || '';
-        document.getElementById('editFileId').value = f.id; document.getElementById('visaType').value = f.visaType || 'Medical'; document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-folder-plus text-[#00b4d8]"></i> ভিসা ফাইল প্রসেসিং' + (f.serial ? ' <span class="bg-white/15 px-2.5 py-0.5 rounded-lg mono-type text-base">#' + escHtml(String(f.serial)) + '</span>' : '');
+        document.getElementById('editFileId').value = f.id; document.getElementById('visaType').value = canonVisaType(f.visaType); document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-folder-plus text-[#00b4d8]"></i> ভিসা ফাইল প্রসেসিং' + (f.serial ? ' <span class="bg-white/15 px-2.5 py-0.5 rounded-lg mono-type text-base">#' + escHtml(String(f.serial)) + '</span>' : '');
         document.getElementById('workerName').value = f.worker || ''; document.getElementById('isSignedUp').checked = !!f.isSignedUp; document.getElementById('entryBorder').value = f.border || ''; document.getElementById('smsApp').value = f.smsApp || 'Rtcsms'; document.getElementById('appGiven').checked = !!f.appGiven; refreshSmsDatalist();
         document.getElementById('isDelivered').checked = !!f.isDelivered; document.getElementById('isReturned').checked = !!f.isReturned;
         document.getElementById('accountPhone').value = f.accountPhone || ''; document.getElementById('accountGmail').value = f.accountGmail || '';
@@ -1421,7 +1459,7 @@
         tempApplicants = JSON.parse(JSON.stringify(f.applicants));
         loadModalLetters(f); document.getElementById('hospitalName').value = f.hospitalName || '';
       } else {
-        document.getElementById('editFileId').value = ''; document.getElementById('visaType').value = 'Medical'; document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-folder-plus text-[#00b4d8]"></i> ভিসা ফাইল প্রসেসিং <span class="text-xs font-bold text-white/60">(সেভ করলে ফাইল নম্বর পাবেন)</span>';
+        document.getElementById('editFileId').value = ''; document.getElementById('visaType').value = ''; document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-folder-plus text-[#00b4d8]"></i> ভিসা ফাইল প্রসেসিং <span class="text-xs font-bold text-white/60">(সেভ করলে ফাইল নম্বর পাবেন)</span>';
         
         // Auto Set Worker Name
         let currentWorker = auth.currentUser ? (auth.currentUser.displayName || auth.currentUser.email.split('@')[0]) : '';
@@ -1479,6 +1517,7 @@
       if (file.size > 5 * 1024 * 1024) { alert('PDF ৫ মেগাবাইটের নিচে হতে হবে!'); return; }
       if (!driveEnabled()) { alert('PDF রাখার জায়গা সেট করা নেই!'); return; }
       if (!((tempApplicants[0].name || '').trim()) || !((tempApplicants[idx].name || '').trim())) { alert('আগে মেইন আবেদনকারী ও এই আবেদনকারীর নাম লিখুন, তারপর PDF দিন।'); event.target.value = ''; return; }
+      if (!document.getElementById('visaType').value) { alert('আগে ভিসা টাইপ সিলেক্ট করুন, তারপর PDF দিন।'); event.target.value = ''; return; }
       cloudBusy++; showToast('⏳ PDF আপলোড হচ্ছে...');
       try {
         const t0 = tempApplicants[idx];
@@ -1556,6 +1595,7 @@
       if (savingSet) return;
       if (cloudBusy > 0) { alert('⏳ PDF আপলোড চলছে। শেষ হওয়া পর্যন্ত অপেক্ষা করে তারপর সেভ করুন।'); return; }
       syncTempInputs();
+      if (!document.getElementById('visaType').value) { alert('ভিসা টাইপ সিলেক্ট করুন!'); return; }
       if (document.getElementById('visaType').value === 'Medical' && !(document.getElementById('hospitalName').value || '').trim() && !confirm('🏥 Medical ভিসা — হাসপাতালের নাম দেওয়া হয়নি।\nতবুও সেভ করবেন?')) return;
       const editId = document.getElementById('editFileId').value;
       let newSerial = 0;
