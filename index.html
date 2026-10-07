@@ -93,6 +93,7 @@
         <nav class="p-4 space-y-2 text-xs font-bold">
           <button onclick="switchTab('RUNNING')" id="tab_RUNNING" class="w-full flex items-center justify-between px-4 py-3 rounded-2xl btn-primary-rtc text-white shadow-md transition"><span class="flex items-center gap-3"><i class="fa-solid fa-folder-open text-white/90 text-sm"></i> রানিং ফাইল</span><span class="bg-white/25 px-2 py-0.5 rounded-full text-[11px]" id="badgeRunning">0</span></button>
           <button onclick="switchTab('EXPIRED')" id="tab_EXPIRED" class="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-white/10 text-slate-300 transition"><span class="flex items-center gap-3"><i class="fa-solid fa-ban text-red-400 text-sm"></i> মেয়াদ শেষ (Expired)</span><span class="bg-red-500 text-white px-2 py-0.5 rounded-full text-[11px]" id="badgeExpired">0</span></button>
+          <button onclick="switchTab('BGD_UP')" id="tab_BGD_UP" class="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-white/10 text-slate-300 transition"><span class="flex items-center gap-3"><i class="fa-solid fa-file-circle-check text-emerald-400 text-sm"></i> BGD আপলোড হয়েছে</span><span class="bg-emerald-500 text-white px-2 py-0.5 rounded-full text-[11px]" id="badgeBgdUp">0</span></button>
           <button onclick="switchTab('EXPIRING')" id="tab_EXPIRING" class="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-white/10 text-slate-300 transition"><span class="flex items-center gap-3"><i class="fa-solid fa-triangle-exclamation text-rose-400 text-sm"></i> মেয়াদ সতর্কতা</span><span class="bg-rose-50 text-rose-600 px-2 py-0.5 rounded-full text-[11px]" id="badgeExpiring">0</span></button>
           <button onclick="switchTab('SIGNED_UP')" id="tab_SIGNED_UP" class="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-white/10 text-slate-300 transition"><span class="flex items-center gap-3"><i class="fa-solid fa-user-check text-purple-400 text-sm"></i> সাইন-আপ সম্পন্ন</span><span class="bg-white/10 px-2 py-0.5 rounded-full text-[11px]" id="badgeSignedUp">0</span></button>
           <button onclick="switchTab('APPOINTMENT')" id="tab_APPOINTMENT" class="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-white/10 text-slate-300 transition"><span class="flex items-center gap-3"><i class="fa-solid fa-calendar-check text-emerald-400 text-sm"></i> অ্যাপয়েন্টমেন্ট</span><span class="bg-white/10 px-2 py-0.5 rounded-full text-[11px]" id="badgeAppointment">0</span></button>
@@ -600,7 +601,7 @@
 
     function switchTab(tabName) {
       activeTab = tabName;
-      ['RUNNING', 'EXPIRING', 'EXPIRED', 'SIGNED_UP', 'APPOINTMENT', 'DELIVERED', 'RETURNED', 'ALL', 'RECYCLE', 'ACTIVITY'].forEach(t => {
+      ['RUNNING', 'EXPIRING', 'EXPIRED', 'BGD_UP', 'SIGNED_UP', 'APPOINTMENT', 'DELIVERED', 'RETURNED', 'ALL', 'RECYCLE', 'ACTIVITY'].forEach(t => {
         const btn = document.getElementById(`tab_${t}`);
         if (t === tabName) btn.className = 'w-full flex items-center justify-between px-4 py-3 rounded-2xl btn-primary-rtc text-white shadow-md transition';
         else btn.className = 'w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-white/10 text-slate-300 transition';
@@ -1008,7 +1009,7 @@
     function smsOf(f) { return ((f && f.smsApp) || 'Rtcsms').trim() || 'Rtcsms'; }
     function normSmsName(v) { const t = String(v || '').replace(/\s+/g, ' ').trim(); if (!t) return 'Rtcsms'; const k = t.toLowerCase(); if (k === 'rtcsms') return 'Rtcsms'; const hit = visaFiles.find(f => !f.isDeleted && f.smsApp && f.smsApp.trim().toLowerCase() === k); return hit ? hit.smsApp.trim() : t; }
     function setSmsFilter(v) { smsFilter = (smsFilter === v) ? '' : v; if (activeTab === 'RECYCLE' || activeTab === 'ACTIVITY') { switchTab('RUNNING'); return; } renderFiles(); }
-    const TAB_TITLES = { 'RUNNING': '📂 রানিং ফাইল', 'EXPIRING': '⏳ মেয়াদ সতর্কতা', 'EXPIRED': '⛔ Expired (মেয়াদ শেষ)', 'SIGNED_UP': '🟣 সাইন-আপ সম্পন্ন', 'APPOINTMENT': '📅 অ্যাপয়েন্টমেন্ট', 'DELIVERED': '📦 ডেলিভারি', 'RETURNED': '🔙 ফেরত ফাইল', 'ALL': '📋 সব ফাইল', 'RECYCLE': '🗑️ রিসাইকেল বিন', 'ACTIVITY': '🕘 অ্যাক্টিভিটি লগ' };
+    const TAB_TITLES = { 'RUNNING': '📂 রানিং ফাইল', 'EXPIRING': '⏳ মেয়াদ সতর্কতা', 'EXPIRED': '⛔ Expired (মেয়াদ শেষ)', 'BGD_UP': '📄 BGD আপলোড হয়েছে', 'SIGNED_UP': '🟣 সাইন-আপ সম্পন্ন', 'APPOINTMENT': '📅 অ্যাপয়েন্টমেন্ট', 'DELIVERED': '📦 ডেলিভারি', 'RETURNED': '🔙 ফেরত ফাইল', 'ALL': '📋 সব ফাইল', 'RECYCLE': '🗑️ রিসাইকেল বিন', 'ACTIVITY': '🕘 অ্যাক্টিভিটি লগ' };
     function updateViewTitle() { const el = document.getElementById('currentViewTitle'); if (!el) return; el.innerText = (TAB_TITLES[activeTab] || '') + ((smsFilter && activeTab !== 'RECYCLE' && activeTab !== 'ACTIVITY') ? '  ·  📱 ' + smsFilter : ''); }
     let smsMenuOpen = localStorage.getItem('rtc_sms_menu_open') !== '0';
     function toggleSmsMenu() { smsMenuOpen = !smsMenuOpen; localStorage.setItem('rtc_sms_menu_open', smsMenuOpen ? '1' : '0'); renderSmsMenu(); }
@@ -1137,6 +1138,12 @@
       finally { cloudBusy = Math.max(0, cloudBusy - 1); event.target.value = ''; }
     }
 
+    // 📄 একটা সেটে (১-৪ জন) কতজনের BGD PDF আপলোড হয়েছে। অন্তত ১ জনের হলেই সেটটা 'BGD আপলোড হয়েছে' ট্যাবে আসে; n/মোট দেখে বোঝা যায় সম্পূর্ণ না আংশিক
+    function bgdUpCount(f) { return (f.applicants || []).filter(a => a.driveFileId).length; }
+    function bgdSetBadge(f) {
+      const n = bgdUpCount(f), t = (f.applicants || []).length; if (!n) return '';
+      return n === t ? `<span class="bg-emerald-100 text-emerald-700 border border-emerald-300 px-2 py-0.5 rounded text-[10px] font-extrabold">📄 BGD ${n}/${t} ✓</span>` : `<span class="bg-amber-100 text-amber-800 border border-amber-300 px-2 py-0.5 rounded text-[10px] font-extrabold">📄 BGD ${n}/${t} (বাকি ${t - n})</span>`;
+    }
     // ⛔ Expired = মেয়াদ শেষ বা নতুন BGD লাগবে | ⏳ Warning = আর ৫ দিন বা কম বাকি
     function hasExpired(f) { return expiredPeople(f).length > 0; }
     function warningPeople(f) { return expiryRelevant(f) ? f.applicants.filter(a => !needsRenewal(a, f) && getBgdExpiryInfo(a, f).status === 'WARNING') : []; }
@@ -1149,19 +1156,19 @@
       const search = document.getElementById('searchInput').value.toLowerCase().trim();
       const vType = document.getElementById('filterVisaType').value; const workerVal = document.getElementById('filterWorker').value;
 
-      let cntR = 0, cntE = 0, cntX = 0, cntS = 0, cntA = 0, cntD = 0, cntRet = 0, cntDel = 0;
+      let cntB = 0, cntBC = 0, cntBP = 0, cntR = 0, cntE = 0, cntX = 0, cntS = 0, cntA = 0, cntD = 0, cntRet = 0, cntDel = 0;
       visaFiles.forEach(f => {
         if (f.isDeleted) { cntDel++; return; }
         const isClosed = f.isDelivered || f.isReturned;
-        if (!isClosed) cntR++; if (hasWarning(f)) cntE++; if (hasExpired(f)) cntX++; if (f.isSignedUp && !isClosed) cntS++; if (isAppt(f) && !isClosed) cntA++; if (f.isDelivered) cntD++; if (f.isReturned) cntRet++;
+        if (!isClosed) cntR++; if (hasWarning(f)) cntE++; if (hasExpired(f)) cntX++; if (!isClosed && bgdUpCount(f) > 0) { cntB++; if (bgdUpCount(f) === f.applicants.length) cntBC++; else cntBP++; } if (f.isSignedUp && !isClosed) cntS++; if (isAppt(f) && !isClosed) cntA++; if (f.isDelivered) cntD++; if (f.isReturned) cntRet++;
       });
-      document.getElementById('badgeRunning').innerText = cntR; document.getElementById('badgeExpiring').innerText = cntE; document.getElementById('badgeExpired').innerText = cntX; document.getElementById('badgeSignedUp').innerText = cntS; document.getElementById('badgeAppointment').innerText = cntA; document.getElementById('badgeDelivered').innerText = cntD; document.getElementById('badgeReturned').innerText = cntRet; document.getElementById('badgeAll').innerText = visaFiles.length - cntDel; document.getElementById('badgeRecycle').innerText = cntDel;
+      document.getElementById('badgeRunning').innerText = cntR; document.getElementById('badgeExpiring').innerText = cntE; document.getElementById('badgeExpired').innerText = cntX; document.getElementById('badgeBgdUp').innerText = cntB; if (activeTab === 'BGD_UP') { const vt = document.getElementById('currentViewTitle'); if (vt) vt.innerText += '  ·  সম্পূর্ণ ' + cntBC + '  ·  আংশিক ' + cntBP; } document.getElementById('badgeSignedUp').innerText = cntS; document.getElementById('badgeAppointment').innerText = cntA; document.getElementById('badgeDelivered').innerText = cntD; document.getElementById('badgeReturned').innerText = cntRet; document.getElementById('badgeAll').innerText = visaFiles.length - cntDel; document.getElementById('badgeRecycle').innerText = cntDel;
 
       if (activeTab === 'ACTIVITY') { renderActivityView(container); return; }
       const _passBase = (f) => {
         if (activeTab === 'RECYCLE') { if (!f.isDeleted || !isAdmin) return false; } else if (f.isDeleted) return false;
         const isClosed = f.isDelivered || f.isReturned;
-        if (activeTab === 'RUNNING' && isClosed) return false; if (activeTab === 'EXPIRING' && !hasWarning(f)) return false; if (activeTab === 'EXPIRED' && !hasExpired(f)) return false; if (activeTab === 'SIGNED_UP' && (!f.isSignedUp || isClosed)) return false; if (activeTab === 'APPOINTMENT' && (!isAppt(f) || isClosed)) return false; if (activeTab === 'DELIVERED' && !f.isDelivered) return false; if (activeTab === 'RETURNED' && !f.isReturned) return false;
+        if (activeTab === 'RUNNING' && isClosed) return false; if (activeTab === 'EXPIRING' && !hasWarning(f)) return false; if (activeTab === 'EXPIRED' && !hasExpired(f)) return false; if (activeTab === 'BGD_UP' && (isClosed || bgdUpCount(f) === 0)) return false; if (activeTab === 'SIGNED_UP' && (!f.isSignedUp || isClosed)) return false; if (activeTab === 'APPOINTMENT' && (!isAppt(f) || isClosed)) return false; if (activeTab === 'DELIVERED' && !f.isDelivered) return false; if (activeTab === 'RETURNED' && !f.isReturned) return false;
         if (vType !== 'ALL' && visaTypeOf(f) !== vType) return false; if (workerVal !== 'ALL' && (f.worker || '').trim() !== workerVal) return false;
         if (!search) return true;
         if (search.startsWith('#')) { const q = search.slice(1).trim(); return String(f.serial || '') === q || hasPrevSerial(f, q); }
@@ -1205,7 +1212,7 @@
               const exPpl = expiredPeople(f);
               return `<tr class="hover:bg-[#f4f7fa] transition ${exPpl.length ? 'bg-red-50/40' : ''}">
                 <td class="p-3.5">${noteBlock(f)}${f.serial ? '<div class="mb-1">' + serialBadge(f) + '</div>' : ''}<div class="font-extrabold text-[#0b132b] text-sm">${escHtml(f.applicants[0]?.name || 'Unnamed')}</div><div class="text-[10px] text-slate-500 font-bold uppercase mt-0.5">মোট ${f.applicants.length} জন</div>${f.updatedBy ? `<div class="text-[10px] text-slate-400 font-bold mt-0.5">শেষ আপডেট: ${escHtml(f.updatedBy)}${f.updatedAt ? ' · ' + escHtml(f.updatedAt) : ''}</div>` : ''}${exPpl.length ? `<div class="text-[10px] text-red-600 font-extrabold mt-0.5">⚠ Expired: ${exPpl.map(a => escHtml(a.name)).join(', ')}</div>` : ''}</td>
-                <td class="p-3.5 space-y-1.5"><span class="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-slate-100 text-slate-600">${escHtml(f.visaType)}</span>${f.visaType === 'Medical' ? medicalChips(f) : ''}<div class="flex flex-wrap gap-1 mt-1">${getDocChecklistBadges(f)}</div></td>
+                <td class="p-3.5 space-y-1.5"><span class="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-slate-100 text-slate-600">${escHtml(f.visaType)}</span>${bgdSetBadge(f)}${f.visaType === 'Medical' ? medicalChips(f) : ''}<div class="flex flex-wrap gap-1 mt-1">${getDocChecklistBadges(f)}</div></td>
                 <td class="p-3.5"><div class="mono-type font-extrabold text-[#0b132b]">${escHtml(f.accountPhone || 'N/A')}</div>${f.border ? `<div class="text-[10px] text-indigo-600 font-bold mt-0.5">${escHtml(f.border)}</div>` : ''}<div class="text-[10px] text-slate-500 font-bold mt-0.5">📱 ${escHtml(smsOf(f))}</div><div class="text-[10px] font-extrabold mt-0.5 ${f.appGiven ? 'text-emerald-600' : 'text-amber-600'}">${f.appGiven ? '✅ অ্যাপ দেওয়া হয়েছে' : '⚠️ অ্যাপ দেওয়া হয়নি'}</div></td>
                 <td class="p-3.5 space-y-1.5">${f.applicants.map((a, i) => {
                   const st = personState(a, f); const exp = getBgdExpiryInfo(a, f);
@@ -1230,7 +1237,7 @@
           <div class="bg-white px-5 py-4 flex flex-wrap justify-between items-center gap-3 border-b border-slate-100">
             <div class="flex flex-wrap items-center gap-3">
               ${serialBadge(f)}
-              <span class="bg-slate-100 text-slate-600 border border-slate-200 px-2.5 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wide">${f.visaType}</span>
+              <span class="bg-slate-100 text-slate-600 border border-slate-200 px-2.5 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wide">${f.visaType}</span>${bgdSetBadge(f)}
               <h3 class="text-base font-extrabold text-[#0b132b] tracking-tight">${escHtml(f.applicants[0]?.name || 'Unnamed')}</h3>
               <span class="bg-slate-50 text-slate-500 px-2 py-0.5 rounded text-[10px] font-bold border border-slate-200">${f.applicants.length > 1 ? `মোট ${f.applicants.length} জন` : 'সিঙ্গেল ফাইল'}</span>
               ${f.worker ? `<span class="bg-[#00b4d8]/10 text-[#0077b6] px-2 py-0.5 rounded text-[10px] font-extrabold"><i class="fa-solid fa-user-gear mr-1"></i>${escHtml(f.worker)}</span>` : ''}
