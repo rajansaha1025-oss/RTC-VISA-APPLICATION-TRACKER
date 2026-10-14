@@ -1769,8 +1769,8 @@
     function logChanges(ch, oldSnap) {
       try {
         if (logOverride) { const o = logOverride; logOverride = null; pushLog(o); return; }
-        ch.changed.forEach(function (f) { const old = oldSnap[f.id] ? JSON.parse(oldSnap[f.id]) : null; const e = diffEntry(old, f); if (e) pushLog(e); });
-        ch.deleted.forEach(function (id) { const old = oldSnap[id] ? JSON.parse(oldSnap[id]) : null; pushLog({ type: 'purge', setId: id, name: mainNameOf(old), detail: logHint || 'সেটটি সিস্টেম থেকে সরানো হয়েছে' }); });
+        ch.changed.forEach(function (f) { const old = oldSnap[f.id] ? JSON.parse(oldSnap[f.id]) : null; const e = diffEntry(old, f); if (e) { if (f.serial) e.serial = String(f.serial); pushLog(e); } });
+        ch.deleted.forEach(function (id) { const old = oldSnap[id] ? JSON.parse(oldSnap[id]) : null; const pe = { type: 'purge', setId: id, name: mainNameOf(old), detail: logHint || 'সেটটি সিস্টেম থেকে সরানো হয়েছে' }; if (old && old.serial) pe.serial = String(old.serial); pushLog(pe); });
         logHint = '';
       } catch (e) { console.warn('log error', e); }
     }
@@ -1813,6 +1813,7 @@
       create: ['নতুন', 'bg-emerald-100 text-emerald-700'], edit: ['এডিট', 'bg-sky-100 text-sky-700'], delete: ['ডিলিট', 'bg-rose-100 text-rose-700'], restore: ['ফিরিয়ে আনা', 'bg-emerald-100 text-emerald-700'],
       purge: ['চিরতরে ডিলিট', 'bg-red-600 text-white'], backup: ['ব্যাকআপ', 'bg-amber-100 text-amber-800'], restore_backup: ['ব্যাকআপ রিস্টোর', 'bg-purple-100 text-purple-700']
     };
+    function actSerial(x) { if (x.serial) return String(x.serial); if (!x.setId) return ''; const f = visaFiles.find(function (v) { return v.id === x.setId; }); return (f && f.serial) ? String(f.serial) : ''; }
     function bdDayKey(t) { return new Date(t).toLocaleDateString('en-CA', { timeZone: 'Asia/Dhaka' }); }
     function bdDayLabel(t) {
       const k = bdDayKey(t), today = bdDayKey(Date.now()), yest = bdDayKey(Date.now() - 86400000);
@@ -1826,7 +1827,7 @@
       if (!isAdmin) { container.innerHTML = ''; return; }
       const q = (document.getElementById('searchInput').value || '').toLowerCase().trim();
       const users = Array.from(new Set(activityCache.map(function (x) { return x.by; }).filter(Boolean))).sort();
-      const list = activityCache.filter(function (x) { return (!activityFilterUser || x.by === activityFilterUser) && (!q || ((x.name || '') + ' ' + (x.detail || '') + ' ' + (x.by || '')).toLowerCase().indexOf(q) >= 0); });
+      const list = activityCache.filter(function (x) { if (activityFilterUser && x.by !== activityFilterUser) return false; if (!q) return true; const sn = actSerial(x); if (q.charAt(0) === '#') return sn !== '' && sn === q.slice(1).trim(); if (sn && sn === q) return true; return ((x.name || '') + ' ' + (x.detail || '') + ' ' + (x.by || '')).toLowerCase().indexOf(q) >= 0; });
       let html = '<div class="flex flex-wrap items-center gap-2 mb-4"><select onchange="activityFilterUser=this.value;renderActivityView()" class="px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-700 bg-white shadow-sm focus:outline-none"><option value="">সব ইউজার</option>'
         + users.map(function (u) { return '<option value="' + escHtml(u) + '"' + (u === activityFilterUser ? ' selected' : '') + '>' + escHtml(u) + '</option>'; }).join('')
         + '</select><button onclick="loadActivity()" class="bg-white hover:bg-slate-50 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-bold border border-slate-200 shadow-sm"><i class="fa-solid fa-arrows-rotate text-[#00b4d8] mr-1"></i> রিফ্রেশ</button>'
@@ -1844,7 +1845,7 @@
           + '<span class="mono-type text-[11px] font-bold text-slate-400 w-12 flex-shrink-0 pt-0.5">' + escHtml(bdTimeLabel(x.t)) + '</span>'
           + '<span class="text-[10px] font-extrabold px-2 py-0.5 rounded-md ' + ty[1] + ' flex-shrink-0">' + escHtml(ty[0]) + '</span>'
           + '<span class="text-[11px] font-extrabold text-[#0077b6] flex-shrink-0"><i class="fa-regular fa-user mr-1"></i>' + escHtml(x.by || '?') + '</span>'
-          + '<div class="min-w-0 flex-1 basis-60"><span class="text-xs font-extrabold text-[#0b132b]">' + escHtml(x.name || '') + '</span>' + (x.detail ? '<div class="text-[11px] text-slate-500 font-medium break-words">' + escHtml(x.detail) + '</div>' : '') + '</div></div>';
+          + '<div class="min-w-0 flex-1 basis-60">' + (actSerial(x) ? '<span class="mr-1.5 align-middle">' + serialBadge({ serial: actSerial(x) }) + '</span>' : '') + '<span class="text-xs font-extrabold text-[#0b132b]">' + escHtml(x.name || '') + '</span>' + (x.detail ? '<div class="text-[11px] text-slate-500 font-medium break-words">' + escHtml(x.detail) + '</div>' : '') + '</div></div>';
       }).join('') + '</div>';
       container.innerHTML = html;
     }
