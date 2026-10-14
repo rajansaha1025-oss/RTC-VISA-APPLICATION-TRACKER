@@ -245,9 +245,12 @@
             <select id="entryBorder" class="w-full md:w-1/2 px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold bg-slate-50 focus:bg-white focus:outline-none focus:border-[#8b5cf6]"><option value="">Select entry point</option><option value="BY AIR">BY AIR</option><option value="BY AIR/ HARIDASPUR">BY AIR/ HARIDASPUR</option><option value="BY RAIL CHITPUR">BY RAIL CHITPUR</option><option value="BY RAIL GEDE">BY RAIL GEDE</option><option value="BY RAIL GEDE/BY AIR">BY RAIL GEDE/BY AIR</option><option value="BY RAIL GEDE/BYROAD HARIDASPUR">BY RAIL GEDE/BYROAD HARIDASPUR</option><option value="BY RAIL NEW JALPAIGURI">BY RAIL NEW JALPAIGURI</option><option value="BY RAIL NISCHINTPUR">BY RAIL NISCHINTPUR</option><option value="BY RAIL PETRAPOLE">BY RAIL PETRAPOLE</option><option value="BY ROAD AGARTALA">BY ROAD AGARTALA</option><option value="BY ROAD BAGHMARA">BY ROAD BAGHMARA</option><option value="BY ROAD BELONIA">BY ROAD BELONIA</option><option value="BY ROAD BHOLAGONJ">BY ROAD BHOLAGONJ</option><option value="BY ROAD CHANGRABANDHA">BY ROAD CHANGRABANDHA</option><option value="BY ROAD CHANGRABANDHA/ JAYGAON">BY ROAD CHANGRABANDHA/ JAYGAON</option><option value="BY ROAD CHANGRABANDHA/ RANIGANJ">BY ROAD CHANGRABANDHA/ RANIGANJ</option><option value="BY ROAD DALU">BY ROAD DALU</option><option value="BY ROAD DAWKI">BY ROAD DAWKI</option><option value="BY ROAD DHALIGHAT">BY ROAD DHALIGHAT</option><option value="BY ROAD DHUBRI">BY ROAD DHUBRI</option><option value="BY ROAD GEDE">BY ROAD GEDE</option><option value="BY ROAD GHOJADANGA">BY ROAD GHOJADANGA</option><option value="BY ROAD GOLAKGANJ">BY ROAD GOLAKGANJ</option><option value="BY ROAD HALDIBARI">BY ROAD HALDIBARI</option><option value="BY ROAD HARIDASPUR">BY ROAD HARIDASPUR</option><option value="BY ROAD HILI">BY ROAD HILI</option><option value="BY ROAD JAIGAON">BY ROAD JAIGAON</option><option value="BY ROAD JAIGAON/PHULBARI">BY ROAD JAIGAON/PHULBARI</option><option value="BY ROAD KAILASHAHAR">BY ROAD KAILASHAHAR</option><option value="BY ROAD KARIMGANJ">BY ROAD KARIMGANJ</option><option value="BY ROAD KHOWAI">BY ROAD KHOWAI</option><option value="BY ROAD LALGOLAGHAT">BY ROAD LALGOLAGHAT</option><option value="BY ROAD MAHADIPUR">BY ROAD MAHADIPUR</option><option value="BY ROAD MANKARCHAR">BY ROAD MANKARCHAR</option><option value="BY ROAD MUHURIGHAT">BY ROAD MUHURIGHAT</option><option value="BY ROAD PHULBARI">BY ROAD PHULBARI</option><option value="BY ROAD PHULBARI/JAIGAON">BY ROAD PHULBARI/JAIGAON</option><option value="BY ROAD PHULBARI/RANIGANJ">BY ROAD PHULBARI/RANIGANJ</option><option value="BY ROAD RADHIKAPUR">BY ROAD RADHIKAPUR</option><option value="BY ROAD RANIGANJ">BY ROAD RANIGANJ</option><option value="BY ROAD RANIGANJ/PHULBARI">BY ROAD RANIGANJ/PHULBARI</option><option value="BY ROAD SABROOM">BY ROAD SABROOM</option><option value="BY ROAD SONAHAT">BY ROAD SONAHAT</option><option value="BY ROAD SRIMANTPUR">BY ROAD SRIMANTPUR</option><option value="BY ROAD SUTERKANDI">BY ROAD SUTERKANDI</option></select>
           </div>
           <div class="pl-2 mt-4">
-            <label class="block text-[11px] font-bold text-slate-500 mb-1">📱 SMS অ্যাপ (ডিফল্ট Rtcsms, চাইলে নিজে লিখে বদলান)</label>
-            <input type="text" id="smsApp" list="smsAppList" placeholder="Rtcsms" autocomplete="off" class="w-full md:w-1/2 px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold bg-slate-50 focus:bg-white focus:outline-none focus:border-[#8b5cf6]">
-            <datalist id="smsAppList"></datalist>
+            <label class="block text-[11px] font-bold text-slate-500 mb-1">📱 SMS অ্যাপ (ডিফল্ট Rtcsms)</label>
+            <div class="flex items-center gap-2 w-full md:w-1/2">
+              <select id="smsApp" class="flex-1 min-w-0 px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold bg-slate-50 focus:bg-white focus:outline-none focus:border-[#8b5cf6]"><option value="Rtcsms">Rtcsms</option></select>
+              <button type="button" onclick="addSmsOption()" title="নতুন SMS অ্যাপ যোগ করুন" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold flex-shrink-0">➕ নতুন</button>
+              <button type="button" onclick="deleteSmsOption()" title="সিলেক্ট করা SMS অ্যাপ মুছুন" class="px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-extrabold flex-shrink-0">🗑️ মুছুন</button>
+            </div>
             <label class="inline-flex items-center cursor-pointer bg-indigo-50 px-4 py-2.5 rounded-xl border border-indigo-200 mt-2.5 hover:bg-indigo-100 transition">
               <input type="checkbox" id="appGiven" class="w-4 h-4 accent-indigo-600">
               <span class="ml-2.5 text-xs font-extrabold text-indigo-900">📲 অ্যাপ কাস্টমারকে দেওয়া হয়েছে</span>
@@ -655,10 +658,10 @@
       return r;
     }
     async function loadCloudSettings() {
-      try { const r = await cloudFetch('/rtc_settings.json'); if (r.ok) { const st = await r.json(); if (st && st.defaultPass) { defaultPass = st.defaultPass; localStorage.setItem('rtc_default_pass', defaultPass); } } } catch (e) { }
+      try { const r = await cloudFetch('/rtc_settings.json'); if (r.ok) { const st = await r.json(); if (st && st.defaultPass) { defaultPass = st.defaultPass; localStorage.setItem('rtc_default_pass', defaultPass); } if (st && typeof st.smsListJson === 'string') { try { const arr = JSON.parse(st.smsListJson); if (Array.isArray(arr)) { smsList = arr; localStorage.setItem('rtc_sms_list', JSON.stringify(arr)); } } catch (e2) { } } } } catch (e) { }
     }
     async function saveCloudSettings() {
-      try { await cloudFetch('/rtc_settings.json', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ defaultPass: defaultPass }) }); } catch (e) { }
+      try { await cloudFetch('/rtc_settings.json', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ defaultPass: defaultPass, smsListJson: JSON.stringify(smsListNames()) }) }); } catch (e) { }
     }
 
     let cloudBusy = 0; let lastCloudText = '';
@@ -1032,10 +1035,48 @@
       box.innerHTML = row('📱 সব অ্যাপ', act.length, 0, !smsFilter, `onclick="smsFilter=''; if(activeTab==='RECYCLE'){switchTab('RUNNING')}else{renderFiles()}"`) +
         names.map(n => row('📱 ' + escHtml(n), stat[n].n, stat[n].x, smsFilter === n, `data-sms="${escHtml(n)}" onclick="setSmsFilter(this.dataset.sms)"`)).join('');
     }
-    function refreshSmsDatalist() {
-      const dl = document.getElementById('smsAppList'); if (!dl) return;
-      const set = new Set(['Rtcsms']); visaFiles.forEach(f => { if (!f.isDeleted && f.smsApp && f.smsApp.trim()) set.add(f.smsApp.trim()); });
-      dl.innerHTML = Array.from(set).map(n => `<option value="${escHtml(n)}"></option>`).join('');
+    // ---------- 📱 SMS অ্যাপ ড্রপডাউন (Rtcsms সবসময় ডিফল্ট; বাকিগুলো যোগ/মোছা যায়, ক্লাউডে সেভ থাকে) ----------
+    let smsList = null;   // Rtcsms বাদে কাস্টম SMS অ্যাপের তালিকা (null = এখনো কখনো সেট হয়নি)
+    try { const _s = localStorage.getItem('rtc_sms_list'); if (_s) smsList = JSON.parse(_s); } catch (e) { smsList = null; }
+    function saveSmsList() {
+      try { localStorage.setItem('rtc_sms_list', JSON.stringify(smsList || [])); } catch (e) { }
+      if (cloudUrl) saveCloudSettings();
+    }
+    function smsListNames() {
+      if (smsList === null) {   // প্রথমবার: আগের ফাইলগুলোতে যে নামগুলো ছিল সেগুলো দিয়ে শুরু
+        const set = new Set(); visaFiles.forEach(f => { if (!f.isDeleted && f.smsApp && f.smsApp.trim() && f.smsApp.trim().toLowerCase() !== 'rtcsms') set.add(f.smsApp.trim()); });
+        smsList = Array.from(set).sort((x, y) => x.localeCompare(y));
+      }
+      return smsList;
+    }
+    function refreshSmsDatalist(selected) {
+      const sel = document.getElementById('smsApp'); if (!sel) return;
+      let cur = (selected !== undefined && selected !== null) ? String(selected).trim() : sel.value;
+      if (!cur) cur = 'Rtcsms';
+      const names = ['Rtcsms'];
+      smsListNames().forEach(n => { if (!names.some(x => x.toLowerCase() === n.toLowerCase())) names.push(n); });
+      const hit = names.find(n => n.toLowerCase() === cur.toLowerCase());
+      if (hit) cur = hit; else names.push(cur);   // এই ফাইলের পুরনো/মোছা নাম থাকলে ফাইলে যেন হারিয়ে না যায়
+      sel.innerHTML = names.map(n => `<option value="${escHtml(n)}">${escHtml(n)}</option>`).join('');
+      sel.value = cur;
+    }
+    function addSmsOption() {
+      const raw = prompt('নতুন SMS অ্যাপের নাম লিখুন:'); if (raw === null) return;
+      const t = raw.replace(/[\\\/:*?"<>|]/g, ' ').replace(/\s+/g, ' ').trim();   // Drive ফোল্ডার নামের জন্য নিষিদ্ধ চিহ্ন বাদ
+      if (!t) { showToast('⚠️ নাম খালি রাখা যাবে না'); return; }
+      const list = smsListNames(); const k = t.toLowerCase();
+      const exist = k === 'rtcsms' ? 'Rtcsms' : list.find(n => n.toLowerCase() === k);
+      if (exist) { refreshSmsDatalist(exist); showToast('ℹ️ এই নামটা আগে থেকেই আছে'); return; }
+      smsList.push(t); smsList.sort((x, y) => x.localeCompare(y)); saveSmsList(); refreshSmsDatalist(t); showToast('✅ "' + t + '" যোগ হয়েছে');
+    }
+    function deleteSmsOption() {
+      const sel = document.getElementById('smsApp'); const cur = sel.value;
+      if (!cur || cur.toLowerCase() === 'rtcsms') { showToast('⚠️ Rtcsms ডিফল্ট, এটা মোছা যাবে না'); return; }
+      const list = smsListNames(); const inList = list.some(n => n === cur);
+      const used = visaFiles.filter(f => !f.isDeleted && f.smsApp && f.smsApp.trim() === cur).length;
+      if (!inList) { showToast('ℹ️ এটা তালিকায় নেই'); return; }
+      if (!confirm('"' + cur + '" ড্রপডাউন থেকে মুছবেন?' + (used ? '\n\n(' + used + 'টি ফাইলে এই নাম আছে — সেগুলোর নাম বদলাবে না, শুধু ড্রপডাউন থেকে সরবে)' : ''))) return;
+      smsList = list.filter(n => n !== cur); saveSmsList(); refreshSmsDatalist('Rtcsms'); showToast('🗑️ "' + cur + '" মোছা হয়েছে');
     }
     function renderSmsChips(list) {
       const box = document.getElementById('smsChips'); if (!box) return;
@@ -1446,7 +1487,7 @@
       if (fileId) {
         const f = visaFiles.find(x => x.id === fileId); modalDriveFolderId = f.driveFolderId || ''; modalDriveFolderName = f.driveFolderName || '';
         document.getElementById('editFileId').value = f.id; document.getElementById('visaType').value = canonVisaType(f.visaType); document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-folder-plus text-[#00b4d8]"></i> ভিসা ফাইল প্রসেসিং' + (f.serial ? ' <span class="bg-white/15 px-2.5 py-0.5 rounded-lg mono-type text-base">#' + escHtml(String(f.serial)) + '</span>' : '');
-        document.getElementById('workerName').value = f.worker || ''; document.getElementById('isSignedUp').checked = !!f.isSignedUp; document.getElementById('entryBorder').value = f.border || ''; document.getElementById('smsApp').value = f.smsApp || 'Rtcsms'; document.getElementById('appGiven').checked = !!f.appGiven; refreshSmsDatalist();
+        document.getElementById('workerName').value = f.worker || ''; document.getElementById('isSignedUp').checked = !!f.isSignedUp; document.getElementById('entryBorder').value = f.border || ''; document.getElementById('appGiven').checked = !!f.appGiven; refreshSmsDatalist(f.smsApp || 'Rtcsms');
         document.getElementById('isDelivered').checked = !!f.isDelivered; document.getElementById('isReturned').checked = !!f.isReturned;
         document.getElementById('accountPhone').value = f.accountPhone || ''; document.getElementById('accountGmail').value = f.accountGmail || '';
         document.getElementById('accountPassword').value = f.accountPassword || defaultPass || '';
@@ -1472,7 +1513,7 @@
         let currentWorker = auth.currentUser ? (auth.currentUser.displayName || auth.currentUser.email.split('@')[0]) : '';
         document.getElementById('workerName').value = currentWorker.toUpperCase();
         
-        document.getElementById('isSignedUp').checked = false; document.getElementById('entryBorder').value = ''; document.getElementById('smsApp').value = 'Rtcsms'; document.getElementById('appGiven').checked = false; refreshSmsDatalist(); document.getElementById('isDelivered').checked = false; document.getElementById('isReturned').checked = false;
+        document.getElementById('isSignedUp').checked = false; document.getElementById('entryBorder').value = ''; document.getElementById('appGiven').checked = false; refreshSmsDatalist('Rtcsms'); document.getElementById('isDelivered').checked = false; document.getElementById('isReturned').checked = false;
         document.getElementById('accountPhone').value = ''; document.getElementById('accountGmail').value = ''; document.getElementById('accountPassword').value = defaultPass || '';
         document.getElementById('docTrade').value = 'NONE'; document.getElementById('docNoc').value = 'NONE'; document.getElementById('docBank').value = 'CUSTOMER';
         document.getElementById('docPassportHeld').value = 'CUSTOMER'; document.getElementById('feeStatus').value = 'UNPAID'; document.getElementById('isAppointed').checked = false;
