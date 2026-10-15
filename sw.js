@@ -4,7 +4,7 @@
  * - Firebase / Google Drive / Apps Script এর ডাটা রিকোয়েস্ট কখনোই ক্যাশ হয় না
  * নতুন ভার্শন দিলে শুধু নিচের VERSION বদলালেই পুরনো ক্যাশ মুছে যাবে।
  */
-const VERSION = 'rtc-visa-v2';
+const VERSION = 'rtc-visa-v4';
 const SHELL = ['./', './index.html', './manifest.json', './logo.png', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 const CDN_HOSTS = ['cdn.tailwindcss.com', 'cdnjs.cloudflare.com', 'fonts.googleapis.com', 'fonts.gstatic.com', 'www.gstatic.com'];
 const NEVER_CACHE = ['firebaseio.com', 'googleapis.com', 'script.google.com', 'script.googleusercontent.com', 'drive.google.com', 'identitytoolkit', 'securetoken'];

@@ -495,13 +495,14 @@
     function isDateExpired(ds) { if (!ds) return false; return dayDiff(getTodayStr(), ds) >= 30; }
     function isAppt(f) { return !!(f && (f.isAppointed || f.appointmentDate)); }
 
+    const WARN_DAYS = 10;   // মেয়াদ শেষের কত দিন আগে থেকে 'মেয়াদ সতর্কতা' ট্যাবে আসবে
     function getBgdExpiryInfo(applicant, fileSet) {
       if (!applicant.isSubmitted || !applicant.subDate) return { status: 'NONE', badgeHtml: '' };
       if (isAppt(fileSet) || fileSet.isDelivered || fileSet.isReturned) return { status: 'SLOT_TAKEN', badgeHtml: `<span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded text-[10px] font-extrabold"><i class="fa-solid fa-check mr-1"></i>স্লট/কাজ সম্পন্ন</span>` };
       const diffDays = dayDiff(getTodayStr(), applicant.subDate);
       const daysLeft = 30 - diffDays;
       if (daysLeft <= 0) return { status: 'EXPIRED', badgeHtml: `<span class="bg-red-100 border border-red-300 text-red-700 px-2 py-0.5 rounded text-[10px] font-extrabold blink-alert"><i class="fa-solid fa-triangle-exclamation mr-1"></i>মেয়াদ শেষ (${Math.abs(daysLeft)} দিন ওভার)</span>` };
-      if (daysLeft <= 5) return { status: 'WARNING', badgeHtml: `<span class="bg-amber-100 border border-amber-300 text-amber-800 px-2 py-0.5 rounded text-[10px] font-extrabold"><i class="fa-solid fa-clock mr-1"></i>মাত্র ${daysLeft} দিন মেয়াদ!</span>` };
+      if (daysLeft <= WARN_DAYS) return { status: 'WARNING', badgeHtml: `<span class="bg-amber-100 border border-amber-300 text-amber-800 px-2 py-0.5 rounded text-[10px] font-extrabold"><i class="fa-solid fa-clock mr-1"></i>মাত্র ${daysLeft} দিন মেয়াদ!</span>` };
       return { status: 'VALID', badgeHtml: `<span class="bg-blue-50 border border-blue-200 text-blue-700 px-2 py-0.5 rounded text-[10px] font-extrabold"><i class="fa-regular fa-hourglass-half mr-1"></i>মেয়াদ: ${daysLeft} দিন বাকি</span>` };
     }
 
@@ -804,24 +805,146 @@
     let lastDayStr = getTodayStr();
     setInterval(() => { const d = getTodayStr(); if (d !== lastDayStr) { lastDayStr = d; if (auth.currentUser) { renderFiles(); setTimeout(driveSyncStatuses, 500); } } }, 30000);
     setInterval(() => { if (!document.hidden) driveSyncStatuses(); }, 60000);
+
+    // ================= 📷 ছবি / 🛂 পাসপোর্ট (ভারতীয় ভিসা সাইটের সাইজ নিয়মে আপলোডের সময়ই ছোট হয়) =================
+    // নিয়ম বদলালে শুধু নিচের সংখ্যা বদলান। রেগুলার ভিসা: ছবি JPEG 10–300 KB, বর্গাকার, 350–1000 px। পাসপোর্ট: PDF
+    // ছবি/পাসপোর্ট যায়: Drive / RTC VISA Files / Passport Pic / NAME (PHOTO).jpg, NAME (PASSPORT).pdf (সাব-ফোল্ডার নেই, মেইন সেট ফোল্ডারের বাইরে)
+    const INDIA_PHOTO = { minKB: 10, maxKB: 300, minPx: 350, maxPx: 1000 };
+    const INDIA_PASSPORT = { minKB: 10, maxKB: 300 };
+    function photoFileNameFor(a) { return safeName(a.name) + ' (PHOTO).jpg'; }
+    function passportFileNameFor(a) { return safeName(a.name) + ' (PASSPORT).pdf'; }
+    function fmtKB(n) { return n >= 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB'; }
+    function loadImageFile(file) { return new Promise((res, rej) => { const u = URL.createObjectURL(file); const im = new Image(); im.onload = () => { URL.revokeObjectURL(u); res(im); }; im.onerror = () => { URL.revokeObjectURL(u); rej(new Error('ছবিটা পড়া যায়নি (JPG/PNG দিন)')); }; im.src = u; }); }
+    function canvasBlob(c, q) { return new Promise((res, rej) => c.toBlob(b => b ? res(b) : rej(new Error('ছবি কনভার্ট হয়নি')), 'image/jpeg', q)); }
+    function drawFit(src, w, h, sw, sh) { const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, w, h); const sc = Math.min(w / sw, h / sh); const dw = sw * sc, dh = sh * sc; x.drawImage(src, (w - dw) / 2, (h - dh) / 2, dw, dh); return c; }
+    // ছবি: সাদা ব্যাকগ্রাউন্ডে বর্গাকার (মাথা কাটে না), JPEG, KB সীমার ভেতরে
+    async function processPhoto(file) {
+      const L = INDIA_PHOTO; const im = await loadImageFile(file); const sw = im.naturalWidth, sh = im.naturalHeight;
+      let side = Math.max(L.minPx, Math.min(Math.max(sw, sh), 800, L.maxPx));
+      for (let round = 0; round < 10; round++) {
+        const c = drawFit(im, side, side, sw, sh);
+        for (const q of [0.92, 0.85, 0.78, 0.7, 0.6, 0.5, 0.4]) {
+          const b = await canvasBlob(c, q);
+          if (b.size <= L.maxKB * 1024) { if (b.size < L.minKB * 1024) throw new Error('ছবির সাইজ ' + L.minKB + ' KB এর কম হয়ে গেছে, আরও পরিষ্কার/বড় ছবি দিন'); return b; }
+        }
+        if (side <= L.minPx) break; side = Math.max(L.minPx, Math.round(side * 0.85));
+      }
+      throw new Error('ছবি ' + L.maxKB + ' KB এর মধ্যে আনা গেল না, অন্য ছবি দিন');
+    }
+    // JPEG ছবিগুলো দিয়ে সরাসরি PDF বানানো (কোনো লাইব্রেরি লাগে না)
+    function buildPdfFromJpegs(pages) {
+      const enc = new TextEncoder(), parts = [], offs = []; let len = 0;
+      const push = d => { const u = typeof d === 'string' ? enc.encode(d) : d; parts.push(u); len += u.length; };
+      const obj = (id, fn) => { offs[id] = len; push(id + ' 0 obj\n'); fn(); push('\nendobj\n'); };
+      push('%PDF-1.4\n'); const n = pages.length;
+      obj(1, () => push('<< /Type /Catalog /Pages 2 0 R >>'));
+      obj(2, () => push('<< /Type /Pages /Kids [' + pages.map((_, i) => (3 + i * 3) + ' 0 R').join(' ') + '] /Count ' + n + ' >>'));
+      pages.forEach((p, i) => {
+        const pid = 3 + i * 3, cid = pid + 1, iid = pid + 2, W = 595, H = Math.round(595 * p.h / p.w), cs = 'q ' + W + ' 0 0 ' + H + ' 0 0 cm /Im0 Do Q';
+        obj(pid, () => push('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ' + W + ' ' + H + '] /Resources << /XObject << /Im0 ' + iid + ' 0 R >> >> /Contents ' + cid + ' 0 R >>'));
+        obj(cid, () => push('<< /Length ' + cs.length + ' >>\nstream\n' + cs + '\nendstream'));
+        obj(iid, () => { push('<< /Type /XObject /Subtype /Image /Width ' + p.w + ' /Height ' + p.h + ' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ' + p.bytes.length + ' >>\nstream\n'); push(p.bytes); push('\nendstream'); });
+      });
+      const total = 2 + n * 3, xref = len; let x = 'xref\n0 ' + (total + 1) + '\n0000000000 65535 f \n';
+      for (let i = 1; i <= total; i++) x += String(offs[i]).padStart(10, '0') + ' 00000 n \n';
+      push(x + 'trailer\n<< /Size ' + (total + 1) + ' /Root 1 0 R >>\nstartxref\n' + xref + '\n%%EOF');
+      const out = new Uint8Array(len); let o = 0; parts.forEach(u => { out.set(u, o); o += u.length; }); return out;
+    }
+    let pdfjsLoading = null;
+    function loadPdfJs() {
+      if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+      if (pdfjsLoading) return pdfjsLoading;
+      return pdfjsLoading = new Promise((res, rej) => {
+        const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+        s.onload = () => { window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'; res(window.pdfjsLib); };
+        s.onerror = () => { pdfjsLoading = null; rej(new Error('PDF ছোট করার টুল লোড হয়নি (ইন্টারনেট চেক করুন) — ছবি (JPG/PNG) দিন অথবা ছোট PDF দিন')); };
+        document.head.appendChild(s);
+      });
+    }
+    async function pdfToCanvases(file, maxPages) {
+      const lib = await loadPdfJs(); const doc = await lib.getDocument({ data: await file.arrayBuffer() }).promise; const out = [];
+      for (let i = 1; i <= Math.min(doc.numPages, maxPages); i++) {
+        const pg = await doc.getPage(i); const v1 = pg.getViewport({ scale: 1 }); const sc = 1700 / Math.max(v1.width, v1.height); const vp = pg.getViewport({ scale: sc });
+        const c = document.createElement('canvas'); c.width = Math.round(vp.width); c.height = Math.round(vp.height); const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height);
+        await pg.render({ canvasContext: x, viewport: vp }).promise; out.push(c);
+      }
+      return out;
+    }
+    // পাসপোর্ট: ছবি বা PDF যা-ই দিন, ফল PDF এবং KB সীমার ভেতরে। সীমার ভেতরের PDF হলে অপরিবর্তিত থাকে
+    async function processPassport(file) {
+      const L = INDIA_PASSPORT, isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name || '');
+      if (isPdf && file.size <= L.maxKB * 1024 && file.size >= L.minKB * 1024) return file;
+      const canvases = isPdf ? await pdfToCanvases(file, 2) : [];
+      if (!isPdf) { const im = await loadImageFile(file); const sc = Math.min(1, 1700 / Math.max(im.naturalWidth, im.naturalHeight)); canvases.push(drawFit(im, Math.round(im.naturalWidth * sc), Math.round(im.naturalHeight * sc), im.naturalWidth, im.naturalHeight)); }
+      for (const scale of [1, 0.85, 0.72, 0.6, 0.5, 0.42]) {
+        for (const q of [0.8, 0.65, 0.5, 0.4]) {
+          const pages = [];
+          for (const c of canvases) { const w = Math.round(c.width * scale), hh = Math.round(c.height * scale); const t = drawFit(c, w, hh, c.width, c.height); const b = await canvasBlob(t, q); pages.push({ bytes: new Uint8Array(await b.arrayBuffer()), w: w, h: hh }); }
+          const pdf = buildPdfFromJpegs(pages);
+          if (pdf.length <= L.maxKB * 1024) { if (pdf.length < L.minKB * 1024) throw new Error('পাসপোর্ট PDF ' + L.minKB + ' KB এর কম হয়ে গেছে, পরিষ্কার স্ক্যান দিন'); return new Blob([pdf], { type: 'application/pdf' }); }
+        }
+      }
+      throw new Error('পাসপোর্ট ' + L.maxKB + ' KB এর মধ্যে আনা গেল না, শুধু ডেটা-পেজের স্ক্যান দিন');
+    }
+    async function quickUploadPersonDoc(fileId, appIdx, kind, event) {
+      const input = event.target; const file = input.files[0]; const isPhoto = kind === 'photo'; const label = isPhoto ? 'ছবি' : 'পাসপোর্ট';
+      const done = () => { input.value = ''; };
+      if (cloudBusy > 0) { alert('⏳ একটি আপলোড চলছে, শেষ হওয়া পর্যন্ত অপেক্ষা করুন!'); done(); return; }
+      if (!file) return;
+      if (file.size > 40 * 1024 * 1024) { alert('ফাইল ৪০ মেগাবাইটের নিচে হতে হবে!'); done(); return; }
+      const f = visaFiles.find(x => x.id === fileId); if (!f) { done(); return; } const a = f.applicants[appIdx]; if (!a) { done(); return; }
+      if (!driveEnabled()) { alert('Drive সেট করা নেই!'); done(); return; }
+      if (!((a.name || '').trim())) { alert('আগে এই আবেদনকারীর নাম লিখে সেভ করুন, তারপর ' + label + ' দিন।'); done(); return; }
+      if (a[kind + 'FileId'] && !confirm('এই ' + label + ' দিয়ে আগেরটা বদলাবেন?\nআগেরটা Drive থেকে মুছে যাবে।')) { done(); return; }
+      cloudBusy++; showToast('⏳ ' + label + ' সাইজ ঠিক করে আপলোড হচ্ছে...');
+      try {
+        const blob = isPhoto ? await processPhoto(file) : await processPassport(file);
+        const res = await driveUploadApplicant({ setKey: f.id, personFolder: 'Passport Pic', fileName: isPhoto ? photoFileNameFor(a) : passportFileNameFor(a), file: blob, mime: isPhoto ? 'image/jpeg' : 'application/pdf', replaceFileId: a[kind + 'FileId'] || '' });
+        a[kind + 'FileId'] = res.fileId; a[kind + 'FileName'] = res.fileName; a[kind + 'By'] = whoAmI(); a[kind + 'At'] = stampNow(); a[kind + 'KB'] = Math.round(blob.size / 1024);
+        f.updatedAt = stampNow(); f.updatedBy = whoAmI();
+        renderFiles(); await syncToCloud(); showToast((isPhoto ? '📷 ছবি' : '🛂 পাসপোর্ট') + ' সেভ হয়েছে (' + fmtKB(file.size) + ' → ' + fmtKB(blob.size) + ')');
+      } catch (e) { console.error(e); alert(label + ' আপলোড হয়নি!\n\nকারণ: ' + ((e && e.message) || e)); }
+      finally { cloudBusy = Math.max(0, cloudBusy - 1); done(); }
+    }
+    function openPersonDoc(fileId, appIdx, kind) {
+      const f = visaFiles.find(x => x.id === fileId); const a = f && f.applicants[appIdx]; const id = a && a[kind + 'FileId'];
+      if (!id) { alert((kind === 'photo' ? 'ছবি' : 'পাসপোর্ট') + ' Drive এ পাওয়া যায়নি! আবার আপলোড করুন।'); return; }
+      window.open('https://drive.google.com/file/d/' + id + '/view', '_blank');
+    }
+    // একটা বাটন: আপলোড থাকলে "খুলুন" (+ বদলানোর ছোট বাটন), না থাকলে আপলোড বাটন
+    function personDocBtn(fid, idx, a, kind, big) {
+      const photo = kind === 'photo'; const ico = photo ? '📷' : '🛂'; const nm = photo ? 'ছবি' : 'পাসপোর্ট'; const acc = photo ? 'image/*' : 'image/*,application/pdf';
+      const up = `<input type="file" accept="${acc}" onchange="quickUploadPersonDoc('${fid}', ${idx}, '${kind}', event)" class="hidden">`;
+      const sz = big ? 'py-1.5 px-2 rounded-xl text-xs' : 'py-1 px-2 rounded-lg text-[11px]';
+      if (a[kind + 'FileId']) return `<button onclick="openPersonDoc('${fid}', ${idx}, '${kind}')" class="flex-1 bg-emerald-50 text-emerald-700 border border-emerald-200 ${sz} font-extrabold hover:bg-emerald-100 transition">${ico} ${nm} খুলুন</button><label title="নতুন ${nm} দিয়ে বদলান" class="cursor-pointer bg-amber-50 text-amber-700 border border-amber-200 ${sz} font-bold flex items-center justify-center hover:bg-amber-100 transition"><i class="fa-solid fa-arrows-rotate"></i>${up}</label>`;
+      return `<label class="flex-1 cursor-pointer bg-slate-50 text-slate-600 border border-slate-200 ${sz} font-bold flex items-center justify-center gap-1 hover:bg-slate-100 transition">${ico} ${nm}${up}</label>`;
+    }
+    // Expired / মেয়াদ সতর্কতার কার্ডের একদম ওপরে: যাদের নতুন BGD লাগবে তাদের ছবি ও পাসপোর্ট এক ক্লিকে
+    function quickDocsStrip(f) {
+      if (!expiryRelevant(f)) return '';
+      const rows = f.applicants.map((a, i) => ({ a: a, i: i })).filter(x => needsRenewal(x.a, f) || getBgdExpiryInfo(x.a, f).status === 'WARNING');
+      if (!rows.length) return '';
+      return `<div class="px-5 py-3 bg-indigo-50/70 border-b border-indigo-100 space-y-2">${rows.map(x => { const ex = needsRenewal(x.a, f); return `<div class="flex flex-wrap items-center gap-2"><span class="text-[11px] font-extrabold ${ex ? 'text-red-700' : 'text-amber-700'} min-w-[130px]">${ex ? '⛔' : '⏳'} ${escHtml(x.a.name || 'Unnamed')}</span><div class="flex gap-1.5 flex-1 min-w-[260px]">${personDocBtn(f.id, x.i, x.a, 'photo', false)}${personDocBtn(f.id, x.i, x.a, 'passport', false)}</div></div>`; }).join('')}</div>`;
+    }
     async function driveUploadApplicant(o) {
       const dataUrl = o.dataUrl || await readFileAsDataURL(o.file); const nm = safeName(o.name);
       const fileName = o.fileName || driveExpectedName({ name: o.name }, o.idx);
       const reqId = 'u' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
-      const d = await driveCall({ action: 'upload', reqId: reqId, setKey: o.setKey || '', folderId: o.folderId || '', folderName: safeName(o.folderName), fileName: fileName, data: dataUrl.split(',')[1], replaceFileId: o.replaceFileId || '', status: o.status || 'Running', sms: o.sms || '', visaType: o.visaType || '' }); return { folderId: d.folderId, folderName: d.folderName, fileId: d.fileId, fileName: fileName };
+      const d = await driveCall({ action: 'upload', reqId: reqId, setKey: o.setKey || '', folderId: o.folderId || '', folderName: safeName(o.folderName), fileName: fileName, data: dataUrl.split(',')[1], replaceFileId: o.replaceFileId || '', status: o.status || 'Running', sms: o.sms || '', visaType: o.visaType || '', mime: o.mime || (o.file && o.file.type) || '', subFolder: o.subFolder || '', personFolder: o.personFolder || '' }); return { folderId: d.folderId, folderName: d.folderName, fileId: d.fileId, fileName: fileName };
     }
     function driveExpectedName(a, idx, f) { const nm = safeName(a.name); const core = idx === 0 ? '1 - ' + nm + ' (MAIN BGD)' : nm + ' (BGD)'; const exp = !!(f && expiryRelevant(f) && needsRenewal(a, f)); return (exp ? 'EXPIRED - ' : '') + core + '.pdf'; }
     async function driveSyncSet(f) {
       if (!driveEnabled() || !f || !f.applicants || !f.applicants.length) return;
       const wantFolder = driveFolderNameFor(f); const files = [];
       f.applicants.forEach((a, i) => { if (a.driveFileId) { const want = driveExpectedName(a, i, f); if (a.driveFileName !== want) files.push({ fileId: a.driveFileId, name: want }); } });
+      f.applicants.forEach(a => { if (a.photoFileId) { const w = photoFileNameFor(a); if (a.photoFileName !== w) files.push({ fileId: a.photoFileId, name: w }); } if (a.passportFileId) { const w = passportFileNameFor(a); if (a.passportFileName !== w) files.push({ fileId: a.passportFileId, name: w }); } });
       if (f.invoiceFileId) { const wantInv = invoiceFileNameFor(f); if (f.invoiceFileName !== wantInv) files.push({ fileId: f.invoiceFileId, name: wantInv }); }
       LETTER_KEYS.forEach(k => { if (f[k + 'FileId']) { const wantL = letterFileNameFor(f, k); if (f[k + 'FileName'] !== wantL) files.push({ fileId: f[k + 'FileId'], name: wantL }); } });
       const folderChange = !!f.driveFolderId && f.driveFolderName !== wantFolder;
       if (!files.length && !folderChange) return;
       try {
         await driveCall({ action: 'syncSet', folderId: folderChange ? f.driveFolderId : '', folderName: wantFolder, files: files });
-        files.forEach(x => { const a = f.applicants.find(y => y.driveFileId === x.fileId); if (a) a.driveFileName = x.name; if (f.invoiceFileId === x.fileId) f.invoiceFileName = x.name; LETTER_KEYS.forEach(k => { if (f[k + 'FileId'] === x.fileId) f[k + 'FileName'] = x.name; }); });
+        files.forEach(x => { f.applicants.forEach(y => { if (y.photoFileId === x.fileId) y.photoFileName = x.name; if (y.passportFileId === x.fileId) y.passportFileName = x.name; }); const a = f.applicants.find(y => y.driveFileId === x.fileId); if (a) a.driveFileName = x.name; if (f.invoiceFileId === x.fileId) f.invoiceFileName = x.name; LETTER_KEYS.forEach(k => { if (f[k + 'FileId'] === x.fileId) f[k + 'FileName'] = x.name; }); });
         if (folderChange) f.driveFolderName = wantFolder; syncToCloud();
       } catch (e) { console.warn('driveSyncSet failed', e); }
     }
@@ -829,6 +952,7 @@
       if (!driveEnabled()) return;
       cloudBusy++;
       try {
+        // ছবি/পাসপোর্ট 'Passport Pic' এ আলাদা থাকে, তাই ট্রান্সফারে সরাতে হয় না
         if (moved.driveFileId) {
           const r = await driveCall({ action: 'moveFile', setKey: dest.id, fileId: moved.driveFileId, toFolderId: dest.driveFolderId || '', toFolderName: safeName(dest.applicants[0].name), fromFolderId: sFile.driveFolderId || '', trashFromIfEmpty: !!sRemoved, status: driveStatusOf(dest), sms: smsOf(dest), visaType: visaTypeOf(dest) });
           if (!dest.driveFolderId) dest.driveStatus = driveLocOf(dest);
@@ -895,6 +1019,7 @@
     function driveNamesDrift(f) {
       if (f.driveFolderName !== driveFolderNameFor(f)) return true;
       if (f.applicants.some((a, i) => a.driveFileId && a.driveFileName !== driveExpectedName(a, i, f))) return true;
+      if (f.applicants.some(a => (a.photoFileId && a.photoFileName !== photoFileNameFor(a)) || (a.passportFileId && a.passportFileName !== passportFileNameFor(a)))) return true;
       return !!(f.invoiceFileId && f.invoiceFileName !== invoiceFileNameFor(f)) || LETTER_KEYS.some(k => f[k + 'FileId'] && f[k + 'FileName'] !== letterFileNameFor(f, k));
     }
     async function driveSyncStatuses() {
@@ -982,7 +1107,7 @@
       cloudBusy++; showToast('⏳ মুছে ফেলা হচ্ছে...');
       try {
         let trashedOnly = 0;
-        const driveIds = f.applicants.map(a => a.driveFileId).filter(Boolean).concat(allLetterIds(f));
+        const driveIds = f.applicants.map(a => a.driveFileId).filter(Boolean).concat(allLetterIds(f)).concat(f.applicants.flatMap(a => [a.photoFileId, a.passportFileId]).filter(Boolean));
         if (driveIds.length || f.driveFolderId) { const d = await driveCall({ action: 'deleteSet', fileIds: driveIds, folderId: f.driveFolderId || '' }); trashedOnly = d.trashedOnly || 0; }
         visaFiles = visaFiles.filter(x => x.id !== id); logHint = 'চিরতরে ডিলিট (Drive সহ)';
         cloudBusy--; renderFiles(); await syncToCloud();
@@ -1185,7 +1310,7 @@
       const n = bgdUpCount(f), t = (f.applicants || []).length; if (!n) return '';
       return n === t ? `<span class="bg-emerald-100 text-emerald-700 border border-emerald-300 px-2 py-0.5 rounded text-[10px] font-extrabold">📄 BGD ${n}/${t} ✓</span>` : `<span class="bg-amber-100 text-amber-800 border border-amber-300 px-2 py-0.5 rounded text-[10px] font-extrabold">📄 BGD ${n}/${t} (বাকি ${t - n})</span>`;
     }
-    // ⛔ Expired = মেয়াদ শেষ বা নতুন BGD লাগবে | ⏳ Warning = আর ৫ দিন বা কম বাকি
+    // ⛔ Expired = মেয়াদ শেষ বা নতুন BGD লাগবে | ⏳ Warning = আর ১০ দিন বা কম বাকি
     function hasExpired(f) { return expiredPeople(f).length > 0; }
     function warningPeople(f) { return expiryRelevant(f) ? f.applicants.filter(a => !needsRenewal(a, f) && getBgdExpiryInfo(a, f).status === 'WARNING') : []; }
     function hasWarning(f) { return warningPeople(f).length > 0; }
@@ -1260,7 +1385,7 @@
                   const box = st === 'EXPIRED' ? 'bg-red-50 border-red-200' : (st === 'UPLOADED' ? 'bg-emerald-50 border-emerald-200' : (st === 'SUBMITTED' ? 'bg-sky-50/60 border-sky-100' : 'bg-white border-slate-100'));
                   return `<div class="rounded-lg border ${box} px-2 py-1.5 space-y-1">
                     <div class="flex flex-wrap items-center gap-1.5 text-[11px]"><span class="font-extrabold ${st === 'EXPIRED' ? 'text-red-700' : 'text-slate-700'}">${i === 0 ? '⭐ ' : ''}${escHtml(a.name || 'Unnamed')}</span>${prevSerialBadge(a)}${personPill(a, f)}${exp.badgeHtml}</div>
-                    <div class="flex flex-wrap items-center gap-1.5 text-[11px]"><span class="mono-type font-bold text-[#00b4d8] bg-[#00b4d8]/10 px-1.5 rounded">${escHtml(a.tempId || 'No-Temp')}</span><span class="mono-type font-bold px-1.5 rounded ${a.bgdNo ? 'text-emerald-700 bg-emerald-100' : 'text-slate-400 bg-slate-100'}">BGD: ${escHtml(a.bgdNo || '—')}</span>${(a.isSubmitted && a.subDate) ? `<span class="text-[10px] font-bold text-slate-500">📅 ${escHtml(a.subDate)}</span>` : ''}${a.driveFileId ? `<button onclick="openPdf('${f.id}', ${i})" class="bg-emerald-100 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded text-[10px] font-extrabold hover:bg-emerald-200"><i class="fa-solid fa-file-pdf"></i> PDF</button>` : ''}</div>
+                    <div class="flex flex-wrap items-center gap-1.5 text-[11px]"><span class="mono-type font-bold text-[#00b4d8] bg-[#00b4d8]/10 px-1.5 rounded">${escHtml(a.tempId || 'No-Temp')}</span><span class="mono-type font-bold px-1.5 rounded ${a.bgdNo ? 'text-emerald-700 bg-emerald-100' : 'text-slate-400 bg-slate-100'}">BGD: ${escHtml(a.bgdNo || '—')}</span>${(a.isSubmitted && a.subDate) ? `<span class="text-[10px] font-bold text-slate-500">📅 ${escHtml(a.subDate)}</span>` : ''}${a.driveFileId ? `<button onclick="openPdf('${f.id}', ${i})" class="bg-emerald-100 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded text-[10px] font-extrabold hover:bg-emerald-200"><i class="fa-solid fa-file-pdf"></i> PDF</button>` : ''}${a.photoFileId ? `<button onclick="openPersonDoc('${f.id}', ${i}, 'photo')" class="bg-sky-100 text-sky-700 border border-sky-200 px-1.5 py-0.5 rounded text-[10px] font-extrabold hover:bg-sky-200">📷 ছবি</button>` : ''}${a.passportFileId ? `<button onclick="openPersonDoc('${f.id}', ${i}, 'passport')" class="bg-indigo-100 text-indigo-700 border border-indigo-200 px-1.5 py-0.5 rounded text-[10px] font-extrabold hover:bg-indigo-200">🛂 পাসপোর্ট</button>` : ''}</div>
                   </div>`;
                 }).join('')}</td>
                 <td class="p-3.5 space-x-1"><button onclick="openFileModal('${f.id}')" class="bg-white text-[#0077b6] px-3 py-1 rounded-lg border border-slate-200 font-bold shadow-sm hover:bg-slate-50">এডিট</button><button onclick="moveToRecycle('${f.id}')" title="রিসাইকেল বিনে পাঠান" class="bg-white text-rose-600 px-2.5 py-1 rounded-lg border border-rose-200 font-bold shadow-sm hover:bg-rose-50"><i class="fa-solid fa-trash"></i></button></td>
@@ -1292,6 +1417,7 @@
             </div>
           </div>
 
+          ${quickDocsStrip(f)}
           ${f.visaType === 'Medical' ? medicalStrip(f) : ''}
           <div class="px-5 py-3.5 ${f.isSignedUp ? 'bg-purple-50/50' : 'bg-rose-50/30'} flex flex-wrap items-center justify-between gap-3 text-xs border-b border-slate-100">
             <div class="flex flex-wrap items-center gap-3">
@@ -1351,6 +1477,7 @@
                 <div class="mt-4 flex gap-1.5">
                   ${(a.driveFileId) ? `<button onclick="openPdf('${f.id}', ${idx})" class="flex-1 bg-emerald-50 text-emerald-700 border border-emerald-200 py-1.5 px-2 rounded-xl text-xs font-bold hover:bg-emerald-100 transition"><i class="fa-solid fa-file-pdf"></i> PDF ওপেন</button><label title="নতুন PDF দিয়ে বদলান" class="cursor-pointer bg-amber-50 text-amber-700 border border-amber-200 py-1.5 px-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1 hover:bg-amber-100 transition"><i class="fa-solid fa-arrows-rotate"></i> রি-আপলোড / বদলান<input type="file" accept="application/pdf" onchange="quickUploadCardPdf('${f.id}', ${idx}, event)" class="hidden"></label>` : `<label class="w-full cursor-pointer bg-slate-50 text-slate-600 border border-slate-200 py-1.5 px-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1 hover:bg-slate-100 transition"><i class="fa-solid fa-upload"></i> PDF রাখুন<input type="file" accept="application/pdf" onchange="quickUploadCardPdf('${f.id}', ${idx}, event)" class="hidden"></label>`}
                 </div>
+                <div class="mt-1.5 flex gap-1.5">${personDocBtn(f.id, idx, a, 'photo', true)}${personDocBtn(f.id, idx, a, 'passport', true)}</div>
                 ${(a.bgdUploadedBy && a.driveFileId) ? `<div class="text-[9px] text-slate-400 font-bold mt-1.5"><i class="fa-solid fa-cloud-arrow-up mr-1"></i>আপলোড: ${escHtml(a.bgdUploadedBy)}${a.bgdUploadedAt ? ' · ' + escHtml(a.bgdUploadedAt) : ''}</div>` : ''}
               </div>`;
             }).join('')}
@@ -1736,7 +1863,7 @@
       ['baseVisaFee', 'ভিসা ফি', 'num'], ['softwareCharge', 'সফটওয়্যার চার্জ', 'num'], ['billTotal', 'মোট বিল', 'num'], ['billAdvance', 'অ্যাডভান্স', 'num'], ['billDue', 'বাকি', 'num'], ['keptCharge', 'রাখা চার্জ', 'num'], ['refundAmount', 'ফেরত টাকা', 'num'],
       ['returnReason', 'ফেরতের কারণ', 'label'], ['note', 'নোট', 'label'], ['hospitalName', 'হাসপাতাল'], ['letterMode', 'Letter ধরন'], ['invitationReceived', 'Invitation Received', 'bool'], ['apptLetterReceived', 'Appointment Letter Received', 'bool']
     ];
-    const LOG_PERSON_FIELDS = [['passport', 'পাসপোর্ট'], ['dob', 'জন্মতারিখ'], ['nid', 'NID'], ['tempId', 'Temp ID'], ['bgdNo', 'BGD নম্বর'], ['isSubmitted', 'সাবমিট'], ['subDate', 'সাবমিট তারিখ'], ['prevBgd', 'আগের BGD'], ['driveFileId', 'PDF']];
+    const LOG_PERSON_FIELDS = [['passport', 'পাসপোর্ট'], ['dob', 'জন্মতারিখ'], ['nid', 'NID'], ['tempId', 'Temp ID'], ['bgdNo', 'BGD নম্বর'], ['isSubmitted', 'সাবমিট'], ['subDate', 'সাবমিট তারিখ'], ['prevBgd', 'আগের BGD'], ['driveFileId', 'PDF'], ['photoFileId', 'ছবি'], ['passportFileId', 'পাসপোর্ট ফাইল']];
     let logQueue = []; try { logQueue = JSON.parse(localStorage.getItem('rtc_log_queue') || '[]'); } catch (e) { logQueue = []; }
     let logFlushing = false; let logDenied = false; let logHint = ''; let logOverride = null;
     function saveLogQueue() { if (logQueue.length > 500) logQueue = logQueue.slice(-500); try { localStorage.setItem('rtc_log_queue', JSON.stringify(logQueue)); } catch (e) { } }
