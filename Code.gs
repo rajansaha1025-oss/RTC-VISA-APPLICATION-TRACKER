@@ -134,7 +134,7 @@ function mimeOf_(r) {
 }
 // সেট ফোল্ডারের ভেতরের আলাদা সাব-ফোল্ডার (যেমন 'passport and pic')
 function cleanSub_(s) { return String(s || '').replace(/[\\\/:*?"<>|]/g, ' ').replace(/\s+/g, ' ').trim(); }
-// ছবি/পাসপোর্ট আলাদা জায়গায়: RTC VISA Files / Passport Pic / NAME (PHOTO).jpg ও NAME (PASSPORT).pdf (কোনো সাব-ফোল্ডার নেই)
+// ছবি/পাসপোর্ট আলাদা জায়গায়: RTC VISA Files / Passport Pic / NAME photo.jpg ও NAME passport.pdf (কোনো সাব-ফোল্ডার নেই)
 const PASSPORT_ROOT_NAME = 'Passport Pic';
 function passportRoot_(root) { return subFolder_(root, PASSPORT_ROOT_NAME); }
 function inFolder_(item, folder) {
@@ -548,7 +548,7 @@ function migratePassportPics() {
   let moved = 0, removed = 0;
   function pull(sub) {
     const files = sub.getFiles();
-    while (files.hasNext()) { const x = files.next(); if (x.isTrashed()) continue; if (/\((PHOTO|PASSPORT)\)\.[A-Za-z0-9]+$/.test(x.getName())) { x.moveTo(pr); moved++; } }
+    while (files.hasNext()) { const x = files.next(); if (x.isTrashed()) continue; x.moveTo(pr); moved++; }
     if (isEmpty_(sub)) { sub.setTrashed(true); removed++; }
   }
   const scan = listSetFolders_(root, deadline);

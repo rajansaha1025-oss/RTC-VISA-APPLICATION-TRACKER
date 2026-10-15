@@ -808,11 +808,21 @@
 
     // ================= 📷 ছবি / 🛂 পাসপোর্ট (ভারতীয় ভিসা সাইটের সাইজ নিয়মে আপলোডের সময়ই ছোট হয়) =================
     // নিয়ম বদলালে শুধু নিচের সংখ্যা বদলান। রেগুলার ভিসা: ছবি JPEG 10–300 KB, বর্গাকার, 350–1000 px। পাসপোর্ট: PDF
-    // ছবি/পাসপোর্ট যায়: Drive / RTC VISA Files / Passport Pic / NAME (PHOTO).jpg, NAME (PASSPORT).pdf (সাব-ফোল্ডার নেই, মেইন সেট ফোল্ডারের বাইরে)
+    // ছবি/পাসপোর্ট যায়: Drive / RTC VISA Files / Passport Pic / NAME photo.jpg, NAME passport.pdf (সাব-ফোল্ডার নেই, মেইন সেট ফোল্ডারের বাইরে)
     const INDIA_PHOTO = { minKB: 10, maxKB: 300, minPx: 350, maxPx: 1000 };
     const INDIA_PASSPORT = { minKB: 10, maxKB: 300 };
-    function photoFileNameFor(a) { return safeName(a.name) + ' (PHOTO).jpg'; }
-    function passportFileNameFor(a) { return safeName(a.name) + ' (PASSPORT).pdf'; }
+    // ফাইলের নাম: 'NAME photo.jpg' ও 'NAME passport.pdf'। একই কার্ডের আপলোড আগেরটা বদলায় (নাম একই থাকে)।
+    // আলাদা কার্ডে একই নামের মানুষ থাকলে 'NAME 2 photo.jpg', 'NAME 3 photo.jpg' ... হয়। একবার নাম হয়ে গেলে আর বদলায় না।
+    function ppNameFor(a, kind) {
+      const word = kind === 'photo' ? 'photo' : 'passport', ext = kind === 'photo' ? '.jpg' : '.pdf', base = safeName(a.name);
+      const re = new RegExp('^' + base.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?: \\d+)? ' + word + ext.replace('.', '\\.') + '$', 'i');
+      const cur = a[kind + 'FileName']; if (cur && re.test(cur)) return cur;
+      const used = new Set(); visaFiles.forEach(f => (f.applicants || []).forEach(x => { if (x !== a) ['photoFileName', 'passportFileName'].forEach(k => { if (x[k]) used.add(String(x[k]).toLowerCase()); }); }));
+      for (let n = 1; n < 500; n++) { const b = n === 1 ? base : base + ' ' + n; if (!used.has((b + ' photo.jpg').toLowerCase()) && !used.has((b + ' passport.pdf').toLowerCase())) return b + ' ' + word + ext; }
+      return base + ' ' + word + ext;
+    }
+    function photoFileNameFor(a) { return ppNameFor(a, 'photo'); }
+    function passportFileNameFor(a) { return ppNameFor(a, 'passport'); }
     function fmtKB(n) { return n >= 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB'; }
     function loadImageFile(file) { return new Promise((res, rej) => { const u = URL.createObjectURL(file); const im = new Image(); im.onload = () => { URL.revokeObjectURL(u); res(im); }; im.onerror = () => { URL.revokeObjectURL(u); rej(new Error('ছবিটা পড়া যায়নি (JPG/PNG দিন)')); }; im.src = u; }); }
     function canvasBlob(c, q) { return new Promise((res, rej) => c.toBlob(b => b ? res(b) : rej(new Error('ছবি কনভার্ট হয়নি')), 'image/jpeg', q)); }
