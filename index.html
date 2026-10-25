@@ -100,6 +100,7 @@
           <button onclick="switchTab('DELIVERED')" id="tab_DELIVERED" class="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-white/10 text-slate-300 transition"><span class="flex items-center gap-3"><i class="fa-solid fa-box-archive text-amber-400 text-sm"></i> ডেলিভারি আর্কাইভ</span><span class="bg-white/10 px-2 py-0.5 rounded-full text-[11px]" id="badgeDelivered">0</span></button>
           <button onclick="switchTab('RETURNED')" id="tab_RETURNED" class="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-white/10 text-slate-300 transition"><span class="flex items-center gap-3"><i class="fa-solid fa-rotate-left text-orange-400 text-sm"></i> ক্যানসেল/ফেরত</span><span class="bg-white/10 px-2 py-0.5 rounded-full text-[11px]" id="badgeReturned">0</span></button>
           <button onclick="switchTab('ALL')" id="tab_ALL" class="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-white/10 text-slate-300 transition"><span class="flex items-center gap-3"><i class="fa-solid fa-layer-group text-cyan-400 text-sm"></i> সব ফাইল</span><span class="bg-white/10 px-2 py-0.5 rounded-full text-[11px]" id="badgeAll">0</span></button>
+          <button onclick="switchTab('ACCOUNTS')" id="tab_ACCOUNTS" class="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-white/10 text-slate-300 transition"><span class="flex items-center gap-3"><i class="fa-solid fa-scale-balanced text-emerald-400 text-sm"></i> হিসাব (Accounts)</span></button>
           <button onclick="switchTab('RECYCLE')" id="tab_RECYCLE" style="display:none" class="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-white/10 text-slate-300 transition"><span class="flex items-center gap-3"><i class="fa-solid fa-trash-can text-slate-400 text-sm"></i> রিসাইকেল বিন</span><span class="bg-white/10 px-2 py-0.5 rounded-full text-[11px]" id="badgeRecycle">0</span></button>
           <button onclick="switchTab('ACTIVITY')" id="tab_ACTIVITY" style="display:none" class="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-white/10 text-slate-300 transition"><span class="flex items-center gap-3"><i class="fa-solid fa-clock-rotate-left text-amber-400 text-sm"></i> অ্যাক্টিভিটি লগ</span></button>
         <div class="pt-3 mt-2 border-t border-white/10">
@@ -605,7 +606,7 @@
 
     function switchTab(tabName) {
       activeTab = tabName;
-      ['RUNNING', 'EXPIRING', 'EXPIRED', 'BGD_UP', 'SIGNED_UP', 'APPOINTMENT', 'DELIVERED', 'RETURNED', 'ALL', 'RECYCLE', 'ACTIVITY'].forEach(t => {
+      ['RUNNING', 'EXPIRING', 'EXPIRED', 'BGD_UP', 'SIGNED_UP', 'APPOINTMENT', 'DELIVERED', 'RETURNED', 'ALL', 'ACCOUNTS', 'RECYCLE', 'ACTIVITY'].forEach(t => {
         const btn = document.getElementById(`tab_${t}`);
         if (t === tabName) btn.className = 'w-full flex items-center justify-between px-4 py-3 rounded-2xl btn-primary-rtc text-white shadow-md transition';
         else btn.className = 'w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-white/10 text-slate-300 transition';
@@ -1147,7 +1148,7 @@
     function smsOf(f) { return ((f && f.smsApp) || 'Rtcsms').trim() || 'Rtcsms'; }
     function normSmsName(v) { const t = String(v || '').replace(/\s+/g, ' ').trim(); if (!t) return 'Rtcsms'; const k = t.toLowerCase(); if (k === 'rtcsms') return 'Rtcsms'; const hit = visaFiles.find(f => !f.isDeleted && f.smsApp && f.smsApp.trim().toLowerCase() === k); return hit ? hit.smsApp.trim() : t; }
     function setSmsFilter(v) { smsFilter = (smsFilter === v) ? '' : v; if (activeTab === 'RECYCLE' || activeTab === 'ACTIVITY') { switchTab('RUNNING'); return; } renderFiles(); }
-    const TAB_TITLES = { 'RUNNING': '📂 রানিং ফাইল', 'EXPIRING': '⏳ মেয়াদ সতর্কতা', 'EXPIRED': '⛔ Expired (মেয়াদ শেষ)', 'BGD_UP': '📄 BGD আপলোড হয়েছে', 'SIGNED_UP': '🟣 সাইন-আপ সম্পন্ন', 'APPOINTMENT': '📅 অ্যাপয়েন্টমেন্ট', 'DELIVERED': '📦 ডেলিভারি', 'RETURNED': '🔙 ফেরত ফাইল', 'ALL': '📋 সব ফাইল', 'RECYCLE': '🗑️ রিসাইকেল বিন', 'ACTIVITY': '🕘 অ্যাক্টিভিটি লগ' };
+    const TAB_TITLES = { 'RUNNING': '📂 রানিং ফাইল', 'EXPIRING': '⏳ মেয়াদ সতর্কতা', 'EXPIRED': '⛔ Expired (মেয়াদ শেষ)', 'BGD_UP': '📄 BGD আপলোড হয়েছে', 'SIGNED_UP': '🟣 সাইন-আপ সম্পন্ন', 'APPOINTMENT': '📅 অ্যাপয়েন্টমেন্ট', 'DELIVERED': '📦 ডেলিভারি', 'RETURNED': '🔙 ফেরত ফাইল', 'ALL': '📋 সব ফাইল', 'ACCOUNTS': '💰 হিসাব (Accounts)', 'RECYCLE': '🗑️ রিসাইকেল বিন', 'ACTIVITY': '🕘 অ্যাক্টিভিটি লগ' };
     function updateViewTitle() { const el = document.getElementById('currentViewTitle'); if (!el) return; el.innerText = (TAB_TITLES[activeTab] || '') + ((smsFilter && activeTab !== 'RECYCLE' && activeTab !== 'ACTIVITY') ? '  ·  📱 ' + smsFilter : ''); }
     let smsMenuOpen = localStorage.getItem('rtc_sms_menu_open') !== '0';
     function toggleSmsMenu() { smsMenuOpen = !smsMenuOpen; localStorage.setItem('rtc_sms_menu_open', smsMenuOpen ? '1' : '0'); renderSmsMenu(); }
@@ -1354,6 +1355,7 @@
       };
       const baseList = visaFiles.filter(_passBase); renderSmsChips(baseList);
       const filtered = baseList.filter(f => activeTab === 'RECYCLE' || !smsFilter || smsOf(f) === smsFilter);
+      if (activeTab === 'ACCOUNTS') { renderAccountsView(container, filtered); return; }
 
       if (filtered.length === 0) {
         container.innerHTML = `<div class="bg-white rounded-3xl p-12 text-center border border-slate-200 shadow-sm"><div class="w-16 h-16 bg-[#f4f7fa] text-[#00b4d8] rounded-2xl mx-auto flex items-center justify-center text-3xl mb-4 border border-slate-100"><i class="fa-solid fa-folder-open"></i></div><h4 class="font-extrabold text-slate-700 text-base">কোনো ভিসা ফাইল পাওয়া যায়নি!</h4></div>`; return;
@@ -1985,6 +1987,87 @@
           + '<div class="min-w-0 flex-1 basis-60">' + (actSerial(x) ? '<span class="mr-1.5 align-middle">' + serialBadge({ serial: actSerial(x) }) + '</span>' : '') + '<span class="text-xs font-extrabold text-[#0b132b]">' + escHtml(x.name || '') + '</span>' + (x.detail ? '<div class="text-[11px] text-slate-500 font-medium break-words">' + escHtml(x.detail) + '</div>' : '') + '</div></div>';
       }).join('') + '</div>';
       container.innerHTML = html;
+    }
+
+
+    // ================= 💰 হিসাব (Accounts) সেকশন =================
+    // প্রতিটি ফাইলের বিল/জমা/বাকি/ফেরত/খরচ এক জায়গায়, নামসহ। ফাইল এডিট ফর্মের ডাটা থেকেই অটো হিসাব হয় (আলাদা কিছু লিখতে হয় না)।
+    let acctFilter = 'ALL'; let acctSort = 'SERIAL'; let acctLast = [];
+    const fmtTk = n => (Math.round((Number(n) || 0) * 100) / 100).toLocaleString('en-US');
+    function acctRow(f) {
+      const num = v => parseFloat(v) || 0;
+      const ret = !!f.isReturned;
+      const paid = num(f.billAdvance);
+      let bill, due, refund, expense, profit, kept;
+      if (ret) {   // ফেরত ফাইল: চার্জ হিসেবে যা রাখা হয়েছে সেটাই আয়; বাকি নেই
+        kept = num(f.keptCharge); bill = kept; due = 0; refund = num(f.refundAmount); expense = 0; profit = kept;
+      } else {
+        bill = num(f.billTotal); kept = 0; due = Math.max(0, bill - paid); refund = 0;
+        expense = num(f.baseVisaFee) + num(f.softwareCharge); profit = bill - expense;
+      }
+      const noBill = !ret && bill === 0 && paid === 0;
+      const state = ret ? 'RETURNED' : (noBill ? 'NOBILL' : (due > 0 ? 'DUE' : 'CLEAR'));
+      return { f: f, ret: ret, bill: bill, paid: paid, due: due, refund: refund, expense: expense, profit: profit, kept: kept, noBill: noBill, state: state,
+        name: mainNameOf(f), others: (f.applicants || []).slice(1).map(a => a.name).filter(Boolean) };
+    }
+    function setAcctFilter(v) { acctFilter = v; renderFiles(); }
+    function setAcctSort(v) { acctSort = v; renderFiles(); }
+    function renderAccountsView(container, files) {
+      container = container || document.getElementById('fileListContainer'); if (files) acctLast = files;
+      const rows = acctLast.map(acctRow);
+      const sum = k => rows.reduce((t, r) => t + r[k], 0);
+      const T = { bill: sum('bill'), paid: sum('paid'), due: sum('due'), refund: sum('refund'), expense: sum('expense'), profit: sum('profit') };
+      const cnt = { ALL: rows.length, DUE: 0, CLEAR: 0, RETURNED: 0, NOBILL: 0 }; rows.forEach(r => { cnt[r.state]++; });
+      let list = rows.filter(r => acctFilter === 'ALL' || r.state === acctFilter);
+      const sorters = { SERIAL: (a, b) => (Number(b.f.serial) || 0) - (Number(a.f.serial) || 0), DUE: (a, b) => b.due - a.due, BILL: (a, b) => b.bill - a.bill, PROFIT: (a, b) => b.profit - a.profit, NAME: (a, b) => a.name.localeCompare(b.name) };
+      list = list.slice().sort(sorters[acctSort] || sorters.SERIAL);
+      const L = { bill: 0, paid: 0, due: 0, refund: 0, expense: 0, profit: 0 }; list.forEach(r => { Object.keys(L).forEach(k => { L[k] += r[k]; }); });   // এখন যা দেখা যাচ্ছে তার টোটাল
+      const card = (label, val, cls, sub) => '<div class="bg-white rounded-2xl border ' + cls[0] + ' shadow-sm p-4"><p class="text-[11px] font-extrabold text-slate-500 uppercase tracking-wide">' + label + '</p><p class="mono-type text-xl md:text-2xl font-extrabold mt-1 ' + cls[1] + '">' + fmtTk(val) + ' <span class="text-xs">৳</span></p>' + (sub ? '<p class="text-[10px] font-bold text-slate-400 mt-0.5">' + sub + '</p>' : '') + '</div>';
+      let html = '<div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 mb-4">'
+        + card('মোট বিল', T.bill, ['border-slate-200', 'text-[#0b132b]'], rows.length + 'টি ফাইল')
+        + card('মোট জমা (Paid)', T.paid, ['border-emerald-200', 'text-emerald-600'], 'কাস্টমার দিয়েছে')
+        + card('মোট বাকি (Due)', T.due, ['border-rose-300', 'text-rose-600'], cnt.DUE + ' জনের কাছে পাব')
+        + card('মোট ফেরত', T.refund, ['border-orange-200', 'text-orange-600'], cnt.RETURNED + 'টি ফাইল ফেরত')
+        + card('মোট খরচ', T.expense, ['border-amber-200', 'text-amber-600'], 'ভিসা ফি + সফটওয়্যার/অন্য')
+        + card('নিট লাভ', T.profit, [T.profit >= 0 ? 'border-sky-200' : 'border-rose-300', T.profit >= 0 ? 'text-sky-600' : 'text-rose-600'], 'বিল − খরচ')
+        + '</div>';
+      const chip = (k, lb) => '<button onclick="setAcctFilter(\'' + k + '\')" class="px-3 py-1.5 rounded-xl text-xs font-extrabold border transition ' + (acctFilter === k ? 'bg-[#0b132b] text-white border-[#0b132b]' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50') + '">' + lb + ' <span class="opacity-70">' + cnt[k] + '</span></button>';
+      const so = (k, lb) => '<option value="' + k + '"' + (acctSort === k ? ' selected' : '') + '>' + lb + '</option>';
+      html += '<div class="flex flex-wrap items-center gap-2 mb-3">' + chip('ALL', 'সব') + chip('DUE', '⏳ বাকি আছে') + chip('CLEAR', '✅ পরিশোধ') + chip('RETURNED', '🔙 ফেরত') + chip('NOBILL', '❔ বিল দেওয়া হয়নি')
+        + '<select onchange="setAcctSort(this.value)" class="ml-auto px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-700 bg-white shadow-sm focus:outline-none">' + so('SERIAL', 'নতুন ফাইল আগে') + so('DUE', 'বেশি বাকি আগে') + so('BILL', 'বেশি বিল আগে') + so('PROFIT', 'বেশি লাভ আগে') + so('NAME', 'নাম (A-Z)') + '</select>'
+        + '<button onclick="exportAccountsCsv()" class="bg-white hover:bg-slate-50 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-bold border border-slate-200 shadow-sm"><i class="fa-solid fa-file-csv text-emerald-600 mr-1"></i> CSV</button></div>';
+      if (!list.length) { container.innerHTML = html + '<div class="bg-white rounded-3xl p-12 text-center border border-slate-200 shadow-sm"><h4 class="font-extrabold text-slate-700 text-base">এই ফিল্টারে কোনো ফাইল নেই</h4></div>'; return; }
+      const stBadge = r => r.state === 'RETURNED' ? '<span class="bg-orange-100 text-orange-700 px-2 py-0.5 rounded-md text-[10px] font-extrabold">🔙 ফেরত</span>' : (r.state === 'NOBILL' ? '<span class="bg-slate-100 text-slate-500 px-2 py-0.5 rounded-md text-[10px] font-extrabold">❔ বিল নেই</span>' : (r.state === 'DUE' ? '<span class="bg-rose-100 text-rose-700 px-2 py-0.5 rounded-md text-[10px] font-extrabold">⏳ বাকি</span>' : '<span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-md text-[10px] font-extrabold">✅ পরিশোধ</span>'));
+      const progress = f => f.isDelivered ? '📦 ডেলিভারড' : (f.isReturned ? '' : '📂 রানিং');
+      const td = 'px-3 py-2.5 text-right mono-type text-xs font-bold whitespace-nowrap';
+      html += '<div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden"><div class="overflow-x-auto"><table class="w-full min-w-[920px] text-left">'
+        + '<thead class="bg-[#0b132b] text-white text-[11px] uppercase tracking-wide"><tr><th class="px-3 py-3">#</th><th class="px-3 py-3">নাম</th><th class="px-3 py-3">অবস্থা</th><th class="px-3 py-3 text-right">বিল</th><th class="px-3 py-3 text-right">জমা</th><th class="px-3 py-3 text-right">বাকি</th><th class="px-3 py-3 text-right">ফেরত</th><th class="px-3 py-3 text-right">খরচ</th><th class="px-3 py-3 text-right">লাভ</th></tr></thead><tbody class="divide-y divide-slate-100">'
+        + list.map(r => {
+          const f = r.f;
+          return '<tr onclick="openFileModal(\'' + escHtml(f.id) + '\')" class="hover:bg-sky-50/60 cursor-pointer">'
+            + '<td class="px-3 py-2.5">' + serialBadge(f) + '</td>'
+            + '<td class="px-3 py-2.5 min-w-[180px]"><div class="text-xs font-extrabold text-[#0b132b]">' + escHtml(r.name) + '</div>'
+            + (r.others.length ? '<div class="text-[10px] text-slate-400 font-bold">+ ' + escHtml(r.others.join(', ')) + '</div>' : '')
+            + '<div class="text-[10px] text-slate-400 font-bold mono-type">' + escHtml(f.accountPhone || '') + (f.worker ? ' · ' + escHtml(f.worker) : '') + '</div></td>'
+            + '<td class="px-3 py-2.5">' + stBadge(r) + '<div class="text-[10px] text-slate-400 font-bold mt-0.5">' + progress(f) + '</div></td>'
+            + '<td class="' + td + ' text-[#0b132b]">' + fmtTk(r.bill) + (r.ret ? '<div class="text-[9px] text-orange-500 font-bold">চার্জ রাখা</div>' : '') + '</td>'
+            + '<td class="' + td + ' text-emerald-600">' + fmtTk(r.paid) + '</td>'
+            + '<td class="' + td + (r.due > 0 ? ' text-rose-600 bg-rose-50/60' : ' text-slate-300') + '">' + fmtTk(r.due) + '</td>'
+            + '<td class="' + td + (r.refund > 0 ? ' text-orange-600' : ' text-slate-300') + '">' + fmtTk(r.refund) + '</td>'
+            + '<td class="' + td + ' text-amber-600" title="ভিসা ফি ' + fmtTk(f.baseVisaFee) + ' + সফটওয়্যার/অন্য ' + fmtTk(f.softwareCharge) + '">' + fmtTk(r.expense) + '</td>'
+            + '<td class="' + td + (r.profit >= 0 ? ' text-sky-600' : ' text-rose-600') + '">' + fmtTk(r.profit) + '</td></tr>';
+        }).join('')
+        + '</tbody><tfoot class="bg-slate-100 border-t-2 border-slate-300"><tr class="text-xs font-extrabold"><td class="px-3 py-3" colspan="3">মোট (' + list.length + 'টি ফাইল)</td>'
+        + '<td class="' + td + ' text-[#0b132b]">' + fmtTk(L.bill) + '</td><td class="' + td + ' text-emerald-600">' + fmtTk(L.paid) + '</td><td class="' + td + ' text-rose-600">' + fmtTk(L.due) + '</td><td class="' + td + ' text-orange-600">' + fmtTk(L.refund) + '</td><td class="' + td + ' text-amber-600">' + fmtTk(L.expense) + '</td><td class="' + td + (L.profit >= 0 ? ' text-sky-600' : ' text-rose-600') + '">' + fmtTk(L.profit) + '</td></tr></tfoot></table></div></div>'
+        + '<p class="text-[11px] text-slate-400 font-bold mt-3 leading-relaxed">ℹ️ বাকি = বিল − জমা। ফেরত ফাইলে: যে চার্জ রাখা হয়েছে সেটাই "বিল/লাভ", আর যা ফেরত দেওয়া হয়েছে সেটা "ফেরত" কলামে। খরচ = ভিসা ফি + সফটওয়্যার/অন্য খরচ (ফাইল ফর্মে যা দেওয়া আছে)। যেকোনো সারিতে চাপলে ফাইল এডিট খুলবে। উপরের সার্চ, SMS অ্যাপ, ওয়ার্কার ও ভিসা-টাইপ ফিল্টার এখানেও কাজ করে।</p>';
+      container.innerHTML = html;
+    }
+    function exportAccountsCsv() {
+      const rows = acctLast.map(acctRow); if (!rows.length) { showToast('কোনো ডাটা নেই'); return; }
+      const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+      const head = ['ফাইল নং', 'নাম', 'সহ-আবেদনকারী', 'ফোন', 'অবস্থা', 'বিল', 'জমা', 'বাকি', 'ফেরত', 'খরচ', 'লাভ'];
+      const lines = [head.map(q).join(',')].concat(rows.map(r => [r.f.serial || '', r.name, r.others.join(' / '), r.f.accountPhone || '', r.state, r.bill, r.paid, r.due, r.refund, r.expense, r.profit].map(q).join(',')));
+      const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' })); a.download = 'RTC-hisab-' + getTodayStr() + '.csv'; document.body.appendChild(a); a.click(); a.remove();
     }
 
     // ================= 📱 ফোনে সাইডবার ড্রয়ার =================
