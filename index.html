@@ -2028,22 +2028,26 @@
     const fmtTk = n => (Math.round((Number(n) || 0) * 100) / 100).toLocaleString('en-US');
     function acctRow(f) {
       const num = v => parseFloat(v) || 0;
-      const ret = !!f.isReturned; const appt = isAppt(f);
+      const ret = !!f.isReturned; const del = !ret && !!f.isDelivered; const appt = isAppt(f);
       const paid = num(f.billAdvance);
-      let bill, due, refund, expense, profit, kept, spent, pending = 0, expected = 0;
-      if (ret) {   // ফেরত ফাইল: চার্জ হিসেবে যা রাখা হয়েছে সেটাই আয়; বাকি নেই
-        kept = num(f.keptCharge); bill = kept; due = 0; refund = num(f.refundAmount); expense = 0; spent = 0; profit = kept;   // ফেরত হলে কোনো খরচ নেই; যত চার্জ রাখা হলো তত লাভ
+      let bill, due, refund, expense, profit, kept, spent, pending = 0, expected = 0, realized = 0;
+      if (ret) {   // ফেরত ফাইল: চার্জ হিসেবে যা রাখা হয়েছে সেটাই আয়; বাকি নেই; কোনো খরচ নেই
+        kept = num(f.keptCharge); bill = kept; due = 0; refund = num(f.refundAmount); expense = 0; spent = 0; profit = kept; realized = kept; expected = kept;
       } else {
         bill = num(f.billTotal); kept = 0; due = Math.max(0, bill - paid); refund = 0;
         const written = num(f.baseVisaFee) + num(f.softwareCharge);
-        if (appt) { expense = written; spent = written; profit = bill - written; }   // অ্যাপয়েন্টমেন্ট হলেই আসল খরচ
-        else { expense = 0; spent = 0; profit = 0; pending = written; expected = bill - written; }   // হয়নি: লেখা খরচ আলাদা দেখাবে, লাভ/ক্যাশ থেকে কাটবে না
+        if (del || appt) { expense = written; spent = written; profit = bill - written; realized = paid - written; expected = profit; }   // ডেলিভারড বা অ্যাপয়েন্টেড: সব খরচ হয়ে গেছে
+        else { expense = 0; spent = 0; profit = 0; pending = written; expected = bill - written; }   // রানিং, Appt হয়নি: লেখা খরচ আলাদা, লাভ/ক্যাশ থেকে কাটে না
       }
       const noBill = !ret && bill === 0 && paid === 0;
       const state = ret ? 'RETURNED' : (noBill ? 'NOBILL' : (due > 0 ? 'DUE' : 'CLEAR'));
-      return { f: f, ret: ret, bill: bill, paid: paid, due: due, refund: refund, expense: expense, profit: profit, kept: kept, spent: spent, pending: pending, expected: expected, cash: Math.max(0, paid - refund), noBill: noBill, state: state,
+      return { f: f, ret: ret, mode: ret ? 'RETURNED' : (del ? 'DELIVERED' : 'RUNNING'), bill: bill, paid: paid, due: due, refund: refund, expense: expense, profit: profit, kept: kept, spent: spent, pending: pending, expected: expected, realized: realized,
+        refundable: (!ret && !del && !appt) ? paid : 0, cash: Math.max(0, paid - refund), noBill: noBill, state: state,
         name: mainNameOf(f), others: (f.applicants || []).slice(1).map(a => a.name).filter(Boolean) };
     }
+    let acctMode = 'DELIVERED';
+    function setAcctMode(m) { acctMode = m; acctFilter = 'ALL'; renderFiles(); }
+    function acctModeRows() { return acctLast.map(acctRow).filter(r => acctMode === 'ALL' || r.mode === acctMode); }
     // ট্রান্সফারের নোট: কোন জন কোন ফাইল থেকে এল/কোন ফাইলে গেল, আর টাকা সাথে গেছে কিনা
     function acctTransferNotes(f) {
       const log = f.transferLog || []; if (!log.length) return '';
@@ -2085,37 +2089,94 @@
     function setAcctSort(v) { acctSort = v; renderFiles(); }
     function renderAccountsView(container, files) {
       container = container || document.getElementById('fileListContainer'); if (files) acctLast = files;
-      const rows = acctLast.map(acctRow);
+      const allRows = acctLast.map(acctRow);
+      const mc = { DELIVERED: 0, RUNNING: 0, RETURNED: 0, ALL: allRows.length }; allRows.forEach(r => { mc[r.mode]++; });
+      const rows = allRows.filter(r => acctMode === 'ALL' || r.mode === acctMode);
       const sum = k => rows.reduce((t, r) => t + r[k], 0);
-      const T = { bill: sum('bill'), paid: sum('paid'), due: sum('due'), refund: sum('refund'), expense: sum('expense'), profit: sum('profit'), cash: sum('cash'), pending: sum('pending') };
+      const T = { bill: sum('bill'), paid: sum('paid'), due: sum('due'), refund: sum('refund'), expense: sum('expense'), profit: sum('profit'), cash: sum('cash'), pending: sum('pending'), realized: sum('realized'), refundable: sum('refundable'), expected: sum('expected') };
       const cnt = { ALL: rows.length, DUE: 0, CLEAR: 0, RETURNED: 0, NOBILL: 0 }; rows.forEach(r => { cnt[r.state]++; });
       let list = rows.filter(r => acctFilter === 'ALL' || r.state === acctFilter);
       const sorters = { SERIAL: (a, b) => (Number(b.f.serial) || 0) - (Number(a.f.serial) || 0), DUE: (a, b) => b.due - a.due, BILL: (a, b) => b.bill - a.bill, PROFIT: (a, b) => b.profit - a.profit, NAME: (a, b) => a.name.localeCompare(b.name) };
       list = list.slice().sort(sorters[acctSort] || sorters.SERIAL);
-      const L = { bill: 0, paid: 0, due: 0, refund: 0, expense: 0, profit: 0, cash: 0, pending: 0 }; list.forEach(r => { Object.keys(L).forEach(k => { L[k] += r[k]; }); });   // এখন যা দেখা যাচ্ছে তার টোটাল
+      const L = { bill: 0, paid: 0, due: 0, refund: 0, expense: 0, profit: 0, cash: 0, pending: 0, realized: 0 }; list.forEach(r => { Object.keys(L).forEach(k => { L[k] += r[k]; }); });   // এখন যা দেখা যাচ্ছে তার টোটাল
       const card = (label, val, cls, sub) => '<div class="bg-white rounded-2xl border ' + cls[0] + ' shadow-sm p-4"><p class="text-[11px] font-extrabold text-slate-500 uppercase tracking-wide">' + label + '</p><p class="mono-type text-xl md:text-2xl font-extrabold mt-1 ' + cls[1] + '">' + fmtTk(val) + ' <span class="text-xs">৳</span></p>' + (sub ? '<p class="text-[10px] font-bold text-slate-400 mt-0.5">' + sub + '</p>' : '') + '</div>';
-      let html = '<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">'
-        + card('মোট বিল', T.bill, ['border-slate-200', 'text-[#0b132b]'], rows.length + 'টি ফাইল')
-        + card('মোট জমা (Paid)', T.paid, ['border-emerald-200', 'text-emerald-600'], 'কাস্টমার দিয়েছে')
-        + card('মোট বাকি (Due)', T.due, ['border-rose-300', 'text-rose-600'], cnt.DUE + ' জনের কাছে পাব')
-        + card('মোট ফেরত', T.refund, ['border-orange-200', 'text-orange-600'], cnt.RETURNED + 'টি ফাইল ফেরত')
-        + card('মোট খরচ', T.expense, ['border-amber-200', 'text-amber-600'], 'Appointed ফাইলের ভিসা ফি + SMS/অন্য')
-        + card('💵 হাতে আছে (Cash)', T.cash, [T.cash >= 0 ? 'border-teal-300' : 'border-rose-300', T.cash >= 0 ? 'text-teal-600' : 'text-rose-600'], 'জমা − ফেরত (ক্লায়েন্টের দেওয়া টাকা আপনার কাছে)')
-        + card('⏳ লেখা খরচ (Appointment হয়নি)', T.pending, ['border-slate-300', 'text-slate-500'], 'Appointment হলে খরচ হবে; এখনো কাটা হয়নি')
-        + card('নিট লাভ', T.profit, [T.profit >= 0 ? 'border-sky-200' : 'border-rose-300', T.profit >= 0 ? 'text-sky-600' : 'text-rose-600'], 'Appointed (বিল − খরচ) + ফেরতে রাখা চার্জ')
+      const sgn = v => v >= 0 ? ['border-sky-200', 'text-sky-600'] : ['border-rose-300', 'text-rose-600'];
+      const modeBtn = (k, lb, sub) => '<button onclick="setAcctMode(\'' + k + '\')" class="flex-1 min-w-[130px] px-4 py-3 rounded-2xl border-2 text-left transition ' + (acctMode === k ? 'bg-[#0b132b] text-white border-[#0b132b] shadow-md' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50') + '"><div class="text-sm font-extrabold">' + lb + ' <span class="opacity-70">' + mc[k] + '</span></div><div class="text-[10px] font-bold ' + (acctMode === k ? 'text-slate-300' : 'text-slate-400') + '">' + sub + '</div></button>';
+      // 📊 সব ট্যাবের উপরে সবসময়: Running / Delivered / Returned ও মোট, এক নজরে
+      const agg = m => { const a = { n: 0, bill: 0, paid: 0, refund: 0, due: 0, expense: 0, refundable: 0, profit: 0, expected: 0, hand: 0 }; allRows.forEach(r => { if (m && r.mode !== m) return; a.n++; a.bill += r.bill; a.paid += r.paid; a.refund += r.refund; a.due += r.due; a.expense += r.expense; a.refundable += r.refundable; a.profit += r.profit; a.expected += r.expected; a.hand += r.paid - r.refund - r.expense; }); return a; };
+      const aR = agg('RUNNING'), aD = agg('DELIVERED'), aX = agg('RETURNED'), aT = agg(null);
+      const sgnC = v => v >= 0 ? 'text-teal-600' : 'text-rose-600';
+      const ovRow = (lb, v, cls) => '<div class="flex items-center justify-between py-1"><span class="text-[11px] font-bold text-slate-500">' + lb + '</span><span class="mono-type text-xs font-extrabold ' + (cls || 'text-[#0b132b]') + '">' + fmtTk(v) + ' ৳</span></div>';
+      const ovBig = (lb, v, cls) => '<div class="flex items-center justify-between border-t-2 border-slate-200 mt-1.5 pt-2"><span class="text-[11px] font-extrabold text-slate-700">' + lb + '</span><span class="mono-type text-base font-extrabold ' + cls + '">' + fmtTk(v) + ' ৳</span></div>';
+      const ovCard = (title, n, border, body) => '<div class="bg-white rounded-2xl border-2 ' + border + ' shadow-sm p-4"><div class="flex items-center justify-between mb-1.5"><p class="text-xs font-extrabold text-[#0b132b]">' + title + '</p><span class="text-[10px] font-extrabold bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">' + n + 'টি ফাইল</span></div>' + body + '</div>';
+      const strip = '<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 mb-4">'
+        + ovCard('📂 Running', aR.n, 'border-sky-200',
+          ovRow('মোট বিল', aR.bill) + ovRow('জমা (ক্লায়েন্টের)', aR.paid, 'text-emerald-600') + ovRow('ফেরত হতে পারে', aR.refundable, 'text-orange-600') + ovRow('বাকি', aR.due, 'text-rose-600') + ovRow('খরচ হয়ে গেছে', aR.expense, 'text-amber-600') + ovRow('সম্ভাব্য লাভ', aR.expected, sgnC(aR.expected))
+          + ovBig('🏦 ক্যাশ (ক্লায়েন্টের রাখা)', aR.hand, sgnC(aR.hand)))
+        + ovCard('📦 Delivered', aD.n, 'border-emerald-300',
+          ovRow('মোট বিল', aD.bill) + ovRow('জমা (এসেছে)', aD.paid, 'text-emerald-600') + ovRow('বাকি (পাব)', aD.due, 'text-rose-600') + ovRow('খরচ', aD.expense, 'text-amber-600') + ovRow('সম্পূর্ণ লাভ (বাকি পেলে)', aD.profit, sgnC(aD.profit))
+          + ovBig('💵 ক্যাশ আমার (জমা − খরচ)', aD.hand, sgnC(aD.hand)))
+        + ovCard('🔙 Returned', aX.n, 'border-orange-200',
+          ovRow('জমা ছিল', aX.paid, 'text-emerald-600') + ovRow('ফেরত দেওয়া', aX.refund, 'text-orange-600')
+          + ovBig('💵 রাখা চার্জ (আমার)', aX.hand, sgnC(aX.hand)))
+        + ovCard('📊 মোট', aT.n, 'border-[#0b132b]',
+          ovRow('মোট বিল', aT.bill) + ovRow('জমা', aT.paid, 'text-emerald-600') + ovRow('ফেরত', aT.refund, 'text-orange-600') + ovRow('বাকি', aT.due, 'text-rose-600') + ovRow('খরচ', aT.expense, 'text-amber-600')
+          + ovRow('✅ আমার নিজের (Delivered+Returned)', aD.hand + aX.hand, sgnC(aD.hand + aX.hand)) + ovRow('🏦 ক্লায়েন্টের রাখা (Running)', aR.hand, sgnC(aR.hand))
+          + ovBig('💵 মোট ক্যাশ আমার কাছে', aT.hand, sgnC(aT.hand)))
         + '</div>';
+      let html = strip + '<div class="flex flex-wrap gap-2 mb-4">' + modeBtn('DELIVERED', '📦 Delivered', 'কাজ শেষ · আসল লাভ-খরচ-ক্যাশ') + modeBtn('RUNNING', '📂 Running', 'চলছে · ক্লায়েন্টের জমা') + modeBtn('RETURNED', '🔙 Returned', 'ফেরত · রাখা চার্জ') + modeBtn('ALL', '📊 সব একসাথে', 'মিশ্র হিসাব') + '</div>';
+      if (acctMode === 'DELIVERED') {
+        html += '<div class="grid grid-cols-2 lg:grid-cols-3 gap-3 mb-4">'
+          + card('মোট বিল', T.bill, ['border-slate-200', 'text-[#0b132b]'], mc.DELIVERED + 'টি ডেলিভারড ফাইল · সর্বোচ্চ যা পেতে পারি')
+          + card('💵 ক্যাশ এসেছে (জমা)', T.paid, ['border-emerald-200', 'text-emerald-600'], 'ক্লায়েন্ট আসলে যত দিয়েছে')
+          + card('⏳ এখনো পাব (বাকি)', T.due, ['border-rose-300', 'text-rose-600'], cnt.DUE + ' জনের কাছে')
+          + card('মোট খরচ', T.expense, ['border-amber-200', 'text-amber-600'], 'ভিসা ফি + SMS/অন্য · সব খরচ হয়ে গেছে')
+          + card('✅ আসল লাভ (এখন পর্যন্ত)', T.realized, sgn(T.realized), 'ক্যাশ এসেছে − খরচ')
+          + card('📈 সম্পূর্ণ লাভ (বাকি পেলে)', T.profit, sgn(T.profit), 'মোট বিল − খরচ')
+          + '</div>';
+      } else if (acctMode === 'RUNNING') {
+        html += '<div class="grid grid-cols-2 lg:grid-cols-3 gap-3 mb-4">'
+          + card('🏦 ক্লায়েন্টের জমা (আমার কাছে)', T.paid, ['border-teal-300', 'text-teal-600'], 'এখনো আমার লাভ না, কাজ শেষ হলে লাভ হবে')
+          + card('↩️ ফেরত দিতে হতে পারে', T.refundable, ['border-orange-200', 'text-orange-600'], 'Appointment হয়নি এমন ফাইলের জমা')
+          + card('মোট বিল', T.bill, ['border-slate-200', 'text-[#0b132b]'], mc.RUNNING + 'টি রানিং ফাইল')
+          + card('বাকি (পাব)', T.due, ['border-rose-300', 'text-rose-600'], cnt.DUE + ' জনের কাছে')
+          + card('খরচ হয়ে গেছে (Appt হয়েছে)', T.expense, ['border-amber-200', 'text-amber-600'], 'Appointed ফাইলের ভিসা ফি + SMS/অন্য')
+          + card('⏳ লেখা খরচ (Appt হয়নি)', T.pending, ['border-slate-300', 'text-slate-500'], 'এখনো খরচ হয়নি, কাটা হয়নি')
+          + card('📈 সম্ভাব্য লাভ (ডেলিভারি হলে)', T.expected, sgn(T.expected), 'বিল − খরচ, সব রানিং ফাইল ধরে')
+          + '</div>';
+      } else if (acctMode === 'RETURNED') {
+        html += '<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">'
+          + card('মোট জমা ছিল', T.paid, ['border-emerald-200', 'text-emerald-600'], mc.RETURNED + 'টি ফেরত ফাইল')
+          + card('ফেরত দেওয়া হয়েছে', T.refund, ['border-orange-200', 'text-orange-600'], 'ক্লায়েন্টকে ফেরত')
+          + card('💰 রাখা চার্জ (লাভ)', T.profit, sgn(T.profit), 'ফেরতের সময় যা রেখেছি, খরচ নেই')
+          + card('হাতে আছে', T.cash, ['border-teal-300', 'text-teal-600'], 'জমা − ফেরত')
+          + '</div>';
+      } else {
+        html += '<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">'
+          + card('মোট বিল', T.bill, ['border-slate-200', 'text-[#0b132b]'], rows.length + 'টি ফাইল')
+          + card('মোট জমা (Paid)', T.paid, ['border-emerald-200', 'text-emerald-600'], 'কাস্টমার দিয়েছে')
+          + card('মোট বাকি (Due)', T.due, ['border-rose-300', 'text-rose-600'], cnt.DUE + ' জনের কাছে পাব')
+          + card('মোট ফেরত', T.refund, ['border-orange-200', 'text-orange-600'], cnt.RETURNED + 'টি ফাইল ফেরত')
+          + card('মোট খরচ', T.expense, ['border-amber-200', 'text-amber-600'], 'Delivered + Appointed ফাইলের খরচ')
+          + card('💵 হাতে আছে (Cash)', T.cash, [T.cash >= 0 ? 'border-teal-300' : 'border-rose-300', T.cash >= 0 ? 'text-teal-600' : 'text-rose-600'], 'জমা − ফেরত (রানিং এর জমাও এতে ধরা)')
+          + card('⏳ লেখা খরচ (Appointment হয়নি)', T.pending, ['border-slate-300', 'text-slate-500'], 'এখনো কাটা হয়নি')
+          + card('নিট লাভ', T.profit, sgn(T.profit), 'Delivered/Appointed (বিল − খরচ) + ফেরতে রাখা চার্জ')
+          + '</div>';
+      }
       html += acctTransferHistory();
       const chip = (k, lb) => '<button onclick="setAcctFilter(\'' + k + '\')" class="px-3 py-1.5 rounded-xl text-xs font-extrabold border transition ' + (acctFilter === k ? 'bg-[#0b132b] text-white border-[#0b132b]' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50') + '">' + lb + ' <span class="opacity-70">' + cnt[k] + '</span></button>';
       const so = (k, lb) => '<option value="' + k + '"' + (acctSort === k ? ' selected' : '') + '>' + lb + '</option>';
-      html += '<div class="flex flex-wrap items-center gap-2 mb-3">' + chip('ALL', 'সব') + chip('DUE', '⏳ বাকি আছে') + chip('CLEAR', '✅ পরিশোধ') + chip('RETURNED', '🔙 ফেরত') + chip('NOBILL', '❔ বিল দেওয়া হয়নি')
+      html += '<div class="flex flex-wrap items-center gap-2 mb-3">' + chip('ALL', 'সব') + chip('DUE', '⏳ বাকি আছে') + chip('CLEAR', '✅ পরিশোধ') + (acctMode === 'ALL' ? chip('RETURNED', '🔙 ফেরত') : '') + chip('NOBILL', '❔ বিল দেওয়া হয়নি')
         + '<select onchange="setAcctSort(this.value)" class="ml-auto px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-700 bg-white shadow-sm focus:outline-none">' + so('SERIAL', 'নতুন ফাইল আগে') + so('DUE', 'বেশি বাকি আগে') + so('BILL', 'বেশি বিল আগে') + so('PROFIT', 'বেশি লাভ আগে') + so('NAME', 'নাম (A-Z)') + '</select>'
         + '<button onclick="exportAccountsCsv()" class="bg-white hover:bg-slate-50 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-bold border border-slate-200 shadow-sm"><i class="fa-solid fa-file-csv text-emerald-600 mr-1"></i> CSV</button></div>';
       if (!list.length) { container.innerHTML = html + '<div class="bg-white rounded-3xl p-12 text-center border border-slate-200 shadow-sm"><h4 class="font-extrabold text-slate-700 text-base">এই ফিল্টারে কোনো ফাইল নেই</h4></div>'; return; }
       const stBadge = r => r.state === 'RETURNED' ? '<span class="bg-orange-100 text-orange-700 px-2 py-0.5 rounded-md text-[10px] font-extrabold">🔙 ফেরত</span>' : (r.state === 'NOBILL' ? '<span class="bg-slate-100 text-slate-500 px-2 py-0.5 rounded-md text-[10px] font-extrabold">❔ বিল নেই</span>' : (r.state === 'DUE' ? '<span class="bg-rose-100 text-rose-700 px-2 py-0.5 rounded-md text-[10px] font-extrabold">⏳ বাকি</span>' : '<span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-md text-[10px] font-extrabold">✅ পরিশোধ</span>'));
       const progress = f => (isAppt(f) ? '📅 Appointed · ' : '') + (f.isDelivered ? '📦 ডেলিভারড' : (f.isReturned ? '' : '📂 রানিং'));
       const td = 'px-3 py-2.5 text-right mono-type text-xs font-bold whitespace-nowrap';
+      const ex = acctMode === 'DELIVERED';   // ডেলিভারডে আলাদা "আসল লাভ" কলাম
+      const cashLb = acctMode === 'RUNNING' ? 'ক্লায়েন্টের জমা' : (acctMode === 'DELIVERED' ? 'ক্যাশ এসেছে' : 'হাতে আছে');
       html += '<div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden"><div class="overflow-x-auto"><table class="w-full min-w-[1000px] text-left">'
-        + '<thead class="bg-[#0b132b] text-white text-[11px] uppercase tracking-wide"><tr><th class="px-3 py-3">#</th><th class="px-3 py-3">নাম</th><th class="px-3 py-3">অবস্থা</th><th class="px-3 py-3 text-right">বিল</th><th class="px-3 py-3 text-right">জমা</th><th class="px-3 py-3 text-right">বাকি</th><th class="px-3 py-3 text-right">ফেরত</th><th class="px-3 py-3 text-right">খরচ</th><th class="px-3 py-3 text-right">লাভ</th><th class="px-3 py-3 text-right">হাতে আছে</th></tr></thead><tbody class="divide-y divide-slate-100">'
+        + '<thead class="bg-[#0b132b] text-white text-[11px] uppercase tracking-wide"><tr><th class="px-3 py-3">#</th><th class="px-3 py-3">নাম</th><th class="px-3 py-3">অবস্থা</th><th class="px-3 py-3 text-right">বিল</th><th class="px-3 py-3 text-right">জমা</th><th class="px-3 py-3 text-right">বাকি</th><th class="px-3 py-3 text-right">ফেরত</th><th class="px-3 py-3 text-right">খরচ</th><th class="px-3 py-3 text-right">' + (ex ? 'সম্পূর্ণ লাভ' : 'লাভ') + '</th>' + (ex ? '<th class="px-3 py-3 text-right">আসল লাভ</th>' : '') + '<th class="px-3 py-3 text-right">' + cashLb + '</th></tr></thead><tbody class="divide-y divide-slate-100">'
         + list.map(r => {
           const f = r.f;
           return '<tr onclick="openFileModal(\'' + escHtml(f.id) + '\')" class="hover:bg-sky-50/60 cursor-pointer">'
@@ -2129,21 +2190,29 @@
             + '<td class="' + td + (r.due > 0 ? ' text-rose-600 bg-rose-50/60' : ' text-slate-300') + '">' + fmtTk(r.due) + '</td>'
             + '<td class="' + td + (r.refund > 0 ? ' text-orange-600' : ' text-slate-300') + '">' + fmtTk(r.refund) + '</td>'
             + '<td class="' + td + ' text-amber-600" title="ভিসা ফি ' + fmtTk(f.baseVisaFee) + ' + সফটওয়্যার/অন্য ' + fmtTk(f.softwareCharge) + '">' + fmtTk(r.expense) + (r.pending > 0 ? '<div class="text-[9px] text-slate-400 font-bold">লেখা ' + fmtTk(r.pending) + ' (Appt হলে)</div>' : '') + '</td>'
-            + '<td class="' + td + (r.profit >= 0 ? ' text-sky-600' : ' text-rose-600') + '">' + fmtTk(r.profit) + (r.pending > 0 || (!r.ret && !isAppt(f) && r.bill > 0) ? '<div class="text-[9px] text-slate-400 font-bold">সম্ভাব্য ' + fmtTk(r.expected) + '</div>' : '') + '</td>'
+            + '<td class="' + td + (r.profit >= 0 ? ' text-sky-600' : ' text-rose-600') + '">' + fmtTk(r.profit) + (r.mode === 'RUNNING' && !isAppt(f) && (r.pending > 0 || r.bill > 0) ? '<div class="text-[9px] text-slate-400 font-bold">সম্ভাব্য ' + fmtTk(r.expected) + '</div>' : '') + '</td>'
+            + (ex ? '<td class="' + td + (r.realized >= 0 ? ' text-emerald-700' : ' text-rose-600') + '" title="জমা ' + fmtTk(r.paid) + ' − খরচ ' + fmtTk(r.expense) + '">' + fmtTk(r.realized) + '</td>' : '')
             + '<td class="' + td + (r.cash >= 0 ? ' text-teal-600' : ' text-rose-600') + '" title="জমা ' + fmtTk(r.paid) + ' − ফেরত ' + fmtTk(r.refund) + '">' + fmtTk(r.cash) + '</td></tr>';
         }).join('')
         + '</tbody><tfoot class="bg-slate-100 border-t-2 border-slate-300"><tr class="text-xs font-extrabold"><td class="px-3 py-3" colspan="3">মোট (' + list.length + 'টি ফাইল)</td>'
-        + '<td class="' + td + ' text-[#0b132b]">' + fmtTk(L.bill) + '</td><td class="' + td + ' text-emerald-600">' + fmtTk(L.paid) + '</td><td class="' + td + ' text-rose-600">' + fmtTk(L.due) + '</td><td class="' + td + ' text-orange-600">' + fmtTk(L.refund) + '</td><td class="' + td + ' text-amber-600">' + fmtTk(L.expense) + '</td><td class="' + td + (L.profit >= 0 ? ' text-sky-600' : ' text-rose-600') + '">' + fmtTk(L.profit) + '</td><td class="' + td + (L.cash >= 0 ? ' text-teal-600' : ' text-rose-600') + '">' + fmtTk(L.cash) + '</td></tr></tfoot></table></div></div>'
-        + '<p class="text-[11px] text-slate-400 font-bold mt-3 leading-relaxed">ℹ️ বাকি = বিল − জমা। ফেরত ফাইলে: যে চার্জ রাখা হয়েছে সেটাই "বিল", ফেরত দেওয়া টাকা "ফেরত" কলামে। খরচ শুধু Appointed ফাইলে ধরা হয় (ভিসা ফি জনপ্রতি ১৫০০ + SMS/অন্য খরচ)। Appointment না হলে ফাইলে লেখা খরচ খরচ-কলামের নিচে ছোট করে "লেখা ..." দেখায় এবং আলাদা কার্ডে জমা হয়, কিন্তু লাভ বা ক্যাশ থেকে কাটে না; লাভের ঘরে ছোট করে "সম্ভাব্য" লাভ দেখায়। ফেরত ফাইলে খরচ ০, যত চার্জ রাখা তত লাভ। হাতে আছে = জমা − ফেরত (ক্লায়েন্ট আসলে যত টাকা দিয়েছে তার মধ্যে এখন আপনার কাছে যত আছে; খরচ এখানে কাটা হয় না, খরচ আলাদা কার্ডে)। কাস্টমারের কাছে যা পাবেন সেটা শুধু "বাকি" কার্ডে। যেকোনো সারিতে চাপলে ফাইল এডিট খুলবে। উপরের সার্চ, SMS অ্যাপ, ওয়ার্কার ও ভিসা-টাইপ ফিল্টার এখানেও কাজ করে।</p>';
+        + '<td class="' + td + ' text-[#0b132b]">' + fmtTk(L.bill) + '</td><td class="' + td + ' text-emerald-600">' + fmtTk(L.paid) + '</td><td class="' + td + ' text-rose-600">' + fmtTk(L.due) + '</td><td class="' + td + ' text-orange-600">' + fmtTk(L.refund) + '</td><td class="' + td + ' text-amber-600">' + fmtTk(L.expense) + '</td><td class="' + td + (L.profit >= 0 ? ' text-sky-600' : ' text-rose-600') + '">' + fmtTk(L.profit) + '</td>' + (ex ? '<td class="' + td + (L.realized >= 0 ? ' text-emerald-700' : ' text-rose-600') + '">' + fmtTk(L.realized) + '</td>' : '') + '<td class="' + td + (L.cash >= 0 ? ' text-teal-600' : ' text-rose-600') + '">' + fmtTk(L.cash) + '</td></tr></tfoot></table></div></div>';
+      const notes = {
+        DELIVERED: 'ℹ️ Delivered = কাজ শেষ। এখানে সব খরচ (ভিসা ফি + SMS/অন্য) হয়ে গেছে ধরা হয়। <b>সম্পূর্ণ লাভ</b> = বিল − খরচ (বাকি পেলে যা হবে)। <b>আসল লাভ</b> = ক্যাশ এসেছে (জমা) − খরচ (এখন পর্যন্ত যা সত্যিই লাভ)। <b>বাকি</b> = যা এখনো ক্লায়েন্টের কাছে পাব; সর্বোচ্চ পাওয়া যায় মোট বিল পর্যন্ত। যেকোনো সারিতে চাপলে ফাইল এডিট খুলবে।',
+        RUNNING: 'ℹ️ Running = কাজ চলছে। ক্লায়েন্টের <b>জমা</b> আমার কাছে রাখা টাকা, এখনো আমার লাভ না; Appointment না হলে ফেরত দিতে হতে পারে (উপরে "ফেরত দিতে হতে পারে")। Appointment হলেই ভিসা ফি + SMS/অন্য খরচ হয়ে যায় (খরচ কলাম)। Appointment না হলে লেখা খরচ ছোট করে দেখায়, কাটে না। কাজ শেষ করে Delivered করলে হিসাব Delivered ট্যাবে চলে যাবে।',
+        RETURNED: 'ℹ️ Returned = ফেরত ফাইল। ক্লায়েন্টকে টাকা ফেরত দেওয়ার সময় যে চার্জ রাখা হয় সেটাই লাভ, কোনো খরচ ধরা হয় না।',
+        ALL: 'ℹ️ এখানে Delivered, Running ও Returned একসাথে মিশে আছে, তাই "হাতে আছে" এ রানিং ফাইলের ক্লায়েন্টের জমাও ধরা। আসল লাভ-খরচ দেখতে ওপরে Delivered ট্যাব দেখুন।'
+      };
+      html += '<p class="text-[11px] text-slate-400 font-bold mt-3 leading-relaxed">' + notes[acctMode] + ' উপরের সার্চ, SMS অ্যাপ, ওয়ার্কার ও ভিসা-টাইপ ফিল্টার এখানেও কাজ করে।</p>';
       container.innerHTML = html;
     }
     function exportAccountsCsv() {
       if (!isAdmin) return;
-      const rows = acctLast.map(acctRow); if (!rows.length) { showToast('কোনো ডাটা নেই'); return; }
+      const rows = acctModeRows(); if (!rows.length) { showToast('কোনো ডাটা নেই'); return; }
       const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
-      const head = ['ফাইল নং', 'নাম', 'সহ-আবেদনকারী', 'ফোন', 'অবস্থা', 'বিল', 'জমা', 'বাকি', 'ফেরত', 'খরচ', 'লাভ', 'হাতে আছে'];
-      const lines = [head.map(q).join(',')].concat(rows.map(r => [r.f.serial || '', r.name, r.others.join(' / '), r.f.accountPhone || '', r.state, r.bill, r.paid, r.due, r.refund, r.expense, r.profit, r.cash].map(q).join(',')));
-      const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' })); a.download = 'RTC-hisab-' + getTodayStr() + '.csv'; document.body.appendChild(a); a.click(); a.remove();
+      const mlb = { DELIVERED: 'Delivered', RUNNING: 'Running', RETURNED: 'Returned' };
+      const head = ['ফাইল নং', 'নাম', 'সহ-আবেদনকারী', 'ফোন', 'ধরন', 'অবস্থা', 'বিল', 'জমা', 'বাকি', 'ফেরত', 'খরচ', 'লাভ', 'আসল লাভ (জমা−খরচ)', 'হাতে আছে'];
+      const lines = [head.map(q).join(',')].concat(rows.map(r => [r.f.serial || '', r.name, r.others.join(' / '), r.f.accountPhone || '', mlb[r.mode], r.state, r.bill, r.paid, r.due, r.refund, r.expense, r.profit, r.mode === 'DELIVERED' ? r.realized : '', r.cash].map(q).join(',')));
+      const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' })); a.download = 'RTC-hisab-' + acctMode.toLowerCase() + '-' + getTodayStr() + '.csv'; document.body.appendChild(a); a.click(); a.remove();
     }
 
 
