@@ -100,7 +100,7 @@
           <button onclick="switchTab('DELIVERED')" id="tab_DELIVERED" class="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-white/10 text-slate-300 transition"><span class="flex items-center gap-3"><i class="fa-solid fa-box-archive text-amber-400 text-sm"></i> ডেলিভারি আর্কাইভ</span><span class="bg-white/10 px-2 py-0.5 rounded-full text-[11px]" id="badgeDelivered">0</span></button>
           <button onclick="switchTab('RETURNED')" id="tab_RETURNED" class="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-white/10 text-slate-300 transition"><span class="flex items-center gap-3"><i class="fa-solid fa-rotate-left text-orange-400 text-sm"></i> ক্যানসেল/ফেরত</span><span class="bg-white/10 px-2 py-0.5 rounded-full text-[11px]" id="badgeReturned">0</span></button>
           <button onclick="switchTab('ALL')" id="tab_ALL" class="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-white/10 text-slate-300 transition"><span class="flex items-center gap-3"><i class="fa-solid fa-layer-group text-cyan-400 text-sm"></i> সব ফাইল</span><span class="bg-white/10 px-2 py-0.5 rounded-full text-[11px]" id="badgeAll">0</span></button>
-          <button onclick="switchTab('ACCOUNTS')" id="tab_ACCOUNTS" class="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-white/10 text-slate-300 transition"><span class="flex items-center gap-3"><i class="fa-solid fa-scale-balanced text-emerald-400 text-sm"></i> হিসাব (Accounts)</span></button>
+          <button onclick="switchTab('ACCOUNTS')" id="tab_ACCOUNTS" style="display:none" class="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-white/10 text-slate-300 transition"><span class="flex items-center gap-3"><i class="fa-solid fa-scale-balanced text-emerald-400 text-sm"></i> হিসাব (Accounts)</span></button>
           <button onclick="switchTab('RECYCLE')" id="tab_RECYCLE" style="display:none" class="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-white/10 text-slate-300 transition"><span class="flex items-center gap-3"><i class="fa-solid fa-trash-can text-slate-400 text-sm"></i> রিসাইকেল বিন</span><span class="bg-white/10 px-2 py-0.5 rounded-full text-[11px]" id="badgeRecycle">0</span></button>
           <button onclick="switchTab('ACTIVITY')" id="tab_ACTIVITY" style="display:none" class="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-white/10 text-slate-300 transition"><span class="flex items-center gap-3"><i class="fa-solid fa-clock-rotate-left text-amber-400 text-sm"></i> অ্যাক্টিভিটি লগ</span></button>
         <div class="pt-3 mt-2 border-t border-white/10">
@@ -383,7 +383,7 @@
   <!-- OTHER MODALS -->
   <div id="quickReturnModal" class="fixed inset-0 modal-bg hidden z-50 flex items-center justify-center p-3"><div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-md overflow-hidden border border-slate-200"><div class="bg-[#d90429] text-white px-6 py-4 flex justify-between items-center"><h3 class="font-extrabold text-sm flex items-center gap-2"><i class="fa-solid fa-rotate-left"></i> ফাইল ফেরত</h3><button onclick="closeQuickReturnModal()" class="text-white text-xl">&times;</button></div><div class="p-6 space-y-4 text-xs"><input type="hidden" id="returnTargetFileId"><div class="bg-slate-50 p-3 rounded-xl border font-bold text-slate-700" id="returnCustomerSummary"></div><div><label class="block font-bold text-slate-500 mb-1">মোট জমা (Advance Tk):</label><input type="number" id="qRetAdvance" oninput="calcQuickReturn()" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-extrabold bg-white"></div><div><label class="block font-bold text-slate-500 mb-1">✂️ চার্জ রাখা হলো (Tk):</label><input type="number" id="qRetKept" oninput="calcQuickReturn()" class="w-full px-3 py-2 rounded-xl border-2 border-amber-400 font-extrabold bg-amber-50"></div><div><label class="block font-bold text-slate-500 mb-1">💸 ফেরত দেওয়া হলো (Tk):</label><input type="number" id="qRetRefund" class="w-full px-3 py-2 rounded-xl border-2 border-[#d90429] font-extrabold bg-rose-50 text-[#d90429]"></div><div><label class="block font-bold text-slate-500 mb-1">নোট:</label><input type="text" id="qRetNote" value="স্লট না পাওয়ায় ফেরত" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold bg-white"></div></div><div class="bg-slate-50 px-6 py-3.5 flex justify-end gap-2 border-t border-slate-200"><button onclick="closeQuickReturnModal()" class="px-4 py-2 rounded-xl border bg-white font-bold">বাতিল</button><button onclick="confirmQuickReturn()" class="bg-[#d90429] text-white px-5 py-2 rounded-xl font-extrabold shadow">🔙 কনফার্ম</button></div></div></div>
 
-  <div id="moveApplicantModal" class="fixed inset-0 modal-bg hidden z-50 flex items-center justify-center p-3"><div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-md overflow-hidden border border-slate-200"><div class="bg-[#0077b6] text-white px-6 py-4 flex justify-between items-center"><h3 class="font-extrabold text-sm flex items-center gap-2"><i class="fa-solid fa-arrow-right-arrow-left"></i> ট্রান্সফার</h3><button onclick="closeMoveModal()" class="text-white text-xl">&times;</button></div><div class="p-6 space-y-4 text-xs"><input type="hidden" id="moveSourceFileId"><input type="hidden" id="moveAppIdx"><div class="bg-slate-50 p-4 rounded-xl border border-slate-200"><p class="font-bold text-slate-500 mb-1">যাকে সরাতে চান:</p><p class="text-base font-extrabold text-slate-900" id="moveApplicantName"></p></div><div><label class="block font-bold text-slate-500 mb-2">কোথায় পাঠাতে চান?</label><select id="moveTargetSet" class="w-full px-3 py-2.5 rounded-xl border-2 border-[#00b4d8] font-bold bg-white focus:outline-none"></select></div></div><div class="bg-slate-50 px-6 py-3.5 flex justify-end gap-2 border-t border-slate-200"><button onclick="closeMoveModal()" class="px-4 py-2 rounded-xl border bg-white font-bold">বাতিল</button><button onclick="confirmMoveApplicant()" class="btn-primary-rtc text-white px-5 py-2 rounded-xl font-extrabold shadow"><i class="fa-solid fa-check mr-1"></i> কনফার্ম</button></div></div></div>
+  <div id="moveApplicantModal" class="fixed inset-0 modal-bg hidden z-50 flex items-center justify-center p-3"><div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-md overflow-hidden border border-slate-200"><div class="bg-[#0077b6] text-white px-6 py-4 flex justify-between items-center"><h3 class="font-extrabold text-sm flex items-center gap-2"><i class="fa-solid fa-arrow-right-arrow-left"></i> ট্রান্সফার</h3><button onclick="closeMoveModal()" class="text-white text-xl">&times;</button></div><div class="p-6 space-y-4 text-xs"><input type="hidden" id="moveSourceFileId"><input type="hidden" id="moveAppIdx"><div class="bg-slate-50 p-4 rounded-xl border border-slate-200"><p class="font-bold text-slate-500 mb-1">যাকে সরাতে চান:</p><p class="text-base font-extrabold text-slate-900" id="moveApplicantName"></p></div><div><label class="block font-bold text-slate-500 mb-2">কোথায় পাঠাতে চান?</label><select id="moveTargetSet" class="w-full px-3 py-2.5 rounded-xl border-2 border-[#00b4d8] font-bold bg-white focus:outline-none"></select></div><div id="moveMoneyBox" style="display:none" class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 space-y-2"><p class="font-extrabold text-emerald-800">💰 হিসাব (শুধু অ্যাডমিন)</p><div class="grid grid-cols-2 gap-2"><div><label class="block font-bold text-slate-500 mb-1">বিল সাথে নেবে (৳)</label><input type="number" min="0" id="moveBillAmt" placeholder="0" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold"></div><div><label class="block font-bold text-slate-500 mb-1">জমা সাথে নেবে (৳)</label><input type="number" min="0" id="movePaidAmt" placeholder="0" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold"></div></div><p id="moveMoneyHint" class="text-[10px] font-bold text-slate-500 leading-relaxed"></p></div></div><div class="bg-slate-50 px-6 py-3.5 flex justify-end gap-2 border-t border-slate-200"><button onclick="closeMoveModal()" class="px-4 py-2 rounded-xl border bg-white font-bold">বাতিল</button><button onclick="confirmMoveApplicant()" class="btn-primary-rtc text-white px-5 py-2 rounded-xl font-extrabold shadow"><i class="fa-solid fa-check mr-1"></i> কনফার্ম</button></div></div></div>
 
   <div id="settingsModal" class="fixed inset-0 modal-bg hidden z-50 flex items-center justify-center p-3"><div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-lg overflow-hidden border border-slate-200"><div class="bg-[#0b132b] text-white px-6 py-4 flex justify-between items-center"><h3 class="font-extrabold text-sm flex items-center gap-2"><i class="fa-solid fa-sliders text-[#00b4d8]"></i> সেটিংস</h3><button onclick="closeSettingsModal()" class="text-white text-xl">&times;</button></div><div class="p-6 space-y-4 text-xs max-h-[68vh] overflow-y-auto">
     
@@ -392,6 +392,7 @@
       <p class="text-[11px] text-slate-400">কমন পাসওয়ার্ড সেভ করলে তা ক্লাউডে (শুধু লগইন করা ইউজারদের জন্য) সেভ থাকবে।</p>
     </div>
       <div id="driveOrganizeBox" style="display:none" class="bg-emerald-50 p-4 rounded-xl border border-emerald-200 text-center"><p class="text-xs text-emerald-800 font-bold mb-1">📁 Drive ফোল্ডার সাজান</p><div id="driveOrganizePending" style="display:none"><p class="text-[11px] text-emerald-700 mb-2">পুরনো <b id="driveOrganizeCount">0</b>টি ফোল্ডার এখনো সাজানো হয়নি (একবারই লাগে)</p><button type="button" onclick="organizeDriveFolders()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-bold">এখনই সাজান</button></div><p id="driveOrganizeDone" class="text-[11px] text-emerald-700">✅ সব ফোল্ডার সাজানো আছে। নতুন ফোল্ডার ও স্ট্যাটাস বদল নিজে নিজেই ঠিক জায়গায় যাবে।</p><div class="mt-3 pt-3 border-t border-emerald-200"><p class="text-[11px] text-emerald-700 mb-2">একই নামের ডুপ্লিকেট ফোল্ডার থাকলে একটা রেখে বাকিটা পরিষ্কার হবে (ফাইল হারায় না, ট্র্যাশে যায়)। একই মেইন নামে ২টা কার্ড থাকলে কিছু মোছে না। প্রতি রাতে নিজে নিজেও চলে।</p><button type="button" id="dupCleanBtn" onclick="cleanDriveDuplicates()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-bold">🧹 ডুপ্লিকেট ফোল্ডার পরিষ্কার</button></div></div>
+      <div id="medMigrateBox" style="display:none" class="bg-sky-50 p-4 rounded-xl border border-sky-200 text-center"><p class="text-xs text-sky-800 font-bold mb-1">🏥 পুরনো মেডিকেল PDF সরান</p><div id="medMigratePending" style="display:none"><p class="text-[11px] text-sky-700 mb-2"><b id="medMigrateCount">0</b>টি PDF এখনো আগের জায়গায় আছে। বাটন চাপলে সব <b>Medical Files / রোগীর নাম</b> ফোল্ডারে চলে যাবে (ফাইল মোছে না, শুধু সরায়)</p><button type="button" id="medMigrateBtn" onclick="migrateMedicalFiles()" class="bg-sky-600 hover:bg-sky-700 text-white px-4 py-2 rounded-xl text-xs font-bold">এখনই সরান</button></div><p id="medMigrateDone" class="text-[11px] text-sky-700">✅ সব মেডিকেল PDF Medical Files ফোল্ডারে আছে।</p></div>
       <div id="backupBox" style="display:none" class="bg-amber-50 p-4 rounded-xl border border-amber-200"><p class="text-xs text-amber-900 font-bold mb-1">🛡️ Drive অটো ব্যাকআপ</p><p id="backupLastText" class="text-[11px] text-amber-800 mb-2">লোড হচ্ছে...</p><div class="flex gap-2 flex-wrap"><button type="button" onclick="backupNow()" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold">এখনই ব্যাকআপ নিন</button><button type="button" onclick="loadBackupList()" class="bg-white border border-amber-300 text-amber-800 px-3 py-1.5 rounded-lg text-xs font-bold">ব্যাকআপ তালিকা / রিস্টোর</button></div><div id="backupListBox" class="mt-2 space-y-1 max-h-48 overflow-y-auto"></div></div>
     <div class="bg-slate-50 p-4 rounded-xl border border-slate-200"><label class="block font-bold text-slate-600 mb-1">🔑 কমন পাসওয়ার্ড</label><input type="text" id="settingDefaultPass" class="w-full px-3 py-2 rounded-lg border border-slate-300 font-bold mono-type"></div><div class="bg-slate-50 p-4 rounded-xl border border-slate-200"><label class="block font-bold text-slate-600 mb-1">🌐 Firebase Cloud URL (লাইভ সিঙ্ক)</label><input type="url" id="settingCloudUrl" class="w-full px-3 py-2 rounded-lg border border-slate-300"></div><div class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex justify-between items-center"><div><p class="font-bold text-slate-700">📂 রিস্টোর</p></div><label class="cursor-pointer bg-slate-800 text-white px-3 py-1.5 rounded-lg font-bold">ফাইল দিন <input type="file" accept=".json" onchange="importBackup(event)" class="hidden"></label></div></div><div class="bg-slate-50 px-6 py-3.5 flex justify-end gap-2 border-t border-slate-200"><button onclick="closeSettingsModal()" class="px-4 py-2 rounded-xl border bg-white font-bold">বন্ধ</button><button onclick="saveSettings()" class="btn-primary-rtc text-white px-5 py-2 rounded-xl font-bold shadow">সেভ করুন</button></div></div></div>
 
@@ -535,6 +536,10 @@
       const select = document.getElementById('moveTargetSet');
       select.innerHTML = '<option value="NEW">✨ আলাদা নতুন ফাইল তৈরি করুন</option>';
       visaFiles.forEach(t => { if (t.id !== fileId && !t.isDeleted && !t.isDelivered && !t.isReturned) select.innerHTML += `<option value="${t.id}">📂 যুক্ত করুন: ${escHtml(t.applicants[0]?.name)} (${escHtml(t.accountPhone)}) - ${t.applicants.length} জন</option>`; });
+      const single = f.applicants.length === 1;
+      document.getElementById('moveBillAmt').value = single ? (f.billTotal || '') : ''; document.getElementById('movePaidAmt').value = single ? (f.billAdvance || '') : '';
+      document.getElementById('moveMoneyBox').style.display = isAdmin ? '' : 'none';
+      document.getElementById('moveMoneyHint').innerText = single ? 'এটাই ফাইলের একমাত্র জন, তাই পুরো বিল/জমা সাথে যাবে (দরকারে বদলান)।' : 'এই জনের যতটুকু বিল/জমা নতুন ফাইলে ধরতে চান লিখুন। ফাঁকা (০) রাখলে টাকা পুরনো ফাইলেই থাকবে, হিসাবে ট্রান্সফারের নোট দেখাবে।';
       document.getElementById('moveApplicantModal').classList.remove('hidden');
     }
     function closeMoveModal() { document.getElementById('moveApplicantModal').classList.add('hidden'); }
@@ -542,12 +547,17 @@
       const sId = document.getElementById('moveSourceFileId').value; const aIdx = parseInt(document.getElementById('moveAppIdx').value); const tId = document.getElementById('moveTargetSet').value;
       const sFile = visaFiles.find(x => x.id === sId); if (!sFile) return;
       if (tId !== 'NEW') { const tChk = visaFiles.find(x => x.id === tId); if (!tChk) return; if (tChk.applicants.length >= 4) { alert('ফাইলে ৪ জন পূর্ণ!'); return; } }
-      const sOldCount = sFile.applicants.length; const appToMove = sFile.applicants.splice(aIdx, 1)[0];
+      const sOldCount = sFile.applicants.length; const fromMain = mainNameOf(sFile); const fromSerial = sFile.serial || '';
+      let mBill = 0, mPaid = 0;   // 💰 এই জনের সাথে যত টাকার বিল/জমা যাবে (অ্যাডমিন বসায়; একজনের ফাইল হলে পুরোটা অটো যায় যাতে হিসাব হারিয়ে না যায়)
+      if (isAdmin) { mBill = parseFloat(document.getElementById('moveBillAmt').value) || 0; mPaid = parseFloat(document.getElementById('movePaidAmt').value) || 0; }
+      else if (sOldCount === 1) { mBill = parseFloat(sFile.billTotal) || 0; mPaid = parseFloat(sFile.billAdvance) || 0; }
+      mBill = Math.max(0, Math.min(mBill, parseFloat(sFile.billTotal) || 0)); mPaid = Math.max(0, Math.min(mPaid, parseFloat(sFile.billAdvance) || 0));
+      const appToMove = sFile.applicants.splice(aIdx, 1)[0];
       if (sFile.serial) { appToMove.prevSerials = (appToMove.prevSerials || []).filter(s => String(s) !== String(sFile.serial)).concat(String(sFile.serial)); }   // আগের ফাইলের নম্বর মনে রাখা (ফিজিক্যাল ফাইলের নম্বর দিয়ে খোঁজার জন্য)
       const now = new Date().toLocaleString('en-GB', BD_TIME_OPTS);
       let dest;
       if (tId === 'NEW') {
-        const newF = JSON.parse(JSON.stringify(sFile)); newF.id = 'SET_' + Date.now(); newF.driveFolderId = ''; newF.driveFolderName = ''; newF.driveStatus = ''; newF.applicants = [appToMove]; newF.appointmentDate = ''; newF.isAppointed = false; newF.invoiceFileId = ''; newF.invoiceFileName = ''; newF.invoiceName = ''; newF.invoiceBy = ''; newF.invoiceAt = ''; newF.invitationFileId = ''; newF.invitationFileName = ''; newF.invitationName = ''; newF.invitationBy = ''; newF.invitationAt = ''; newF.invitationReceived = false; newF.apptLetterFileId = ''; newF.apptLetterFileName = ''; newF.apptLetterName = ''; newF.apptLetterBy = ''; newF.apptLetterAt = ''; newF.apptLetterReceived = false; newF.feeStatus = 'UNPAID'; newF.billTotal = 0; newF.billAdvance = 0; newF.billDue = 0; newF.baseVisaFee = VISA_FEE_PER_PERSON; newF.softwareCharge = 0; newF.updatedAt = now; newF.updatedBy = whoAmI(); newF.serial = ''; visaFiles.unshift(newF); dest = newF;
+        const newF = JSON.parse(JSON.stringify(sFile)); newF.id = 'SET_' + Date.now(); newF.driveFolderId = ''; newF.driveFolderName = ''; newF.driveStatus = ''; newF.applicants = [appToMove]; newF.appointmentDate = ''; newF.isAppointed = false; newF.invoiceFileId = ''; newF.invoiceFileName = ''; newF.invoiceName = ''; newF.invoiceBy = ''; newF.invoiceAt = ''; newF.invitationFileId = ''; newF.invitationFileName = ''; newF.invitationName = ''; newF.invitationBy = ''; newF.invitationAt = ''; newF.invitationReceived = false; newF.apptLetterFileId = ''; newF.apptLetterFileName = ''; newF.apptLetterName = ''; newF.apptLetterBy = ''; newF.apptLetterAt = ''; newF.apptLetterReceived = false; ['undertaking', 'consult'].forEach(function (k) { newF[k + 'FileId'] = ''; newF[k + 'FileName'] = ''; newF[k + 'Name'] = ''; newF[k + 'By'] = ''; newF[k + 'At'] = ''; newF[k + 'Received'] = false; }); newF.medFolderId = ''; newF.medFolderName = ''; LETTER_KEYS.forEach(function (k) { newF[k + 'Med'] = false; }); newF.feeStatus = 'UNPAID'; newF.billTotal = 0; newF.billAdvance = 0; newF.billDue = 0; newF.baseVisaFee = VISA_FEE_PER_PERSON; newF.softwareCharge = 0; newF.updatedAt = now; newF.updatedBy = whoAmI(); newF.serial = ''; visaFiles.unshift(newF); dest = newF;
         nextSerial().then(n => { const t = visaFiles.find(x => x.id === newF.id); if (t) { t.serial = n; renderFiles(); syncToCloud(); showSerialModal(n, appToMove.name || ''); } }).catch(() => showToast('⚠️ নতুন ফাইলের সিরিয়াল নম্বর আনা যায়নি'));
       } else {
         const tFile = visaFiles.find(x => x.id === tId); const tOld = tFile.applicants.length;
@@ -556,6 +566,17 @@
       }
       if (dest && dest.serial) appToMove.prevSerials = (appToMove.prevSerials || []).filter(s => String(s) !== String(dest.serial));
       const sRemoved = sFile.applicants.length === 0;
+      // 💰 বিল/জমা সরানো + দুই ফাইলেই ট্রান্সফারের হিসাব-ইতিহাস রাখা (হিসাব ট্যাবে দেখায়)
+      const sB0 = { b: parseFloat(sFile.billTotal) || 0, p: parseFloat(sFile.billAdvance) || 0 }, dB0 = { b: parseFloat(dest.billTotal) || 0, p: parseFloat(dest.billAdvance) || 0 };
+      if (mBill || mPaid) {
+        sFile.billTotal = Math.max(0, (parseFloat(sFile.billTotal) || 0) - mBill); sFile.billAdvance = Math.max(0, (parseFloat(sFile.billAdvance) || 0) - mPaid); sFile.billDue = Math.max(0, sFile.billTotal - sFile.billAdvance);
+        dest.billTotal = (parseFloat(dest.billTotal) || 0) + mBill; dest.billAdvance = (parseFloat(dest.billAdvance) || 0) + mPaid; dest.billDue = Math.max(0, dest.billTotal - dest.billAdvance);
+      }
+      const trEntry = { at: now, by: whoAmI(), name: appToMove.name || '', fromId: sId, fromSerial: fromSerial, fromMain: fromMain, toId: dest.id, toSerial: dest.serial || '', toMain: mainNameOf(dest), bill: mBill, paid: mPaid, ts: Date.now(),
+        sBefore: sB0, sAfter: { b: parseFloat(sFile.billTotal) || 0, p: parseFloat(sFile.billAdvance) || 0 }, dBefore: dB0, dAfter: { b: parseFloat(dest.billTotal) || 0, p: parseFloat(dest.billAdvance) || 0 }, sGone: sRemoved };
+      try { pushLog({ type: 'transfer', setId: dest.id, name: appToMove.name || '', detail: (fromSerial ? '#' + fromSerial + ' ' : '') + fromMain + ' ফাইল থেকে ' + mainNameOf(dest) + ' ফাইলে' + ((mBill || mPaid) ? ' · বিল ' + mBill + ', জমা ' + mPaid + ' সাথে গেছে' : ' · টাকা সরানো হয়নি') }); } catch (e) { }
+      dest.transferLog = (tId === 'NEW' ? [] : (dest.transferLog || [])).concat([trEntry]);
+      if (!sRemoved) sFile.transferLog = (sFile.transferLog || []).concat([trEntry]);
       if (sRemoved) { visaFiles = visaFiles.filter(x => x.id !== sId); logHint = 'ট্রান্সফারের পর সেটটি ফাঁকা হয়ে সরে গেছে'; }
       else { sFile.updatedAt = now; sFile.updatedBy = whoAmI(); if (sFile.baseVisaFee === VISA_FEE_PER_PERSON * sOldCount) sFile.baseVisaFee = VISA_FEE_PER_PERSON * sFile.applicants.length; }
       closeMoveModal(); renderFiles(); syncToCloud(); showToast('🔄 ট্রান্সফার সম্পন্ন!');
@@ -605,6 +626,7 @@
     function copyPersonData(txt, pName, label) { if (!txt) { alert(`${label} নেই!`); return; } navigator.clipboard.writeText(txt.trim()); showToast(`📋 ${pName}-এর ${label} কপি হয়েছে!`); }
 
     function switchTab(tabName) {
+      if (tabName === 'ACCOUNTS' && !isAdmin) tabName = 'RUNNING';   // হিসাব ট্যাব শুধু অ্যাডমিন
       activeTab = tabName;
       ['RUNNING', 'EXPIRING', 'EXPIRED', 'BGD_UP', 'SIGNED_UP', 'APPOINTMENT', 'DELIVERED', 'RETURNED', 'ALL', 'ACCOUNTS', 'RECYCLE', 'ACTIVITY'].forEach(t => {
         const btn = document.getElementById(`tab_${t}`);
@@ -764,7 +786,7 @@
       applyAdminUI(); renderFiles();
     }
         function updateOrganizeBox() {
-      const box = document.getElementById('driveOrganizeBox'); if (!box) return;
+      const box = document.getElementById('driveOrganizeBox'); if (!box) return; updateMedMigrateBox();
       const n = visaFiles.filter(f => f.driveFolderId && !f.isDeleted && !f.driveStatus).length;
       box.style.display = isAdmin ? '' : 'none';
       const p = document.getElementById('driveOrganizePending'), d = document.getElementById('driveOrganizeDone'), c = document.getElementById('driveOrganizeCount');
@@ -774,7 +796,8 @@
       const t = document.getElementById('tab_RECYCLE'); if (t) t.style.display = isAdmin ? '' : 'none'; updateOrganizeBox();
       const ta = document.getElementById('tab_ACTIVITY'); if (ta) ta.style.display = isAdmin ? '' : 'none';
       const bb = document.getElementById('backupBox'); if (bb) bb.style.display = isAdmin ? '' : 'none';
-      if (!isAdmin && (activeTab === 'RECYCLE' || activeTab === 'ACTIVITY')) switchTab('RUNNING');
+      const tac = document.getElementById('tab_ACCOUNTS'); if (tac) tac.style.display = isAdmin ? '' : 'none';   // 💰 হিসাব শুধু অ্যাডমিনের
+      if (!isAdmin && (activeTab === 'RECYCLE' || activeTab === 'ACTIVITY' || activeTab === 'ACCOUNTS')) switchTab('RUNNING');
     }
     function whoAmI() { return auth.currentUser ? (auth.currentUser.displayName || (auth.currentUser.email || '').split('@')[0]).toUpperCase() : ''; }
     function stampNow() { return new Date().toLocaleString('en-GB', BD_TIME_OPTS); }
@@ -941,7 +964,7 @@
       const dataUrl = o.dataUrl || await readFileAsDataURL(o.file); const nm = safeName(o.name);
       const fileName = o.fileName || driveExpectedName({ name: o.name }, o.idx);
       const reqId = 'u' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
-      const d = await driveCall({ action: 'upload', reqId: reqId, setKey: o.setKey || '', folderId: o.folderId || '', folderName: safeName(o.folderName), fileName: fileName, data: dataUrl.split(',')[1], replaceFileId: o.replaceFileId || '', status: o.status || 'Running', sms: o.sms || '', visaType: o.visaType || '', mime: o.mime || (o.file && o.file.type) || '', subFolder: o.subFolder || '', personFolder: o.personFolder || '' }); return { folderId: d.folderId, folderName: d.folderName, fileId: d.fileId, fileName: fileName };
+      const d = await driveCall({ action: 'upload', reqId: reqId, setKey: o.setKey || '', folderId: o.folderId || '', folderName: safeName(o.folderName), fileName: fileName, data: dataUrl.split(',')[1], replaceFileId: o.replaceFileId || '', status: o.status || 'Running', sms: o.sms || '', visaType: o.visaType || '', mime: o.mime || (o.file && o.file.type) || '', subFolder: o.subFolder || '', personFolder: o.personFolder || '', medFolder: o.medFolder || '', medFolderId: o.medFolderId || '' }); return { folderId: d.folderId, folderName: d.folderName, fileId: d.fileId, fileName: fileName };
     }
     function driveExpectedName(a, idx, f) { const nm = safeName(a.name); const core = idx === 0 ? '1 - ' + nm + ' (MAIN BGD)' : nm + ' (BGD)'; const exp = !!(f && expiryRelevant(f) && needsRenewal(a, f)); return (exp ? 'EXPIRED - ' : '') + core + '.pdf'; }
     async function driveSyncSet(f) {
@@ -952,9 +975,11 @@
       if (f.invoiceFileId) { const wantInv = invoiceFileNameFor(f); if (f.invoiceFileName !== wantInv) files.push({ fileId: f.invoiceFileId, name: wantInv }); }
       LETTER_KEYS.forEach(k => { if (f[k + 'FileId']) { const wantL = letterFileNameFor(f, k); if (f[k + 'FileName'] !== wantL) files.push({ fileId: f[k + 'FileId'], name: wantL }); } });
       const folderChange = !!f.driveFolderId && f.driveFolderName !== wantFolder;
-      if (!files.length && !folderChange) return;
+      const wantMed = safeName(f.applicants[0] && f.applicants[0].name); const medChange = !!f.medFolderId && f.medFolderName !== wantMed;
+      if (!files.length && !folderChange && !medChange) return;
       try {
-        await driveCall({ action: 'syncSet', folderId: folderChange ? f.driveFolderId : '', folderName: wantFolder, files: files });
+        await driveCall({ action: 'syncSet', folderId: folderChange ? f.driveFolderId : '', folderName: wantFolder, files: files, extraFolders: medChange ? [{ folderId: f.medFolderId, name: wantMed }] : [] });
+        if (medChange) f.medFolderName = wantMed;
         files.forEach(x => { f.applicants.forEach(y => { if (y.photoFileId === x.fileId) y.photoFileName = x.name; if (y.passportFileId === x.fileId) y.passportFileName = x.name; }); const a = f.applicants.find(y => y.driveFileId === x.fileId); if (a) a.driveFileName = x.name; if (f.invoiceFileId === x.fileId) f.invoiceFileName = x.name; LETTER_KEYS.forEach(k => { if (f[k + 'FileId'] === x.fileId) f[k + 'FileName'] = x.name; }); });
         if (folderChange) f.driveFolderName = wantFolder; syncToCloud();
       } catch (e) { console.warn('driveSyncSet failed', e); }
@@ -1031,7 +1056,7 @@
       if (f.driveFolderName !== driveFolderNameFor(f)) return true;
       if (f.applicants.some((a, i) => a.driveFileId && a.driveFileName !== driveExpectedName(a, i, f))) return true;
       if (f.applicants.some(a => (a.photoFileId && a.photoFileName !== photoFileNameFor(a)) || (a.passportFileId && a.passportFileName !== passportFileNameFor(a)))) return true;
-      return !!(f.invoiceFileId && f.invoiceFileName !== invoiceFileNameFor(f)) || LETTER_KEYS.some(k => f[k + 'FileId'] && f[k + 'FileName'] !== letterFileNameFor(f, k));
+      return !!(f.invoiceFileId && f.invoiceFileName !== invoiceFileNameFor(f)) || LETTER_KEYS.some(k => f[k + 'FileId'] && f[k + 'FileName'] !== letterFileNameFor(f, k)) || !!(f.medFolderId && f.medFolderName !== safeName(f.applicants[0] && f.applicants[0].name));
     }
     async function driveSyncStatuses() {
       if (!driveEnabled() || !auth.currentUser || statusSyncBusy) return; driveFixOtherOnce();
@@ -1119,7 +1144,7 @@
       try {
         let trashedOnly = 0;
         const driveIds = f.applicants.map(a => a.driveFileId).filter(Boolean).concat(allLetterIds(f)).concat(f.applicants.flatMap(a => [a.photoFileId, a.passportFileId]).filter(Boolean));
-        if (driveIds.length || f.driveFolderId) { const d = await driveCall({ action: 'deleteSet', fileIds: driveIds, folderId: f.driveFolderId || '' }); trashedOnly = d.trashedOnly || 0; }
+        if (driveIds.length || f.driveFolderId || f.medFolderId) { const d = await driveCall({ action: 'deleteSet', fileIds: driveIds, folderId: f.driveFolderId || '', extraFolderIds: f.medFolderId ? [f.medFolderId] : [] }); trashedOnly = d.trashedOnly || 0; }
         visaFiles = visaFiles.filter(x => x.id !== id); logHint = 'চিরতরে ডিলিট (Drive সহ)';
         cloudBusy--; renderFiles(); await syncToCloud();
         showToast(trashedOnly ? '🗑️ মুছে গেছে (Drive ট্র্যাশে ৩০ দিন থাকবে)' : '🗑️ সব জায়গা থেকে চিরতরে মুছে গেছে');
@@ -1355,7 +1380,7 @@
       };
       const baseList = visaFiles.filter(_passBase); renderSmsChips(baseList);
       const filtered = baseList.filter(f => activeTab === 'RECYCLE' || !smsFilter || smsOf(f) === smsFilter);
-      if (activeTab === 'ACCOUNTS') { renderAccountsView(container, filtered); return; }
+      if (activeTab === 'ACCOUNTS') { if (!isAdmin) { container.innerHTML = ''; return; } renderAccountsView(container, filtered); return; }
 
       if (filtered.length === 0) {
         container.innerHTML = `<div class="bg-white rounded-3xl p-12 text-center border border-slate-200 shadow-sm"><div class="w-16 h-16 bg-[#f4f7fa] text-[#00b4d8] rounded-2xl mx-auto flex items-center justify-center text-3xl mb-4 border border-slate-100"><i class="fa-solid fa-folder-open"></i></div><h4 class="font-extrabold text-slate-700 text-base">কোনো ভিসা ফাইল পাওয়া যায়নি!</h4></div>`; return;
@@ -1500,13 +1525,17 @@
 
     // ================= 🏥 Medical: হাসপাতাল + Invitation / Appointment Letter | 📝 নোট =================
     // letterMode: 'COMBINED' = ১টা PDF-এ দুটোই (ডিফল্ট) | 'SEPARATE' = Invitation ও Appointment Letter আলাদা ২টা PDF (হাসপাতাল অনুযায়ী বদলায়)
-    const LETTER_KEYS = ['invitation', 'apptLetter'];
-    let modalLet = { mode: 'COMBINED', invitation: {}, apptLetter: {} };
+    const LETTER_KEYS = ['invitation', 'apptLetter', 'undertaking', 'consult'];   // মেডিকেল PDF: সবগুলো Drive এর Medical Files / রোগীর নাম ফোল্ডারে যায়
+    const MED_EXTRA_KEYS = ['undertaking', 'consult'];
+    let modalLet = { mode: 'COMBINED', invitation: {}, apptLetter: {}, undertaking: {}, consult: {} };
+    let modalMedFolderId = ''; let modalMedFolderName = ''; let modalMedFolderNew = false;
     function letterMode(f) { return (f && f.letterMode === 'SEPARATE') ? 'SEPARATE' : 'COMBINED'; }
-    function letterSlots(f) { return letterMode(f) === 'SEPARATE' ? ['invitation', 'apptLetter'] : ['invitation']; }
-    function letterLabel(f, k) { return k === 'apptLetter' ? 'Appointment Letter' : (letterMode(f) === 'SEPARATE' ? 'Invitation Letter' : 'Invitation + Appointment Letter'); }
+    function letterSlots(f) { return (letterMode(f) === 'SEPARATE' ? ['invitation', 'apptLetter'] : ['invitation']).concat(MED_EXTRA_KEYS); }
+    function letterLabel(f, k) { if (k === 'undertaking') return 'Undertaking'; if (k === 'consult') return 'Consult PDF'; return k === 'apptLetter' ? 'Appointment Letter' : (letterMode(f) === 'SEPARATE' ? 'Invitation Letter' : 'Invitation + Appointment Letter'); }
     function letterFileNameFor(f, k) {
       const n = safeName(f.applicants[0] && f.applicants[0].name);
+      if (k === 'undertaking') return 'UNDERTAKING - ' + n + '.pdf';
+      if (k === 'consult') return 'CONSULT - ' + n + '.pdf';
       if (k === 'apptLetter') return 'APPOINTMENT LETTER - ' + n + '.pdf';
       return (letterMode(f) === 'SEPARATE' ? 'INVITATION LETTER - ' : 'INVITATION + APPOINTMENT LETTER - ') + n + '.pdf';
     }
@@ -1541,15 +1570,12 @@
       const f = visaFiles.find(x => x.id === fileId); if (!f) return;
       if (!driveEnabled()) { alert('Drive সেট করা নেই!'); event.target.value = ''; return; }
       if (!((f.applicants[0].name || '').trim())) { alert('আগে মেইন আবেদনকারীর নাম লিখে সেভ করুন।'); event.target.value = ''; return; }
-      if (!ensureVisaType(f)) { event.target.value = ''; return; }
       if (f[k + 'FileId'] && !confirm('এই Letter দিয়ে আগেরটা বদলাবেন?\nআগেরটা Drive থেকে মুছে যাবে।')) { event.target.value = ''; return; }
       cloudBusy++; showToast('⏳ Letter আপলোড হচ্ছে...');
       try {
-        const hadFolder = !!f.driveFolderId;
-        const res = await driveUploadApplicant({ setKey: f.id, folderId: f.driveFolderId || '', folderName: f.applicants[0].name, fileName: letterFileNameFor(f, k), file: file, replaceFileId: f[k + 'FileId'] || '', status: driveStatusOf(f), sms: smsOf(f), visaType: visaTypeOf(f) });
-        if (!hadFolder) f.driveStatus = driveLocOf(f);
-        f.driveFolderId = res.folderId; f.driveFolderName = res.folderName;
-        f[k + 'FileId'] = res.fileId; f[k + 'FileName'] = res.fileName; f[k + 'Name'] = file.name; f[k + 'By'] = whoAmI(); f[k + 'At'] = stampNow(); f[k + 'Received'] = true;
+        const res = await driveUploadApplicant({ setKey: f.id, medFolder: f.applicants[0].name, medFolderId: f.medFolderId || '', folderName: f.applicants[0].name, fileName: letterFileNameFor(f, k), file: file, replaceFileId: f[k + 'FileId'] || '' });
+        f.medFolderId = res.folderId; f.medFolderName = res.folderName;
+        f[k + 'FileId'] = res.fileId; f[k + 'FileName'] = res.fileName; f[k + 'Med'] = true; f[k + 'Name'] = file.name; f[k + 'By'] = whoAmI(); f[k + 'At'] = stampNow(); f[k + 'Received'] = true;
         f.updatedAt = stampNow(); f.updatedBy = whoAmI();
         renderFiles(); await syncToCloud(); showToast('📨 ' + letterLabel(f, k) + ' সেভ হয়েছে, Received হয়েছে!');
       } catch (e) { console.error(e); alert('Letter আপলোড হয়নি!\n\nকারণ: ' + ((e && e.message) || e)); }
@@ -1558,15 +1584,17 @@
 
     // ---- এডিট মডালের ভেতরে ----
     function loadModalLetters(f) {
-      const pick = k => ({ fileId: f[k + 'FileId'] || '', fileName: f[k + 'FileName'] || '', name: f[k + 'Name'] || '', by: f[k + 'By'] || '', at: f[k + 'At'] || '', received: !!f[k + 'Received'] });
-      modalLet = { mode: letterMode(f), invitation: pick('invitation'), apptLetter: pick('apptLetter') };
+      const pick = k => ({ med: !!f[k + 'Med'], fileId: f[k + 'FileId'] || '', fileName: f[k + 'FileName'] || '', name: f[k + 'Name'] || '', by: f[k + 'By'] || '', at: f[k + 'At'] || '', received: !!f[k + 'Received'] });
+      modalLet = { mode: letterMode(f), invitation: pick('invitation'), apptLetter: pick('apptLetter'), undertaking: pick('undertaking'), consult: pick('consult') };
+      modalMedFolderId = f.medFolderId || ''; modalMedFolderName = f.medFolderName || ''; modalMedFolderNew = false;
     }
     function modalLetterFields() {
       const o = { letterMode: modalLet.mode };
       LETTER_KEYS.forEach(k => {
         const m = (k === 'apptLetter' && modalLet.mode !== 'SEPARATE') ? {} : (modalLet[k] || {});
-        o[k + 'FileId'] = m.fileId || ''; o[k + 'FileName'] = m.fileName || ''; o[k + 'Name'] = m.name || ''; o[k + 'By'] = m.by || ''; o[k + 'At'] = m.at || ''; o[k + 'Received'] = !!(m.received || m.fileId);
+        o[k + 'FileId'] = m.fileId || ''; o[k + 'FileName'] = m.fileName || ''; o[k + 'Name'] = m.name || ''; o[k + 'By'] = m.by || ''; o[k + 'At'] = m.at || ''; o[k + 'Received'] = !!(m.received || m.fileId); o[k + 'Med'] = !!(m.fileId && m.med);
       });
+      o.medFolderId = modalMedFolderId || ''; o.medFolderName = modalMedFolderName || '';
       return o;
     }
     function toggleMedicalBox() { const on = document.getElementById('visaType').value === 'Medical'; document.getElementById('medicalBox').classList.toggle('hidden', !on); if (on) renderLettersBox(); }
@@ -1579,7 +1607,7 @@
       const sep = modalLet.mode === 'SEPARATE'; const anyFile = !!(modalLet.invitation.fileId || modalLet.apptLetter.fileId);
       const radio = (v, txt) => `<label class="flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-extrabold ${modalLet.mode === v ? 'bg-sky-50 border-sky-300 text-sky-800' : 'bg-slate-50 border-slate-200 text-slate-600'} ${(anyFile && modalLet.mode !== v) ? 'opacity-50' : 'cursor-pointer'}"><input type="radio" name="letterMode" ${modalLet.mode === v ? 'checked' : ''} ${anyFile ? 'disabled' : ''} onchange="setLetterMode('${v}')" class="accent-sky-600">${txt}</label>`;
       const slot = k => {
-        const m = modalLet[k] || {}, has = !!m.fileId; const lb = k === 'apptLetter' ? 'Appointment Letter' : (sep ? 'Invitation Letter' : 'Invitation + Appointment Letter');
+        const m = modalLet[k] || {}, has = !!m.fileId; const lb = k === 'undertaking' ? 'Undertaking' : (k === 'consult' ? 'Consult PDF' : (k === 'apptLetter' ? 'Appointment Letter' : (sep ? 'Invitation Letter' : 'Invitation + Appointment Letter')));
         return `<div class="p-3 rounded-xl border border-slate-200 bg-slate-50/60"><label class="block text-[11px] font-bold text-[#0077b6] mb-1.5">📨 ${lb} (PDF)</label>`
           + `<div class="flex items-center gap-1.5"><label class="cursor-pointer bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold flex-1 text-center truncate transition"><i class="fa-solid fa-upload"></i> ${has ? 'রি-আপলোড / বদলান' : 'PDF আপলোড'}<input type="file" accept="application/pdf" onchange="handleLetterUpload('${k}', event)" class="hidden"></label>${has ? `<button type="button" onclick="removeLetter('${k}')" class="text-rose-500 bg-rose-50 px-2 py-1.5 rounded-lg text-xs hover:bg-rose-500 hover:text-white transition"><i class="fa-solid fa-xmark"></i></button>` : ''}</div>`
           + ((has || m.received) ? `<div class="mt-2 inline-block bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-lg text-[11px] font-extrabold">📨 ${lb} Received${has ? ' (PDF আছে)' : ' (হাতে দেওয়া)'}</div>` : '')
@@ -1587,7 +1615,9 @@
       };
       b.innerHTML = `<label class="block text-[11px] font-bold text-slate-500 mb-1.5">Letter এর ধরন (হাসপাতাল অনুযায়ী বাছুন)</label><div class="flex flex-wrap gap-2 mb-2">${radio('COMBINED', '📎 একসাথে ১টা PDF (Invitation + Appointment)')}${radio('SEPARATE', '📑 আলাদা ২টা PDF')}</div>`
         + (anyFile ? '<p class="text-[10px] text-amber-700 font-bold mb-2">ধরন বদলাতে চাইলে আগে আপলোড করা PDF সরান (✕)।</p>' : '')
-        + `<div class="grid grid-cols-1 ${sep ? 'md:grid-cols-2' : ''} gap-3">${slot('invitation')}${sep ? slot('apptLetter') : ''}</div>`;
+        + `<div class="grid grid-cols-1 ${sep ? 'md:grid-cols-2' : ''} gap-3">${slot('invitation')}${sep ? slot('apptLetter') : ''}</div>`
+        + `<div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">${slot('undertaking')}${slot('consult')}</div>`
+        + '<p class="text-[10px] text-slate-400 font-bold mt-2">📁 এই সব মেডিকেল PDF Drive এর <b>Medical Files / রোগীর নাম</b> ফোল্ডারে জমা হবে।</p>';
     }
     function removeLetter(k) { const m = modalLet[k]; if (m && m.fileId) modalOrphanDriveIds.push(m.fileId); modalLet[k] = {}; renderLettersBox(); }
     async function handleLetterUpload(k, event) {
@@ -1600,13 +1630,12 @@
       cloudBusy++; showToast('⏳ Letter আপলোড হচ্ছে...');
       try {
         const stNow = document.getElementById('isReturned').checked ? 'Returned' : (document.getElementById('isDelivered').checked ? 'Delivered' : 'Running');
-        const smsNow = ((document.getElementById('smsApp').value || '').trim()) || 'Rtcsms'; const vt = document.getElementById('visaType').value; const wasNew = !modalDriveFolderId;
-        const fakeF = { applicants: [{ name: tempApplicants[0].name }], letterMode: modalLet.mode };
-        const res = await driveUploadApplicant({ setKey: modalKey(), folderId: modalDriveFolderId, folderName: tempApplicants[0].name, fileName: letterFileNameFor(fakeF, k), file: file, status: stNow, sms: smsNow, visaType: vt });
-        if (wasNew) { modalFolderNew = true; modalStatusAtCreate = locFor(stNow, smsNow, vt); }
-        modalDriveFolderId = res.folderId; modalDriveFolderName = res.folderName; modalNewDriveIds.push(res.fileId);
+        const wasNewMed = !modalMedFolderId; const fakeF = { applicants: [{ name: tempApplicants[0].name }], letterMode: modalLet.mode };
+        const res = await driveUploadApplicant({ setKey: modalKey(), medFolder: tempApplicants[0].name, medFolderId: modalMedFolderId, folderName: tempApplicants[0].name, fileName: letterFileNameFor(fakeF, k), file: file });
+        if (wasNewMed) modalMedFolderNew = true;
+        modalMedFolderId = res.folderId; modalMedFolderName = res.folderName; modalNewDriveIds.push(res.fileId);
         if (modalLet[k] && modalLet[k].fileId) modalOrphanDriveIds.push(modalLet[k].fileId);
-        modalLet[k] = { fileId: res.fileId, fileName: res.fileName, name: file.name, by: whoAmI(), at: stampNow(), received: true };
+        modalLet[k] = { med: true, fileId: res.fileId, fileName: res.fileName, name: file.name, by: whoAmI(), at: stampNow(), received: true };
         renderLettersBox(); showToast('✅ Letter যোগ হয়েছে (Received)!');
       } catch (e) { console.error(e); alert('Letter আপলোড হয়নি!\n\nকারণ: ' + ((e && e.message) || e)); }
       finally { cloudBusy = Math.max(0, cloudBusy - 1); event.target.value = ''; }
@@ -1665,7 +1694,7 @@
         document.getElementById('billAdvance').value = ''; document.getElementById('billDue').value = '';
         document.getElementById('keptCharge').value = ''; document.getElementById('refundAmount').value = ''; document.getElementById('returnReason').value = ''; document.getElementById('fileNote').value = '';
         tempApplicants = [{ name: '', passport: '', dob: '', nid: '', tempId: '', bgdNo: '', isSubmitted: false, subDate: '', prevBgd: '', pdfName: '' }];
-        modalLet = { mode: 'COMBINED', invitation: {}, apptLetter: {} }; document.getElementById('hospitalName').value = '';
+        modalLet = { mode: 'COMBINED', invitation: {}, apptLetter: {}, undertaking: {}, consult: {} }; modalMedFolderId = ''; modalMedFolderName = ''; modalMedFolderNew = false; document.getElementById('hospitalName').value = '';
       }
       toggleRefundBox(); renderApplicantForms(); toggleMedicalBox();
       setTimeout(calcDue, 50); // Instantly update profit visual
@@ -1677,8 +1706,8 @@
       clearPendingSetKey();
       document.getElementById('fileModal').classList.add('hidden');
       const isNewSet = !document.getElementById('editFileId').value;
-      if (driveEnabled() && (modalNewDriveIds.length || (isNewSet && modalDriveFolderId))) { driveCall({ action: 'deleteFiles', fileIds: modalNewDriveIds, folderIdIfEmpty: isNewSet ? modalDriveFolderId : '' }).catch(() => { }); }
-      modalNewDriveIds = []; modalOrphanDriveIds = []; modalDriveFolderId = ''; modalDriveFolderName = '';
+      if (driveEnabled() && (modalNewDriveIds.length || (isNewSet && modalDriveFolderId) || modalMedFolderNew)) { driveCall({ action: 'deleteFiles', fileIds: modalNewDriveIds, folderIdIfEmpty: isNewSet ? modalDriveFolderId : '', foldersIfEmpty: modalMedFolderNew ? [modalMedFolderId] : [] }).catch(() => { }); }
+      modalNewDriveIds = []; modalOrphanDriveIds = []; modalDriveFolderId = ''; modalDriveFolderName = ''; modalMedFolderId = ''; modalMedFolderName = ''; modalMedFolderNew = false;
     }
     function fillDefaultPass() { document.getElementById('accountPassword').value = defaultPass || ''; }
 
@@ -1810,16 +1839,17 @@
       };
             const prevSet = editId ? visaFiles.find(x => x.id === editId) : null;
       fileObj.serial = prevSet ? (prevSet.serial || '') : (newSerial || '');
+      fileObj.transferLog = prevSet ? (prevSet.transferLog || []) : [];
       fileObj.driveStatus = modalFolderNew ? modalStatusAtCreate : (prevSet ? (prevSet.driveStatus || '') : '');
       if (prevSet && expiryRelevant(prevSet)) tempApplicants.forEach(a => { if (a.isSubmitted || a.renewing || !(a.name || '').trim()) return; const pv = prevSet.applicants.find(p => (p.name || '') === a.name); if (pv && needsRenewal(pv, prevSet)) a.renewing = true; });
       delete nameSyncTried[fileObj.id]; delete statusSyncTried[fileObj.id];
       if (prevSet) { fileObj.invoiceFileId = prevSet.invoiceFileId || ''; fileObj.invoiceFileName = prevSet.invoiceFileName || ''; fileObj.invoiceName = prevSet.invoiceName || ''; fileObj.invoiceBy = prevSet.invoiceBy || ''; fileObj.invoiceAt = prevSet.invoiceAt || ''; }
       if (driveEnabled()) {
-        const orphans = modalOrphanDriveIds.filter(id => !tempApplicants.some(a => a.driveFileId === id) && id !== modalLet.invitation.fileId && id !== modalLet.apptLetter.fileId);
+        const orphans = modalOrphanDriveIds.filter(id => !tempApplicants.some(a => a.driveFileId === id) && id !== modalLet.invitation.fileId && id !== modalLet.apptLetter.fileId && id !== modalLet.undertaking.fileId && id !== modalLet.consult.fileId);
         if (orphans.length) driveCall({ action: 'deleteFiles', fileIds: orphans }).catch(() => { });
       }
       if (editId) { const idx = visaFiles.findIndex(x => x.id === editId); if (idx > -1) visaFiles[idx] = fileObj; } else visaFiles.unshift(fileObj);
-            modalNewDriveIds = []; modalOrphanDriveIds = []; modalDriveFolderId = ''; modalDriveFolderName = ''; modalFolderNew = false; modalStatusAtCreate = '';
+            modalNewDriveIds = []; modalOrphanDriveIds = []; modalDriveFolderId = ''; modalDriveFolderName = ''; modalFolderNew = false; modalStatusAtCreate = ''; modalMedFolderNew = false;
       closeFileModal(true); renderFiles(); syncToCloud(); showToast('সেভ সম্পন্ন!'); driveSyncSet(fileObj);
       if (newSerial) showSerialModal(newSerial, (fileObj.applicants[0] && fileObj.applicants[0].name) || '');
     }
@@ -1901,6 +1931,8 @@
       });
       if ((old.invoiceFileId || '') !== (f.invoiceFileId || '')) parts.push('ইনভয়েস PDF ' + (f.invoiceFileId ? 'আপলোড/বদল' : 'মোছা'));
       if ((old.invitationFileId || '') !== (f.invitationFileId || '')) parts.push('Invitation Letter PDF ' + (f.invitationFileId ? 'আপলোড/বদল' : 'মোছা'));
+      if ((old.undertakingFileId || '') !== (f.undertakingFileId || '')) parts.push('Undertaking PDF ' + (f.undertakingFileId ? 'আপলোড/বদল' : 'মোছা'));
+      if ((old.consultFileId || '') !== (f.consultFileId || '')) parts.push('Consult PDF ' + (f.consultFileId ? 'আপলোড/বদল' : 'মোছা'));
       if ((old.apptLetterFileId || '') !== (f.apptLetterFileId || '')) parts.push('Appointment Letter PDF ' + (f.apptLetterFileId ? 'আপলোড/বদল' : 'মোছা'));
       if (!parts.length) return null;
       return { type: 'edit', setId: f.id, name: mainNameOf(f), detail: parts.join(' · ') };
@@ -1950,7 +1982,7 @@
     setInterval(function () { if (activeTab === 'ACTIVITY' && !document.hidden && auth.currentUser) loadActivity(true); }, 45000);
     const ACT_TYPES = {
       create: ['নতুন', 'bg-emerald-100 text-emerald-700'], edit: ['এডিট', 'bg-sky-100 text-sky-700'], delete: ['ডিলিট', 'bg-rose-100 text-rose-700'], restore: ['ফিরিয়ে আনা', 'bg-emerald-100 text-emerald-700'],
-      purge: ['চিরতরে ডিলিট', 'bg-red-600 text-white'], backup: ['ব্যাকআপ', 'bg-amber-100 text-amber-800'], restore_backup: ['ব্যাকআপ রিস্টোর', 'bg-purple-100 text-purple-700']
+      purge: ['চিরতরে ডিলিট', 'bg-red-600 text-white'], backup: ['ব্যাকআপ', 'bg-amber-100 text-amber-800'], restore_backup: ['ব্যাকআপ রিস্টোর', 'bg-purple-100 text-purple-700'], transfer: ['🔄 ট্রান্সফার', 'bg-sky-100 text-sky-700']
     };
     function actSerial(x) { if (x.serial) return String(x.serial); if (!x.setId) return ''; const f = visaFiles.find(function (v) { return v.id === x.setId; }); return (f && f.serial) ? String(f.serial) : ''; }
     function bdDayKey(t) { return new Date(t).toLocaleDateString('en-CA', { timeZone: 'Asia/Dhaka' }); }
@@ -2012,6 +2044,43 @@
       return { f: f, ret: ret, bill: bill, paid: paid, due: due, refund: refund, expense: expense, profit: profit, kept: kept, spent: spent, pending: pending, expected: expected, cash: Math.max(0, paid - refund), noBill: noBill, state: state,
         name: mainNameOf(f), others: (f.applicants || []).slice(1).map(a => a.name).filter(Boolean) };
     }
+    // ট্রান্সফারের নোট: কোন জন কোন ফাইল থেকে এল/কোন ফাইলে গেল, আর টাকা সাথে গেছে কিনা
+    function acctTransferNotes(f) {
+      const log = f.transferLog || []; if (!log.length) return '';
+      const ser = (id, fb) => { const t = visaFiles.find(x => x.id === id); return (t && t.serial) ? t.serial : fb; };
+      return log.slice(-3).map(e => {
+        const inc = e.toId === f.id;
+        const sn = inc ? ser(e.fromId, e.fromSerial) : ser(e.toId, e.toSerial); const nm = inc ? e.fromMain : e.toMain;
+        const other = (sn ? '#' + sn + ' ' : '') + (nm || '');
+        const moved = !!(e.bill || e.paid);
+        const money = moved ? ('বিল ' + fmtTk(e.bill) + ' · জমা ' + fmtTk(e.paid) + (inc ? ' সাথে এসেছে' : ' সাথে গেছে')) : '⚠️ টাকা সরানো হয়নি, মিলিয়ে নিন';
+        return '<div class="text-[10px] font-bold mt-0.5 ' + (moved ? 'text-sky-600' : 'text-amber-600') + '">' + (inc ? '↘ ' : '↗ ') + escHtml(e.name || 'Unnamed') + (inc ? ' এসেছে ' + escHtml(other) + ' ফাইল থেকে' : ' গেছে ' + escHtml(other) + ' ফাইলে') + ' · ' + money + '</div>';
+      }).join('');
+    }
+    let acctTrAll = false;
+    function toggleAcctTr() { acctTrAll = !acctTrAll; renderFiles(); }
+    // সব ট্রান্সফারের তালিকা: কে কখন কাকে কোথা থেকে কোথায় সরাল, আর দুই ফাইলের বিল/জমা আগে-পরে কত ছিল
+    function acctTransferHistory() {
+      const seen = {}, all = [];
+      visaFiles.forEach(f => (f.transferLog || []).forEach(e => { const k = [e.ts || e.at, e.name, e.fromId, e.toId].join('|'); if (!seen[k]) { seen[k] = 1; all.push(e); } }));
+      if (!all.length) return '';
+      all.sort((a, b) => (b.ts || 0) - (a.ts || 0));
+      const ser = (id, fb) => { const t = visaFiles.find(x => x.id === id); return (t && t.serial) ? t.serial : fb; };
+      const fl = (id, fb, main) => '<span class="font-extrabold">' + ((ser(id, fb)) ? '#' + escHtml(String(ser(id, fb))) + ' ' : '') + escHtml(main || '') + '</span>';
+      const ba = (x) => x ? (fmtTk(x.b) + ' / ' + fmtTk(x.p)) : '-';
+      const shown = acctTrAll ? all : all.slice(0, 8);
+      let h = '<div class="bg-white rounded-2xl border border-sky-200 shadow-sm mb-4 overflow-hidden"><div class="px-4 py-3 bg-sky-50 border-b border-sky-200 flex items-center justify-between"><p class="text-xs font-extrabold text-sky-800">🔄 ট্রান্সফার ইতিহাস (' + all.length + 'টি) <span class="text-[10px] font-bold text-sky-600">· বিল / জমা, আগে → পরে</span></p>'
+        + (all.length > 8 ? '<button onclick="toggleAcctTr()" class="text-[11px] font-extrabold text-sky-700 underline">' + (acctTrAll ? 'কম দেখুন' : 'সব দেখুন') + '</button>' : '') + '</div><div class="divide-y divide-slate-100">';
+      shown.forEach(e => {
+        const moved = !!(e.bill || e.paid);
+        h += '<div class="px-4 py-2.5 text-[11px] font-bold text-slate-600 leading-relaxed">'
+          + '<div><span class="mono-type text-slate-400">' + escHtml(e.at || '') + '</span> · ' + escHtml(e.by || '') + ' · <span class="font-extrabold text-[#0b132b]">' + escHtml(e.name || 'Unnamed') + '</span> : ' + fl(e.fromId, e.fromSerial, e.fromMain) + ' → ' + fl(e.toId, e.toSerial, e.toMain) + '</div>'
+          + (moved ? '<div class="text-sky-700">সাথে গেছে: বিল ' + fmtTk(e.bill) + ' · জমা ' + fmtTk(e.paid) + '</div>' : '<div class="text-amber-600">⚠️ টাকা সরানো হয়নি, মিলিয়ে নিন</div>')
+          + (e.sBefore ? '<div class="text-slate-500">আগের ফাইল ' + (e.sGone ? '(এখন নেই)' : '') + ': ' + ba(e.sBefore) + ' → ' + ba(e.sAfter) + ' &nbsp;|&nbsp; নতুন ফাইল: ' + ba(e.dBefore) + ' → ' + ba(e.dAfter) + '</div>' : '')
+          + '</div>';
+      });
+      return h + '</div></div>';
+    }
     function setAcctFilter(v) { acctFilter = v; renderFiles(); }
     function setAcctSort(v) { acctSort = v; renderFiles(); }
     function renderAccountsView(container, files) {
@@ -2035,6 +2104,7 @@
         + card('⏳ লেখা খরচ (Appointment হয়নি)', T.pending, ['border-slate-300', 'text-slate-500'], 'Appointment হলে খরচ হবে; এখনো কাটা হয়নি')
         + card('নিট লাভ', T.profit, [T.profit >= 0 ? 'border-sky-200' : 'border-rose-300', T.profit >= 0 ? 'text-sky-600' : 'text-rose-600'], 'Appointed (বিল − খরচ) + ফেরতে রাখা চার্জ')
         + '</div>';
+      html += acctTransferHistory();
       const chip = (k, lb) => '<button onclick="setAcctFilter(\'' + k + '\')" class="px-3 py-1.5 rounded-xl text-xs font-extrabold border transition ' + (acctFilter === k ? 'bg-[#0b132b] text-white border-[#0b132b]' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-50') + '">' + lb + ' <span class="opacity-70">' + cnt[k] + '</span></button>';
       const so = (k, lb) => '<option value="' + k + '"' + (acctSort === k ? ' selected' : '') + '>' + lb + '</option>';
       html += '<div class="flex flex-wrap items-center gap-2 mb-3">' + chip('ALL', 'সব') + chip('DUE', '⏳ বাকি আছে') + chip('CLEAR', '✅ পরিশোধ') + chip('RETURNED', '🔙 ফেরত') + chip('NOBILL', '❔ বিল দেওয়া হয়নি')
@@ -2051,7 +2121,7 @@
           return '<tr onclick="openFileModal(\'' + escHtml(f.id) + '\')" class="hover:bg-sky-50/60 cursor-pointer">'
             + '<td class="px-3 py-2.5">' + serialBadge(f) + '</td>'
             + '<td class="px-3 py-2.5 min-w-[180px]"><div class="text-xs font-extrabold text-[#0b132b]">' + escHtml(r.name) + '</div>'
-            + (r.others.length ? '<div class="text-[10px] text-slate-400 font-bold">+ ' + escHtml(r.others.join(', ')) + '</div>' : '')
+            + (r.others.length ? '<div class="text-[10px] text-slate-400 font-bold">+ ' + escHtml(r.others.join(', ')) + '</div>' : '') + acctTransferNotes(f)
             + '<div class="text-[10px] text-slate-400 font-bold mono-type">' + escHtml(f.accountPhone || '') + (f.worker ? ' · ' + escHtml(f.worker) : '') + '</div></td>'
             + '<td class="px-3 py-2.5">' + stBadge(r) + '<div class="text-[10px] text-slate-400 font-bold mt-0.5">' + progress(f) + '</div></td>'
             + '<td class="' + td + ' text-[#0b132b]">' + fmtTk(r.bill) + (r.ret ? '<div class="text-[9px] text-orange-500 font-bold">চার্জ রাখা</div>' : '') + '</td>'
@@ -2068,12 +2138,60 @@
       container.innerHTML = html;
     }
     function exportAccountsCsv() {
+      if (!isAdmin) return;
       const rows = acctLast.map(acctRow); if (!rows.length) { showToast('কোনো ডাটা নেই'); return; }
       const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
       const head = ['ফাইল নং', 'নাম', 'সহ-আবেদনকারী', 'ফোন', 'অবস্থা', 'বিল', 'জমা', 'বাকি', 'ফেরত', 'খরচ', 'লাভ', 'হাতে আছে'];
       const lines = [head.map(q).join(',')].concat(rows.map(r => [r.f.serial || '', r.name, r.others.join(' / '), r.f.accountPhone || '', r.state, r.bill, r.paid, r.due, r.refund, r.expense, r.profit, r.cash].map(q).join(',')));
       const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' })); a.download = 'RTC-hisab-' + getTodayStr() + '.csv'; document.body.appendChild(a); a.click(); a.remove();
     }
+
+
+    // ================= 🏥 পুরনো মেডিকেল PDF -> Medical Files / রোগীর নাম =================
+    function medPendingKeys(f) { return LETTER_KEYS.filter(k => f[k + 'FileId'] && !f[k + 'Med']); }
+    function medPendingFiles() { return visaFiles.filter(f => !f.isDeleted && medPendingKeys(f).length); }
+    function updateMedMigrateBox() {
+      const box = document.getElementById('medMigrateBox'); if (!box) return;
+      const n = medPendingFiles().reduce((t, f) => t + medPendingKeys(f).length, 0);
+      box.style.display = driveEnabled() ? '' : 'none';
+      const p = document.getElementById('medMigratePending'), d = document.getElementById('medMigrateDone'), c = document.getElementById('medMigrateCount');
+      if (p) p.style.display = n > 0 ? '' : 'none'; if (d) d.style.display = n > 0 ? 'none' : ''; if (c) c.innerText = n;
+    }
+    let medMigrating = false;
+    async function migrateMedicalFiles() {
+      if (medMigrating) return;
+      if (cloudBusy > 0) { alert('⏳ একটি আপলোড চলছে, শেষ হওয়া পর্যন্ত অপেক্ষা করুন!'); return; }
+      const todo = medPendingFiles(); if (!todo.length) { showToast('সরানোর মতো কিছু নেই'); return; }
+      medMigrating = true; cloudBusy++; const btn = document.getElementById('medMigrateBtn'); if (btn) { btn.disabled = true; btn.innerText = '⏳ সরানো হচ্ছে...'; }
+      let moved = 0, missing = 0;
+      try {
+        for (let i = 0; i < todo.length; i += 10) {
+          const batch = todo.slice(i, i + 10); showToast('⏳ সরানো হচ্ছে... ' + Math.min(i + 10, todo.length) + '/' + todo.length);
+          const items = batch.map(f => ({ setKey: f.id, name: safeName(f.applicants[0] && f.applicants[0].name), medFolderId: f.medFolderId || '', fileIds: medPendingKeys(f).map(k => f[k + 'FileId']) }));
+          const d = await driveCall({ action: 'medMigrate', items: items });
+          (d.results || []).forEach(r => {
+            const f = visaFiles.find(x => x.id === r.setKey); if (!f) return;
+            f.medFolderId = r.folderId; f.medFolderName = r.folderName;
+            LETTER_KEYS.forEach(k => { if (f[k + 'FileId'] && (r.moved || []).indexOf(f[k + 'FileId']) >= 0) f[k + 'Med'] = true; });
+            moved += (r.moved || []).length; missing += (r.missing || []).length;
+          });
+        }
+        showToast('✅ ' + moved + 'টি PDF Medical Files এ গেছে' + (missing ? ' (' + missing + 'টি Drive এ পাওয়া যায়নি)' : ''));
+      } catch (e) { console.error(e); alert('সব সরানো যায়নি।\n\nকারণ: ' + ((e && e.message) || e) + '\n\nSettings থেকে আবার চেষ্টা করুন (যেগুলো সরেছে সেগুলো আবার সরবে না)।'); }
+      finally { cloudBusy = Math.max(0, cloudBusy - 1); medMigrating = false; if (btn) { btn.disabled = false; btn.innerText = 'এখনই সরান'; } renderFiles(); syncToCloud(); updateMedMigrateBox(); }
+    }
+
+    // ================= 🔠 টাইপ করলেই অটো CAPITAL =================
+    // ইমেইল, পাসওয়ার্ড, URL ও সার্চ বাদে সব টেক্সট ঘর (নাম, পাসপোর্ট, Temp ID, BGD, হাসপাতাল, নোট ইত্যাদি) অটো বড় হাতের হবে
+    const NO_CAPS_IDS = ['authEmail', 'authPassword', 'accountGmail', 'accountPassword', 'settingDefaultPass', 'settingCloudUrl', 'searchInput'];
+    document.addEventListener('input', function (e) {
+      const el = e.target; if (!el || e.isComposing) return;
+      const isText = (el.tagName === 'INPUT' && (el.type === 'text' || el.type === 'search')) || el.tagName === 'TEXTAREA';
+      if (!isText || NO_CAPS_IDS.indexOf(el.id) >= 0) return;
+      const v = el.value, up = v.toUpperCase(); if (v === up) return;
+      let st = null, en = null; try { st = el.selectionStart; en = el.selectionEnd; } catch (x) { }
+      el.value = up; try { if (st !== null) el.setSelectionRange(st, en); } catch (x) { }
+    }, true);
 
     // ================= 📱 ফোনে সাইডবার ড্রয়ার =================
     function toggleSidebar() { document.getElementById('appSidebar').classList.toggle('open'); document.getElementById('sidebarBackdrop').classList.toggle('open'); }
