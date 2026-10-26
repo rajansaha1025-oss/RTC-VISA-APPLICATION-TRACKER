@@ -333,14 +333,26 @@
             </div>
           </div>
 
+          <div class="pl-2 mb-4">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+              <span class="text-[11px] font-extrabold text-slate-700 uppercase tracking-wide">💰 হিসাব কীভাবে হবে?</span>
+              <div class="inline-flex rounded-xl border border-slate-300 overflow-hidden shadow-sm text-[11px] font-extrabold">
+                <button type="button" id="acctModeBtnGROUP" onclick="setFormAcctMode('GROUP')" class="px-3.5 py-2 transition">👥 গ্রুপ হিসাব</button>
+                <button type="button" id="acctModeBtnPERSON" onclick="setFormAcctMode('PERSON')" class="px-3.5 py-2 transition border-l border-slate-300">👤 জনপ্রতি হিসাব</button>
+              </div>
+            </div>
+            <p id="acctModeHint" class="text-[10px] font-bold text-slate-500 leading-relaxed mb-2"></p>
+            <div id="groupLedgerBox"></div>
+          </div>
+
           <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pl-2">
             <div>
               <label class="block text-[11px] font-bold text-slate-500 mb-1">মোট বিল (সবার যোগফল)</label>
-              <input type="number" id="billTotal" readonly title="প্রতিজনের বিলের যোগফল। নিচে আবেদনকারীর কার্ডে লিখুন" placeholder="0" class="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs font-extrabold bg-blue-50 text-blue-700">
+              <input type="number" id="billTotal" readonly title="এখানে লেখা যায় না — ওপরের হিসাব বক্স থেকে অটো আসে" placeholder="0" class="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs font-extrabold bg-blue-50 text-blue-700">
             </div>
             <div>
               <label class="block text-[11px] font-bold text-slate-500 mb-1">মোট জমা (সবার যোগফল)</label>
-              <input type="number" id="billAdvance" readonly title="প্রতিজনের জমার যোগফল। নিচে আবেদনকারীর কার্ডে লিখুন" placeholder="0" class="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs font-bold bg-slate-50">
+              <input type="number" id="billAdvance" readonly title="এখানে লেখা যায় না — ওপরের হিসাব বক্স থেকে অটো আসে" placeholder="0" class="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs font-bold bg-slate-50">
             </div>
             <div>
               <label class="block text-[11px] font-bold text-slate-500 mb-1">বাকি (Due)</label>
@@ -352,7 +364,7 @@
             </div>
           </div>
 
-          <p class="mt-2 pl-2 text-[10px] font-bold text-emerald-700 leading-relaxed">💡 বিল ও জমা এখন জনপ্রতি: নিচে "আবেদনকারী তালিকা"-র প্রতিটি কার্ডে লিখুন (জমার তারিখ-সময় অটো বসে)। এখানে শুধু সবার মোট দেখাচ্ছে।</p>
+          <p id="acctTotalsHint" class="mt-2 pl-2 text-[10px] font-bold text-emerald-700 leading-relaxed"></p>
           <p id="ledTotalsLine" class="mt-1 pl-2 text-[11px] font-bold text-slate-600"></p>
           <div id="refundCalcBox" class="mt-4 p-4 rounded-xl bg-rose-50 border border-rose-200 hidden ml-2">
             <p class="text-[11px] font-extrabold text-rose-800 uppercase mb-2"><i class="fa-solid fa-rotate-left mr-1"></i> পেমেন্ট রিফান্ড হিসাব</p>
@@ -393,7 +405,7 @@
 
   <div id="deliveryDateModal" class="fixed inset-0 modal-bg hidden z-50 flex items-center justify-center p-3"><div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-sm overflow-hidden border border-slate-200"><div class="bg-emerald-600 text-white px-6 py-4 flex justify-between items-center"><h3 class="font-extrabold text-sm flex items-center gap-2"><i class="fa-solid fa-box-archive"></i> ডেলিভারি তারিখ</h3><button onclick="closeDeliveryDateModal()" class="text-white text-xl">&times;</button></div><div class="p-6 space-y-3 text-xs"><input type="hidden" id="deliveryTargetId"><input type="hidden" id="deliveryFresh"><div id="deliveryWho" class="bg-slate-50 p-3 rounded-xl border font-bold text-slate-700"></div><div><label class="block font-bold text-slate-500 mb-1">📦 কবে ডেলিভারি হয়েছে?</label><input type="date" id="deliveryDateInput" class="w-full px-3 py-2.5 rounded-xl border-2 border-emerald-400 font-extrabold bg-emerald-50 focus:outline-none"></div><p class="text-[10px] font-bold text-slate-400 leading-relaxed">আজকের তারিখ অটো বসানো আছে। আগের দিনে ডেলিভারি হয়ে থাকলে তারিখ বদলে নিন।</p></div><div class="bg-slate-50 px-6 py-3.5 flex justify-end gap-2 border-t border-slate-200"><button onclick="closeDeliveryDateModal()" class="px-4 py-2 rounded-xl border bg-white font-bold">বাতিল</button><button onclick="confirmDeliveryDate()" class="bg-emerald-600 text-white px-5 py-2 rounded-xl font-extrabold shadow"><i class="fa-solid fa-check mr-1"></i> কনফার্ম</button></div></div></div>
 
-  <div id="moveApplicantModal" class="fixed inset-0 modal-bg hidden z-50 flex items-center justify-center p-3"><div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-md overflow-hidden border border-slate-200"><div class="bg-[#0077b6] text-white px-6 py-4 flex justify-between items-center"><h3 class="font-extrabold text-sm flex items-center gap-2"><i class="fa-solid fa-arrow-right-arrow-left"></i> ট্রান্সফার</h3><button onclick="closeMoveModal()" class="text-white text-xl">&times;</button></div><div class="p-6 space-y-4 text-xs"><input type="hidden" id="moveSourceFileId"><input type="hidden" id="moveAppIdx"><div class="bg-slate-50 p-4 rounded-xl border border-slate-200"><p class="font-bold text-slate-500 mb-1">যাকে সরাতে চান:</p><p class="text-base font-extrabold text-slate-900" id="moveApplicantName"></p></div><div><label class="block font-bold text-slate-500 mb-2">কোথায় পাঠাতে চান?</label><select id="moveTargetSet" class="w-full px-3 py-2.5 rounded-xl border-2 border-[#00b4d8] font-bold bg-white focus:outline-none"></select></div><div id="moveMoneyBox" style="display:none" class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 space-y-2"><p class="font-extrabold text-emerald-800">💰 এই জনের হিসাব (অটো সাথে যাবে)</p><div class="grid grid-cols-2 gap-2"><div><label class="block font-bold text-slate-500 mb-1">বিল সাথে নেবে (৳)</label><input type="number" min="0" id="moveBillAmt" readonly placeholder="0" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold"></div><div><label class="block font-bold text-slate-500 mb-1">জমা সাথে নেবে (৳)</label><input type="number" min="0" id="movePaidAmt" readonly placeholder="0" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold"></div></div><p id="moveMoneyHint" class="text-[10px] font-bold text-slate-500 leading-relaxed"></p></div></div><div class="bg-slate-50 px-6 py-3.5 flex justify-end gap-2 border-t border-slate-200"><button onclick="closeMoveModal()" class="px-4 py-2 rounded-xl border bg-white font-bold">বাতিল</button><button onclick="confirmMoveApplicant()" class="btn-primary-rtc text-white px-5 py-2 rounded-xl font-extrabold shadow"><i class="fa-solid fa-check mr-1"></i> কনফার্ম</button></div></div></div>
+  <div id="moveApplicantModal" class="fixed inset-0 modal-bg hidden z-50 flex items-center justify-center p-3"><div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-md overflow-hidden border border-slate-200"><div class="bg-[#0077b6] text-white px-6 py-4 flex justify-between items-center"><h3 class="font-extrabold text-sm flex items-center gap-2"><i class="fa-solid fa-arrow-right-arrow-left"></i> ট্রান্সফার</h3><button onclick="closeMoveModal()" class="text-white text-xl">&times;</button></div><div class="p-6 space-y-4 text-xs"><input type="hidden" id="moveSourceFileId"><input type="hidden" id="moveAppIdx"><div class="bg-slate-50 p-4 rounded-xl border border-slate-200"><p class="font-bold text-slate-500 mb-1">যাকে সরাতে চান:</p><p class="text-base font-extrabold text-slate-900" id="moveApplicantName"></p></div><div><label class="block font-bold text-slate-500 mb-2">কোথায় পাঠাতে চান?</label><select id="moveTargetSet" class="w-full px-3 py-2.5 rounded-xl border-2 border-[#00b4d8] font-bold bg-white focus:outline-none"></select></div><div id="moveMoneyBox" style="display:none" class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 space-y-2"><p class="font-extrabold text-emerald-800">💰 টাকার হিসাব (সাথে যাবে)</p><div class="grid grid-cols-2 gap-2"><div><label class="block font-bold text-slate-500 mb-1">বিল সাথে নেবে (৳)</label><input type="number" min="0" id="moveBillAmt" placeholder="0" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold"></div><div><label class="block font-bold text-slate-500 mb-1">জমা সাথে নেবে (৳)</label><input type="number" min="0" id="movePaidAmt" placeholder="0" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold"></div></div><p id="moveMoneyHint" class="text-[10px] font-bold text-slate-500 leading-relaxed"></p></div></div><div class="bg-slate-50 px-6 py-3.5 flex justify-end gap-2 border-t border-slate-200"><button onclick="closeMoveModal()" class="px-4 py-2 rounded-xl border bg-white font-bold">বাতিল</button><button onclick="confirmMoveApplicant()" class="btn-primary-rtc text-white px-5 py-2 rounded-xl font-extrabold shadow"><i class="fa-solid fa-check mr-1"></i> কনফার্ম</button></div></div></div>
 
   <div id="settingsModal" class="fixed inset-0 modal-bg hidden z-50 flex items-center justify-center p-3"><div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-lg overflow-hidden border border-slate-200"><div class="bg-[#0b132b] text-white px-6 py-4 flex justify-between items-center"><h3 class="font-extrabold text-sm flex items-center gap-2"><i class="fa-solid fa-sliders text-[#00b4d8]"></i> সেটিংস</h3><button onclick="closeSettingsModal()" class="text-white text-xl">&times;</button></div><div class="p-6 space-y-4 text-xs max-h-[68vh] overflow-y-auto">
     
@@ -546,11 +558,16 @@
       const select = document.getElementById('moveTargetSet');
       select.innerHTML = '<option value="NEW">✨ আলাদা নতুন ফাইল তৈরি করুন</option>';
       visaFiles.forEach(t => { if (t.id !== fileId && !t.isDeleted && !t.isDelivered && !t.isReturned) select.innerHTML += `<option value="${t.id}">📂 যুক্ত করুন: ${escHtml(t.applicants[0]?.name)} (${escHtml(t.accountPhone)}) - ${t.applicants.length} জন</option>`; });
-      const single = f.applicants.length === 1;
-      const cl = JSON.parse(JSON.stringify(f)); ensureLedger(cl); const cp = cl.applicants[appIdx] || {}; const cb = nz(cp.bill), cpd = ledPaid(cp);
-      document.getElementById('moveBillAmt').value = cb || ''; document.getElementById('movePaidAmt').value = cpd || '';
+      const single = f.applicants.length === 1; const gm = !isPerPerson(f);
+      let cb = 0, cpd = 0, ro = true, hint = '';
+      if (!gm) { const cp = f.applicants[appIdx] || {}; cb = nz(cp.bill); cpd = ledPaid(cp); hint = '✅ জনপ্রতি হিসাব: এই জনের নিজের বিল ও জমা (তারিখসহ) অটো সাথে যাবে, আর এই ফাইলের মোট অটো কমে যাবে।'; }
+      else if (single) { const gl = groupLedgerOf(f); cb = gl.bill; cpd = sumPays(gl.pays); hint = '✅ ফাইলে শুধু ১ জন, তাই পুরো বিল ও জমা (তারিখসহ) সাথে যাবে।'; }
+      else { ro = false; hint = '👥 গ্রুপ হিসাব: এই জনের আলাদা হিসাব নেই। নতুন জায়গায় যত টাকা বিল ও জমা সরাতে চান লিখুন (ফাঁকা = ০, টাকা সরবে না)। এই ফাইলের মোট সেই হিসাবে কমবে, জমা শেষের এন্ট্রি থেকে কাটবে।'; }
+      const bi = document.getElementById('moveBillAmt'), pi = document.getElementById('movePaidAmt');
+      bi.value = cb || ''; pi.value = cpd || ''; bi.readOnly = ro; pi.readOnly = ro;
+      bi.className = pi.className = 'w-full px-3 py-2 rounded-xl border font-bold ' + (ro ? 'border-slate-300 bg-slate-50' : 'border-emerald-400 bg-white');
       document.getElementById('moveMoneyBox').style.display = isAdmin ? '' : 'none';
-      document.getElementById('moveMoneyHint').innerText = '✅ এই জনের নিজের বিল ও জমা (তারিখসহ) অটো সাথে যাবে, আর এই ফাইলের মোট অটো কমে যাবে।' + ((f.pp || single) ? '' : ' পুরনো ফাইল তাই মোট বিল/জমা সমান ভাগ ধরা হয়েছে, ট্রান্সফারের পর দুই ফাইল এডিট করে মিলিয়ে নিন।');
+      document.getElementById('moveMoneyHint').innerText = hint;
       document.getElementById('moveApplicantModal').classList.remove('hidden');
     }
     function closeMoveModal() { document.getElementById('moveApplicantModal').classList.add('hidden'); }
@@ -559,25 +576,44 @@
       const sFile = visaFiles.find(x => x.id === sId); if (!sFile) return;
       if (tId !== 'NEW') { const tChk = visaFiles.find(x => x.id === tId); if (!tChk) return; if (tChk.applicants.length >= 4) { alert('ফাইলে ৪ জন পূর্ণ!'); return; } }
       const sOldCount = sFile.applicants.length; const fromMain = mainNameOf(sFile); const fromSerial = sFile.serial || '';
-      ensureLedger(sFile); if (tId !== 'NEW') ensureLedger(visaFiles.find(x => x.id === tId));
-      const mPerson = sFile.applicants[aIdx]; const mBill = nz(mPerson.bill), mPaid = ledPaid(mPerson);   // 💰 এই জনের নিজের বিল ও জমা (তারিখসহ) সাথে যায়
+      // 💰 আগের অবস্থা (ট্রান্সফার ইতিহাসের জন্য) — কিছু বদলানোর আগেই নেওয়া
+      const tChk2 = tId !== 'NEW' ? visaFiles.find(x => x.id === tId) : null;
+      const sB0 = { b: parseFloat(sFile.billTotal) || 0, p: parseFloat(sFile.billAdvance) || 0 }, dB0 = tChk2 ? { b: parseFloat(tChk2.billTotal) || 0, p: parseFloat(tChk2.billAdvance) || 0 } : { b: 0, p: 0 };
+      // 💰 কত বিল/জমা সাথে যাবে: জনপ্রতি হলে ওই জনের নিজেরটা; গ্রুপ হলে ১ জনের ফাইলে সবটা, নইলে ফর্মে যা লেখা হয়েছে (ফাইলের মোটের বেশি হলে আটকায়)
+      const sMode = acctModeOf(sFile); const sSingle = sFile.applicants.length === 1; const mPerson = sFile.applicants[aIdx];
+      let mBill = 0, mPays = [];
+      if (sMode === 'PERSON') { mBill = nz(mPerson.bill); mPays = (mPerson.pays || []).filter(p => nz(p.amt) > 0).map(p => ({ amt: nz(p.amt), d: p.d || '', t: p.t || '', by: p.by || '' })); }
+      else {
+        ensureGroupPays(sFile); const totB = nz(sFile.billTotal), totP = sumPays(sFile.pays); let wantB = 0, wantP = 0;
+        if (sSingle) { wantB = totB; wantP = totP; }
+        else if (isAdmin) { wantB = r2(document.getElementById('moveBillAmt').value); wantP = r2(document.getElementById('movePaidAmt').value); }
+        if (wantB < 0 || wantP < 0) { alert('বিল/জমা ঋণাত্মক হতে পারে না।'); return; }
+        if (wantB > totB + 0.001 || wantP > totP + 0.001) { alert('সাথে নেওয়ার বিল/জমা ফাইলের মোটের বেশি হতে পারে না।\n\nএই ফাইলের মোট বিল ৳' + fmtTk(totB) + ', জমা ৳' + fmtTk(totP)); return; }
+        mBill = wantB; mPays = takePays(sFile.pays, wantP); sFile.billTotal = r2(totB - wantB);
+      }
+      const mPaid = sumPays(mPays);
       const appToMove = sFile.applicants.splice(aIdx, 1)[0];
       if (sFile.serial) { appToMove.prevSerials = (appToMove.prevSerials || []).filter(s => String(s) !== String(sFile.serial)).concat(String(sFile.serial)); }   // আগের ফাইলের নম্বর মনে রাখা (ফিজিক্যাল ফাইলের নম্বর দিয়ে খোঁজার জন্য)
       const now = new Date().toLocaleString('en-GB', BD_TIME_OPTS);
       let dest;
       if (tId === 'NEW') {
-        const newF = JSON.parse(JSON.stringify(sFile)); newF.id = 'SET_' + Date.now(); newF.driveFolderId = ''; newF.driveFolderName = ''; newF.driveStatus = ''; newF.applicants = [appToMove]; newF.appointmentDate = ''; newF.isAppointed = false; newF.invoiceFileId = ''; newF.invoiceFileName = ''; newF.invoiceName = ''; newF.invoiceBy = ''; newF.invoiceAt = ''; newF.invitationFileId = ''; newF.invitationFileName = ''; newF.invitationName = ''; newF.invitationBy = ''; newF.invitationAt = ''; newF.invitationReceived = false; newF.apptLetterFileId = ''; newF.apptLetterFileName = ''; newF.apptLetterName = ''; newF.apptLetterBy = ''; newF.apptLetterAt = ''; newF.apptLetterReceived = false; ['undertaking', 'consult'].forEach(function (k) { newF[k + 'FileId'] = ''; newF[k + 'FileName'] = ''; newF[k + 'Name'] = ''; newF[k + 'By'] = ''; newF[k + 'At'] = ''; newF[k + 'Received'] = false; }); newF.medFolderId = ''; newF.medFolderName = ''; LETTER_KEYS.forEach(function (k) { newF[k + 'Med'] = false; }); newF.feeStatus = 'UNPAID'; newF.billTotal = 0; newF.billAdvance = 0; newF.billDue = 0; newF.baseVisaFee = VISA_FEE_PER_PERSON; newF.softwareCharge = 0; newF.updatedAt = now; newF.updatedBy = whoAmI(); newF.serial = ''; visaFiles.unshift(newF); dest = newF;
+        const newF = JSON.parse(JSON.stringify(sFile)); newF.id = 'SET_' + Date.now(); newF.driveFolderId = ''; newF.driveFolderName = ''; newF.driveStatus = ''; newF.applicants = [appToMove]; newF.appointmentDate = ''; newF.isAppointed = false; newF.invoiceFileId = ''; newF.invoiceFileName = ''; newF.invoiceName = ''; newF.invoiceBy = ''; newF.invoiceAt = ''; newF.invitationFileId = ''; newF.invitationFileName = ''; newF.invitationName = ''; newF.invitationBy = ''; newF.invitationAt = ''; newF.invitationReceived = false; newF.apptLetterFileId = ''; newF.apptLetterFileName = ''; newF.apptLetterName = ''; newF.apptLetterBy = ''; newF.apptLetterAt = ''; newF.apptLetterReceived = false; ['undertaking', 'consult'].forEach(function (k) { newF[k + 'FileId'] = ''; newF[k + 'FileName'] = ''; newF[k + 'Name'] = ''; newF[k + 'By'] = ''; newF[k + 'At'] = ''; newF[k + 'Received'] = false; }); newF.medFolderId = ''; newF.medFolderName = ''; LETTER_KEYS.forEach(function (k) { newF[k + 'Med'] = false; }); newF.feeStatus = 'UNPAID'; newF.billTotal = 0; newF.billAdvance = 0; newF.billDue = 0; newF.pays = []; newF.acctMode = sMode; newF.baseVisaFee = VISA_FEE_PER_PERSON; newF.softwareCharge = 0; newF.updatedAt = now; newF.updatedBy = whoAmI(); newF.serial = ''; visaFiles.unshift(newF); dest = newF;
         nextSerial().then(n => { const t = visaFiles.find(x => x.id === newF.id); if (t) { t.serial = n; renderFiles(); syncToCloud(); showSerialModal(n, appToMove.name || ''); } }).catch(() => showToast('⚠️ নতুন ফাইলের সিরিয়াল নম্বর আনা যায়নি'));
       } else {
         const tFile = visaFiles.find(x => x.id === tId); const tOld = tFile.applicants.length;
+        if (!isPerPerson(tFile)) ensureGroupPays(tFile);
         tFile.applicants.push(appToMove); tFile.updatedAt = now; tFile.updatedBy = whoAmI();
         if (tFile.baseVisaFee === VISA_FEE_PER_PERSON * tOld) tFile.baseVisaFee = VISA_FEE_PER_PERSON * tFile.applicants.length; dest = tFile;
       }
       if (dest && dest.serial) appToMove.prevSerials = (appToMove.prevSerials || []).filter(s => String(s) !== String(dest.serial));
       const sRemoved = sFile.applicants.length === 0;
-      // 💰 বিল/জমা সরানো + দুই ফাইলেই ট্রান্সফারের হিসাব-ইতিহাস রাখা (হিসাব ট্যাবে দেখায়)
-      const sB0 = { b: parseFloat(sFile.billTotal) || 0, p: parseFloat(sFile.billAdvance) || 0 }, dB0 = { b: parseFloat(dest.billTotal) || 0, p: parseFloat(dest.billAdvance) || 0 };
-      recalcFileTotals(sFile); recalcFileTotals(dest);   // দুই ফাইলের মোট = নিজ নিজ জনদের যোগফল
+      // 💰 টাকা নতুন জায়গায় বসানো
+      if (!isPerPerson(dest)) {   // গ্রুপ গন্তব্য: বিল যোগ, জমার এন্ট্রি (তারিখসহ) যোগ
+        dest.billTotal = r2(nz(dest.billTotal) + mBill); dest.pays = sortPays((dest.pays || []).concat(mPays));
+      } else if (sMode === 'GROUP') {   // গ্রুপ থেকে জনপ্রতি ফাইলে: এই জনের নিজের বিল/জমা হিসেবে বসে
+        appToMove.bill = mBill; appToMove.billM = 1; appToMove.pays = mPays.map(p => Object.assign({}, p, { m: 1, dm: 1 }));
+      }   // জনপ্রতি -> জনপ্রতি: ব্যক্তির নিজের হিসাব ব্যক্তির সাথেই আছে
+      recalcFileTotals(sFile); recalcFileTotals(dest);   // দুই ফাইলের মোট ঠিক
       const trEntry = { at: now, by: whoAmI(), name: appToMove.name || '', fromId: sId, fromSerial: fromSerial, fromMain: fromMain, toId: dest.id, toSerial: dest.serial || '', toMain: mainNameOf(dest), bill: mBill, paid: mPaid, ts: Date.now(),
         sBefore: sB0, sAfter: { b: parseFloat(sFile.billTotal) || 0, p: parseFloat(sFile.billAdvance) || 0 }, dBefore: dB0, dAfter: { b: parseFloat(dest.billTotal) || 0, p: parseFloat(dest.billAdvance) || 0 }, sGone: sRemoved };
       try { pushLog({ type: 'transfer', setId: dest.id, name: appToMove.name || '', detail: (fromSerial ? '#' + fromSerial + ' ' : '') + fromMain + ' ফাইল থেকে ' + mainNameOf(dest) + ' ফাইলে' + ((mBill || mPaid) ? ' · বিল ' + mBill + ', জমা ' + mPaid + ' সাথে গেছে' : ' · টাকা সরানো হয়নি') }); } catch (e) { }
@@ -604,7 +640,7 @@
       const f = visaFiles.find(x => x.id === fileId);
       if (f.isReturned) { if (confirm('রানিং ফাইলে আনবেন?')) { f.isReturned = false; renderFiles(); syncToCloud(); showToast('রানিং বোর্ডে ফিরেছে!'); } return; }
       document.getElementById('returnTargetFileId').value = f.id; document.getElementById('returnCustomerSummary').innerText = `মেইন: ${f.applicants[0]?.name} | ফোন: ${f.accountPhone || 'N/A'}`;
-      document.getElementById('qRetAdvance').value = f.billAdvance || 0; document.getElementById('qRetAdvance').readOnly = !!f.pp; document.getElementById('qRetKept').value = f.keptCharge || 0; calcQuickReturn(); document.getElementById('quickReturnModal').classList.remove('hidden');
+      document.getElementById('qRetAdvance').value = f.billAdvance || 0; document.getElementById('qRetAdvance').readOnly = true; document.getElementById('qRetKept').value = f.keptCharge || 0; calcQuickReturn(); document.getElementById('quickReturnModal').classList.remove('hidden');
     }
     function closeQuickReturnModal() { document.getElementById('quickReturnModal').classList.add('hidden'); }
     function calcQuickReturn() { document.getElementById('qRetRefund').value = Math.max(0, (parseFloat(document.getElementById('qRetAdvance').value)||0) - (parseFloat(document.getElementById('qRetKept').value)||0)); }
@@ -659,7 +695,7 @@
     function calcDue() { 
       let total = parseFloat(document.getElementById('billTotal').value) || 0;
       let adv = parseFloat(document.getElementById('billAdvance').value) || 0;
-      document.getElementById('billDue').value = Math.max(0, total - adv);
+      document.getElementById('billDue').value = formTotals().due;
 
       let base = parseFloat(document.getElementById('baseVisaFee').value) || 0;
       let soft = parseFloat(document.getElementById('softwareCharge').value) || 0;
@@ -1484,6 +1520,7 @@
 
           ${(() => { const ex = expiredPeople(f); if (!ex.length) return ''; const ok = f.applicants.length - ex.length; const all = ok === 0; return `<div class="px-5 py-2.5 ${all ? 'bg-red-100' : 'bg-red-50'} border-b border-red-100 text-[11px] font-extrabold text-red-700 flex flex-wrap items-center gap-x-2 gap-y-1"><i class="fa-solid fa-triangle-exclamation"></i><span>মেয়াদ শেষ / নতুন BGD লাগবে: <b>${ex.map(a => escHtml(a.name || 'Unnamed')).join(', ')}</b></span>${all ? '<span class="bg-red-600 text-white px-2 py-0.5 rounded">পুরো ফাইল Expired</span>' : `<span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded">বাকি ${ok} জন ঠিক আছে ✅ (ফাইল Running এ আছে)</span>`}</div>`; })()}
           ${getDocChecklistBadges(f) ? `<div class="px-5 py-3 bg-slate-50 border-b border-slate-100 flex flex-wrap items-center gap-2"><span class="text-[10px] font-extrabold text-slate-400 uppercase mr-1">চেকলিস্ট:</span>${getDocChecklistBadges(f)}</div>` : ''}
+          ${groupCardLedgerHtml(f)}
 
           <div class="p-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-${Math.min(f.applicants.length, 4)} gap-4">
             ${f.applicants.map((a, idx) => {
@@ -1685,7 +1722,10 @@
         document.getElementById('billAdvance').value = f.billAdvance || ''; document.getElementById('billDue').value = f.billDue || '';
         document.getElementById('keptCharge').value = f.keptCharge || ''; document.getElementById('refundAmount').value = f.refundAmount || '';
         document.getElementById('returnReason').value = f.returnReason || ''; document.getElementById('fileNote').value = f.note || '';
-        tempApplicants = JSON.parse(JSON.stringify(f.applicants)); if (!f.pp) legacyLedger(tempApplicants, f.billTotal, f.billAdvance);
+        tempApplicants = JSON.parse(JSON.stringify(f.applicants));
+        tempAcctMode = acctModeOf(f);   // পুরনো ফাইল (acctMode নেই) = GROUP, জোর করে জনপ্রতি ভাগ হয় না
+        if (tempAcctMode === 'GROUP') { const g = groupLedgerOf(f); tempGroup = { bill: g.bill || '', pays: g.pays.map(p => ({ amt: p.amt, d: p.d, t: p.t, by: p.by })) }; }
+        else tempGroup = { bill: '', pays: [] };
         loadModalLetters(f); document.getElementById('hospitalName').value = f.hospitalName || '';
       } else {
         document.getElementById('editFileId').value = ''; document.getElementById('visaType').value = ''; document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-folder-plus text-[#00b4d8]"></i> ভিসা ফাইল প্রসেসিং <span class="text-xs font-bold text-white/60">(সেভ করলে ফাইল নম্বর পাবেন)</span>';
@@ -1707,9 +1747,10 @@
         document.getElementById('billAdvance').value = ''; document.getElementById('billDue').value = '';
         document.getElementById('keptCharge').value = ''; document.getElementById('refundAmount').value = ''; document.getElementById('returnReason').value = ''; document.getElementById('fileNote').value = '';
         tempApplicants = [{ name: '', passport: '', dob: '', nid: '', tempId: '', bgdNo: '', isSubmitted: false, subDate: '', prevBgd: '', pdfName: '' }];
+        tempAcctMode = 'GROUP'; tempGroup = { bill: '', pays: [] };   // নতুন ফাইলে গ্রুপ/জনপ্রতি বেছে নেওয়া যাবে (ফর্মের ৩ নম্বর অংশে)
         modalLet = { mode: 'COMBINED', invitation: {}, apptLetter: {}, undertaking: {}, consult: {} }; modalMedFolderId = ''; modalMedFolderName = ''; modalMedFolderNew = false; document.getElementById('hospitalName').value = '';
       }
-      toggleRefundBox(); onApptToggle(false); onDeliveredToggle(false); renderApplicantForms(); toggleMedicalBox();
+      toggleRefundBox(); onApptToggle(false); onDeliveredToggle(false); renderApplicantForms(); renderAcctModeUI(); toggleMedicalBox();
       setTimeout(calcDue, 50); // Instantly update profit visual
     }
 
@@ -1736,8 +1777,8 @@
       });
     }
 
-    function addApplicantForm() { syncTempInputs(); if (tempApplicants.length >= 4) { alert('সর্বোচ্চ ৪ জন যোগ করা যাবে!'); return; } const na = { name: '', passport: '', dob: '', nid: '', tempId: '', bgdNo: '', isSubmitted: false, subDate: '', prevBgd: '', pdfName: '' }; tempApplicants.push(na); ledInit(na); if (nz(tempApplicants[0].bill)) na.bill = tempApplicants[0].bill; const mp = tempApplicants[0].pays && tempApplicants[0].pays[0]; if (mp && nz(mp.amt) > 0) { na.pays[0].amt = mp.amt; na.pays[0].d = mp.d; na.pays[0].t = mp.t; } renderApplicantForms(); }
-    function removeApplicantForm(idx) { syncTempInputs(); const ra = tempApplicants[idx]; if (ra && (nz(ra.bill) || ledPaid(ra)) && !confirm('এই জনের বিল ৳' + fmtTk(nz(ra.bill)) + ' ও জমা ৳' + fmtTk(ledPaid(ra)) + ' ও মুছে যাবে। নিশ্চিত?')) return; tempApplicants.splice(idx, 1); renderApplicantForms(); }
+    function addApplicantForm() { syncTempInputs(); if (tempApplicants.length >= 4) { alert('সর্বোচ্চ ৪ জন যোগ করা যাবে!'); return; } const na = { name: '', passport: '', dob: '', nid: '', tempId: '', bgdNo: '', isSubmitted: false, subDate: '', prevBgd: '', pdfName: '' }; tempApplicants.push(na); if (tempAcctMode === 'PERSON') { ledInit(na); if (nz(tempApplicants[0].bill)) na.bill = tempApplicants[0].bill; const mp = tempApplicants[0].pays && tempApplicants[0].pays[0]; if (mp && nz(mp.amt) > 0) { na.pays[0].amt = mp.amt; na.pays[0].d = mp.d; na.pays[0].t = mp.t; na.pays[0].by = mp.by || ''; } } renderApplicantForms(); }
+    function removeApplicantForm(idx) { syncTempInputs(); const ra = tempApplicants[idx]; if (tempAcctMode === 'PERSON' && ra && (nz(ra.bill) || ledPaid(ra)) && !confirm('এই জনের বিল ৳' + fmtTk(nz(ra.bill)) + ' ও জমা ৳' + fmtTk(ledPaid(ra)) + ' ও মুছে যাবে। নিশ্চিত?')) return; tempApplicants.splice(idx, 1); renderApplicantForms(); }
 
     async function handlePdfUpload(idx, event) {
       if (cloudBusy > 0) { alert('⏳ একটি PDF আপলোড হচ্ছে, অনুগ্রহ করে শেষ হওয়া পর্যন্ত অপেক্ষা করুন!'); event.target.value = ''; return; }
@@ -1768,9 +1809,12 @@
       finally { cloudBusy = Math.max(0, cloudBusy - 1); event.target.value = ''; }
     }
 
-    // ================= 💰 জনপ্রতি হিসাব (প্রত্যেকের নিজের বিল ও জমা) + 📅 অ্যাপয়েন্টমেন্ট/ডেলিভারি তারিখ =================
-    // প্রতিটি আবেদনকারীর ভেতরে: a.bill (বিল), a.pays = [{amt, d: তারিখ, t: সময়, by}], a.billM / p.m / p.dm = হাতে বদলানো হয়েছে কিনা (তাহলে মেইনের সাথে আর অটো মেলে না)
-    // ফাইলের মোট (billTotal / billAdvance / billDue) সবসময় সবার যোগফল থেকে আসে, তাই হিসাব ট্যাব আগের মতোই কাজ করে। f.pp = true মানে এই ফাইলে জনপ্রতি হিসাব চালু।
+    // ================= 💰 হিসাব: গ্রুপ / জনপ্রতি + 📅 অ্যাপয়েন্টমেন্ট/ডেলিভারি তারিখ =================
+    // প্রতিটি ফাইলের হিসাবের ধরন f.acctMode = 'GROUP' | 'PERSON':
+    //   GROUP  = পুরো ফাইলের একটাই বিল (f.billTotal) ও জমার এন্ট্রি f.pays = [{amt, d: তারিখ, t: সময়, by}]। জনপ্রতি হিসাব হয় না।
+    //   PERSON = প্রত্যেক আবেদনকারীর নিজের a.bill ও a.pays। a.billM / p.m / p.dm = হাতে বদলানো হয়েছে কিনা (তাহলে মেইনের সাথে আর অটো মেলে না)।
+    // পুরনো ফাইলে acctMode নেই = সবসময় GROUP (জোর করে জনপ্রতি ভাগ করা হয় না)। জনপ্রতি চাইলে ফাইল এডিটে "জনপ্রতি হিসাব" বাটন চাপতে হবে।
+    // ফাইলের মোট (billTotal / billAdvance / billDue) দুই ধরনেই সবসময় এখান থেকে হিসাব হয়ে ফাইলে বসে, তাই হিসাব ট্যাব একই ডাটা থেকে চলে।
     const MON_EN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     function fmtDate(ds) { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(ds || '')); return m ? (parseInt(m[3], 10) + ' ' + MON_EN[parseInt(m[2], 10) - 1] + ' ' + m[1]) : String(ds || ''); }
     function fmtTime12(t) { const m = /^(\d{1,2}):(\d{2})/.exec(String(t || '')); if (!m) return ''; let h = parseInt(m[1], 10); const ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12; return h + ':' + m[2] + ' ' + ap; }
@@ -1781,28 +1825,81 @@
     function ledPaid(a) { return (a && Array.isArray(a.pays) ? a.pays : []).reduce((t, p) => t + nz(p && p.amt), 0); }
     function ledInit(a) { if (!Array.isArray(a.pays)) a.pays = []; if (!a.pays.length) a.pays.push(newPay()); if (a.bill === undefined || a.bill === null) a.bill = ''; }
 
-    // পুরনো ফাইল (জনপ্রতি হিসাব ছিল না): ফাইলের মোট বিল ও জমা সমান ভাগ করে প্রত্যেককে দেওয়া হয় (ভাগশেষ মেইন পায়), মোট একই থাকে। জমার তারিখ জানা নেই, তাই ফাঁকা
+    // ভাগ করার হেল্পার (গ্রুপ থেকে জনপ্রতি করার সময় সমান ভাগ; ভাগশেষ মেইন পায়, মোট একই থাকে)
     function splitAmt(total, n, i) { total = nz(total); const base = Math.floor(total / n); return i === 0 ? Math.round((total - base * (n - 1)) * 100) / 100 : base; }
-    function legacyLedger(apps, billTotal, billAdvance) {
-      const n = Math.max(1, apps.length);
-      apps.forEach((a, i) => { a.bill = splitAmt(billTotal, n, i); const pd = splitAmt(billAdvance, n, i); a.pays = pd > 0 ? [{ amt: pd, d: '', t: '', m: i > 0 ? 1 : 0, dm: 1 }] : []; a.billM = i > 0 ? 1 : 0; });
+    function r2(n) { return Math.round(nz(n) * 100) / 100; }
+    function sumPays(pays) { return (pays || []).reduce((t, p) => t + nz(p && p.amt), 0); }
+    function payCmp(a, b) { const x = (a.d || '') + ' ' + (a.t || ''), y = (b.d || '') + ' ' + (b.t || ''); return x < y ? -1 : (x > y ? 1 : 0); }   // তারিখ ছাড়া (আগের জমা) সবার আগে
+    function sortPays(list) { return list.slice().sort(payCmp); }
+    // একই তারিখ-সময়-জনের এন্ট্রি জোড়া লাগিয়ে এক লাইন (সবার জমা এক লিস্টে আনতে)
+    function mergePays(list) {
+      const map = {}, order = [];
+      (list || []).forEach(p => {
+        const amt = nz(p && p.amt); if (amt <= 0) return;
+        const k = (p.d || '') + '|' + (p.t || '') + '|' + (p.by || '');
+        if (!map[k]) { map[k] = { amt: 0, d: p.d || '', t: p.t || '', by: p.by || '' }; order.push(k); }
+        map[k].amt = r2(map[k].amt + amt);
+      });
+      return sortPays(order.map(k => map[k]));
     }
-    function ensureLedger(f) { if (!f || f.pp) return; legacyLedger(f.applicants || [], f.billTotal, f.billAdvance); f.pp = true; }
-    function recalcFileTotals(f) { if (!f || !f.pp) return; let b = 0, p = 0; (f.applicants || []).forEach(a => { b += nz(a.bill); p += ledPaid(a); }); f.billTotal = b; f.billAdvance = p; f.billDue = Math.max(0, b - p); }
+    // ---- হিসাবের ধরন ----
+    function acctModeOf(f) { return (f && f.acctMode === 'PERSON') ? 'PERSON' : 'GROUP'; }
+    function isPerPerson(f) { return acctModeOf(f) === 'PERSON'; }
+    // গ্রুপ ফাইলের হিসাব (বিল + জমার তালিকা)। পুরনো ফাইল: আগে জনপ্রতি ছিল -> সবার জমা এক লিস্টে; আগে শুধু মোট ছিল -> একটাই "আগের জমা" লাইন। কিছু বদলায় না, শুধু দেখানোর জন্য হিসাব করে দেয়
+    function groupLedgerOf(f) {
+      const bill = nz(f && f.billTotal);
+      if (f && Array.isArray(f.pays)) return { bill: bill, pays: f.pays.map(p => ({ amt: nz(p.amt), d: p.d || '', t: p.t || '', by: p.by || '' })) };
+      let pays = [];
+      if (f && f.pp) pays = mergePays([].concat.apply([], (f.applicants || []).map(a => a.pays || [])));
+      else if (f && nz(f.billAdvance) > 0) pays = [{ amt: nz(f.billAdvance), d: '', t: '', by: '' }];
+      return { bill: bill, pays: pays };
+    }
+    function ensureGroupPays(f) { if (f && !Array.isArray(f.pays)) f.pays = groupLedgerOf(f).pays; }
+    // জমার তালিকা থেকে amt পরিমাণ টাকা শেষ এন্ট্রি থেকে কেটে নেয় (তারিখসহ) - ট্রান্সফারে গ্রুপ থেকে টাকা সরাতে
+    function takePays(pays, amt) {
+      const out = []; let need = r2(amt);
+      for (let i = pays.length - 1; i >= 0 && need > 0.001; i--) {
+        const a = nz(pays[i].amt);
+        if (a <= need + 0.001) { out.unshift(pays.splice(i, 1)[0]); need = r2(need - a); }
+        else { const part = Object.assign({}, pays[i]); part.amt = need; pays[i].amt = r2(a - need); out.unshift(part); need = 0; }
+      }
+      return out;
+    }
+    function personDueSum(f) { return (f.applicants || []).reduce((t, a) => t + Math.max(0, nz(a.bill) - ledPaid(a)), 0); }   // জনপ্রতি: একজনের বেশি জমা অন্যজনের বাকি ঢাকে না
+    function personOverSum(f) { return (f.applicants || []).reduce((t, a) => t + Math.max(0, ledPaid(a) - nz(a.bill)), 0); }
+    // ফাইলের মোট বিল/জমা/বাকি ঠিক করে ফাইলে বসায় (সেভ ও ট্রান্সফারে)
+    function recalcFileTotals(f) {
+      if (!f) return;
+      f.acctMode = acctModeOf(f);
+      if (f.acctMode === 'PERSON') { let b = 0, p = 0; (f.applicants || []).forEach(a => { b += nz(a.bill); p += ledPaid(a); }); f.billTotal = r2(b); f.billAdvance = r2(p); f.billDue = r2(personDueSum(f)); f.pp = true; }
+      else { ensureGroupPays(f); const b = nz(f.billTotal), p = sumPays(f.pays); f.billTotal = r2(b); f.billAdvance = r2(p); f.billDue = r2(Math.max(0, b - p)); f.pp = false; }
+    }
+    let tempAcctMode = 'GROUP'; let tempGroup = { bill: '', pays: [] };   // খোলা ফর্মের হিসাব (সেভ না করা পর্যন্ত এখানেই থাকে)
+    function formTotals() {
+      if (tempAcctMode === 'GROUP') { const b = nz(tempGroup.bill), p = sumPays(tempGroup.pays); return { b: b, p: p, due: Math.max(0, b - p), over: Math.max(0, p - b) }; }
+      let b = 0, p = 0, due = 0, over = 0; tempApplicants.forEach(a => { const bl = nz(a.bill), pd = ledPaid(a); b += bl; p += pd; due += Math.max(0, bl - pd); over += Math.max(0, pd - bl); });
+      return { b: b, p: p, due: due, over: over };
+    }
 
     // ---- ফর্মের হিসাব বক্স ----
     function ledRefresh(userEdit) {
-      let b = 0, p = 0;
-      tempApplicants.forEach((a, i) => {
-        const pd = ledPaid(a), bl = nz(a.bill), d = bl - pd; b += bl; p += pd;
-        const ep = document.getElementById('led_paid_' + i), ed = document.getElementById('led_due_' + i);
-        if (ep) ep.innerText = fmtTk(pd);
-        if (ed) { ed.innerText = d < 0 ? ('+' + fmtTk(-d) + ' বেশি') : fmtTk(d); ed.className = 'mono-type font-extrabold ' + (d > 0 ? 'text-rose-600' : (d < 0 ? 'text-amber-600' : 'text-emerald-600')); }
-      });
+      const T = formTotals();
+      if (tempAcctMode === 'GROUP') {
+        const ep = document.getElementById('g_paid'), ed = document.getElementById('g_due');
+        if (ep) ep.innerText = fmtTk(T.p);
+        if (ed) { ed.innerText = T.over > 0 ? ('+' + fmtTk(T.over) + ' বেশি') : fmtTk(T.due); ed.className = 'mono-type font-extrabold ' + (T.due > 0 ? 'text-rose-600' : (T.over > 0 ? 'text-amber-600' : 'text-emerald-600')); }
+      } else {
+        tempApplicants.forEach((a, i) => {
+          const pd = ledPaid(a), bl = nz(a.bill), d = bl - pd;
+          const ep = document.getElementById('led_paid_' + i), ed = document.getElementById('led_due_' + i);
+          if (ep) ep.innerText = fmtTk(pd);
+          if (ed) { ed.innerText = d < 0 ? ('+' + fmtTk(-d) + ' বেশি') : fmtTk(d); ed.className = 'mono-type font-extrabold ' + (d > 0 ? 'text-rose-600' : (d < 0 ? 'text-amber-600' : 'text-emerald-600')); }
+        });
+      }
       const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
-      set('billTotal', b || ''); set('billAdvance', p || ''); set('billDue', Math.max(0, b - p) || '');
+      set('billTotal', T.b || ''); set('billAdvance', T.p || ''); set('billDue', T.due || '');
       const lt = document.getElementById('ledTotalsLine');
-      if (lt) lt.innerHTML = '👥 সবার মোট: বিল <b>' + fmtTk(b) + '</b> · জমা <b class="text-emerald-700">' + fmtTk(p) + '</b> · বাকি <b class="text-rose-600">' + fmtTk(Math.max(0, b - p)) + '</b>';
+      if (lt) lt.innerHTML = (tempAcctMode === 'GROUP' ? '👥 গ্রুপের মোট: ' : '👥 সবার মোট: ') + 'বিল <b>' + fmtTk(T.b) + '</b> · জমা <b class="text-emerald-700">' + fmtTk(T.p) + '</b> · বাকি <b class="text-rose-600">' + fmtTk(T.due) + '</b>' + (T.over > 0 ? ' · <b class="text-amber-600">বেশি জমা ' + fmtTk(T.over) + '</b>' : '');
       calcDue(); if (userEdit) calcRefund();
     }
     function ledMirrorBill() { const v = tempApplicants[0].bill; tempApplicants.forEach((x, j) => { if (j > 0 && !x.billM) { x.bill = v; const el = document.getElementById('led_bill_' + j); if (el) el.value = nz(v) ? v : ''; } }); }
@@ -1813,13 +1910,13 @@
       const mp = tempApplicants[0].pays[k]; if (!mp) return;
       tempApplicants.forEach((x, j) => {
         if (j === 0 || !x.pays || !x.pays[k]) return; const q = x.pays[k];
-        if (!q.m) { q.amt = mp.amt; const e = document.getElementById('led_pa_' + j + '_' + k); if (e) e.value = (q.amt === '' || q.amt == null) ? '' : q.amt; }
+        if (!q.m) { q.amt = mp.amt; q.by = mp.by || ''; const e = document.getElementById('led_pa_' + j + '_' + k); if (e) e.value = (q.amt === '' || q.amt == null) ? '' : q.amt; }
         if (!q.dm) { q.d = mp.d; q.t = mp.t; ledSetPayDom(j, k, q); }
       });
     }
     function ledPayAmt(i, k, v) {
       const p = tempApplicants[i].pays[k]; const was = nz(p.amt) > 0; p.amt = v;
-      if (!was && nz(v) > 0 && !p.dm) { p.d = getTodayStr(); p.t = nowTime(); ledSetPayDom(i, k, p); }   // টাকা লেখার মুহূর্তের তারিখ-সময় অটো বসে
+      if (!was && nz(v) > 0) { if (!p.dm) { p.d = getTodayStr(); p.t = nowTime(); ledSetPayDom(i, k, p); } p.by = whoAmI(); }   // টাকা লেখার মুহূর্তের তারিখ-সময় ও কে লিখল অটো বসে
       if (i === 0) ledMirrorPay(k); else p.m = 1;
       ledRefresh(true);
     }
@@ -1858,6 +1955,98 @@
       </div></div>`;
     }
 
+    // ---- 👥 গ্রুপ হিসাব বক্স (পুরো ফাইলের একটাই বিল ও জমা) ----
+    function gInit() { if (!tempGroup || !Array.isArray(tempGroup.pays)) tempGroup = { bill: '', pays: [] }; if (!tempGroup.pays.length) tempGroup.pays.push(newPay()); }
+    function gBill(v) { tempGroup.bill = v; ledRefresh(true); }
+    function gSetPayDom(k, p) { const e1 = document.getElementById('g_pd_' + k), e2 = document.getElementById('g_pt_' + k); if (e1) e1.value = p.d || ''; if (e2) e2.value = p.t || ''; }
+    function gPayAmt(k, v) {
+      const p = tempGroup.pays[k]; if (!p) return; const was = nz(p.amt) > 0; p.amt = v;
+      if (!was && nz(v) > 0) { if (!p.dm) { p.d = getTodayStr(); p.t = nowTime(); gSetPayDom(k, p); } p.by = whoAmI(); }   // টাকা লেখার মুহূর্তের তারিখ-সময় ও কে লিখল অটো বসে
+      ledRefresh(true);
+    }
+    function gPayDate(k, v) { const p = tempGroup.pays[k]; if (p) { p.d = v; p.dm = 1; } }
+    function gPayTime(k, v) { const p = tempGroup.pays[k]; if (p) { p.t = v; p.dm = 1; } }
+    function gAddPay() { tempGroup.pays.push(newPay()); renderGroupLedger(); }
+    function gDelPay(k) {
+      const p = tempGroup.pays[k]; if (!p) return;
+      if (nz(p.amt) > 0 && !confirm('এই জমার এন্ট্রি (৳' + fmtTk(p.amt) + ' · ' + fmtPayDT(p) + ') মুছবেন?')) return;
+      tempGroup.pays.splice(k, 1); renderGroupLedger(); ledRefresh(true);
+    }
+    function gPayRest() {   // বাকি যা আছে সব জমা পেয়েছি - এক চাপে এন্ট্রি
+      const T = formTotals(); if (T.due <= 0) { showToast('বাকি নেই'); return; }
+      const np = newPay(T.due); np.by = whoAmI(); const last = tempGroup.pays[tempGroup.pays.length - 1];
+      if (last && nz(last.amt) <= 0) tempGroup.pays[tempGroup.pays.length - 1] = np; else tempGroup.pays.push(np);
+      renderGroupLedger(); ledRefresh(true);
+    }
+    function renderGroupLedger() {
+      const box = document.getElementById('groupLedgerBox'); if (!box) return;
+      if (tempAcctMode !== 'GROUP') { box.innerHTML = ''; return; }
+      gInit();
+      const inp = 'px-2 py-1.5 rounded-lg border border-slate-300 text-xs font-bold bg-white focus:outline-none focus:border-emerald-400';
+      const rows = tempGroup.pays.map((p, k) => `<div class="grid grid-cols-12 gap-1.5 items-center">
+          <div class="col-span-5 md:col-span-3 relative"><span class="absolute left-2 top-1.5 text-[11px] font-extrabold text-emerald-600">৳</span><input type="number" min="0" id="g_pa_${k}" value="${(p.amt === '' || p.amt == null) ? '' : p.amt}" oninput="gPayAmt(${k},this.value)" placeholder="জমা" class="${inp} w-full pl-5 text-emerald-700 font-extrabold"></div>
+          <div class="col-span-7 md:col-span-4"><input type="date" id="g_pd_${k}" value="${p.d || ''}" onchange="gPayDate(${k},this.value)" class="${inp} w-full"></div>
+          <div class="col-span-8 md:col-span-3"><input type="time" id="g_pt_${k}" value="${p.t || ''}" onchange="gPayTime(${k},this.value)" class="${inp} w-full"></div>
+          <div class="col-span-4 md:col-span-2 flex items-center justify-end gap-1.5">${(!p.d && nz(p.amt) > 0) ? '<span class="text-[9px] font-extrabold text-amber-600">আগের</span>' : ''}<button type="button" onclick="gDelPay(${k})" title="এই জমা মুছুন" class="text-rose-500 hover:text-white hover:bg-rose-500 px-2 py-1 rounded text-[10px] font-bold transition"><i class="fa-solid fa-xmark"></i></button></div>
+        </div>`).join('');
+      box.innerHTML = `<div class="bg-emerald-50/50 border border-emerald-200 rounded-2xl p-4">
+        <div class="flex flex-wrap items-end justify-between gap-3 mb-3">
+          <div><span class="text-[11px] font-extrabold text-emerald-800 uppercase">👥 গ্রুপের হিসাব</span><div class="text-[9px] font-bold text-slate-400">পুরো ফাইলের একটাই বিল, একটাই জমা — জনপ্রতি আলাদা হিসাব হবে না</div></div>
+          <div class="flex items-end gap-3 text-[11px] font-bold">
+            <div><label class="block text-[10px] font-extrabold text-blue-700 mb-0.5">মোট বিল</label><input type="number" min="0" id="g_bill" value="${nz(tempGroup.bill) ? tempGroup.bill : ''}" oninput="gBill(this.value)" placeholder="0" class="w-28 px-2 py-1.5 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 text-xs font-extrabold focus:outline-none"></div>
+            <div class="text-right"><span class="block text-[10px] font-extrabold text-slate-500">জমা</span><span id="g_paid" class="mono-type font-extrabold text-emerald-700">0</span></div>
+            <div class="text-right"><span class="block text-[10px] font-extrabold text-slate-500">বাকি</span><span id="g_due" class="mono-type font-extrabold text-rose-600">0</span></div>
+          </div>
+        </div>
+        <div class="text-[10px] font-extrabold text-slate-500 mb-1">জমার এন্ট্রি (টাকা · তারিখ · সময়)</div>
+        <div class="space-y-1.5">${rows}</div>
+        <div class="flex flex-wrap gap-2 mt-2"><button type="button" onclick="gAddPay()" class="bg-white text-emerald-700 border border-emerald-300 hover:bg-emerald-50 px-3 py-1.5 rounded-lg text-[11px] font-extrabold transition"><i class="fa-solid fa-plus mr-1"></i>আরেকটা জমা যোগ</button><button type="button" onclick="gPayRest()" class="bg-emerald-600 text-white hover:bg-emerald-700 px-3 py-1.5 rounded-lg text-[11px] font-extrabold transition"><i class="fa-solid fa-check mr-1"></i>বাকি সব জমা পেলাম</button></div>
+      </div>`;
+      ledRefresh(false);
+    }
+    function renderAcctModeUI() {
+      const g = tempAcctMode === 'GROUP';
+      const on = 'bg-[#0b132b] text-white', off = 'bg-white text-slate-600 hover:bg-slate-50';
+      const bg = document.getElementById('acctModeBtnGROUP'), bp = document.getElementById('acctModeBtnPERSON');
+      if (bg) bg.className = 'px-3.5 py-2 transition ' + (g ? on : off);
+      if (bp) bp.className = 'px-3.5 py-2 transition border-l border-slate-300 ' + (g ? off : on);
+      const h = document.getElementById('acctModeHint');
+      if (h) h.innerText = g ? 'গ্রুপ: পুরো ফাইলের একটাই বিল, একটাই জমা, একটাই বাকি — নিচের বক্সে লিখুন। ১ জনের ফাইলে গ্রুপ আর জনপ্রতি একই।'
+                             : 'জনপ্রতি: ওপরে প্রত্যেক আবেদনকারীর কার্ডের নিচে "💰 হিসাব" বক্সে তার নিজের বিল ও জমা লিখুন। ফাইলের মোট নিচে অটো দেখাবে।';
+      const th = document.getElementById('acctTotalsHint');
+      if (th) th.innerText = g ? '💡 এখানে শুধু মোট দেখাচ্ছে (ওপরের গ্রুপ হিসাব বক্স থেকে অটো আসে)।' : '💡 এখানে শুধু সবার মোট দেখাচ্ছে (প্রতিজনের হিসাব বক্স থেকে অটো আসে)। কারো বেশি জমা অন্যের বাকি ঢাকে না।';
+      renderGroupLedger();
+    }
+    // GROUP -> PERSON: আগের জনপ্রতি ডাটা মোটের সাথে হুবহু মিললে সেটাই ফেরত আসে, নইলে গ্রুপের বিল ও প্রতিটি জমা (তারিখসহ) সমান ভাগ হয়
+    function toPerson() {
+      const grp = { bill: nz(tempGroup.bill), pays: (tempGroup.pays || []).filter(p => nz(p.amt) > 0) };
+      const has = grp.bill > 0 || grp.pays.length > 0; const n = tempApplicants.length;
+      if (!has) { tempApplicants.forEach(a => { a.bill = ''; a.pays = []; delete a.billM; }); tempApplicants.forEach(ledInit); return; }
+      const stored = tempApplicants.every(a => Array.isArray(a.pays) && a.bill !== undefined && a.bill !== null);
+      if (stored) { let sb = 0, sp = 0; tempApplicants.forEach(a => { sb += nz(a.bill); sp += ledPaid(a); }); if (Math.abs(sb - grp.bill) < 0.01 && Math.abs(sp - sumPays(grp.pays)) < 0.01) { tempApplicants.forEach(ledInit); return; } }
+      tempApplicants.forEach((a, i) => {
+        a.bill = splitAmt(grp.bill, n, i); a.billM = i > 0 ? 1 : 0;
+        a.pays = grp.pays.map(p => ({ amt: splitAmt(p.amt, n, i), d: p.d || '', t: p.t || '', by: p.by || '', m: i > 0 ? 1 : 0, dm: 1 }));
+      });
+      tempApplicants.forEach(ledInit);
+    }
+    // PERSON -> GROUP: সবার বিল যোগ, সবার জমা এক তালিকায় (একই তারিখ-সময়ের এন্ট্রি জোড়া লাগে)। প্রতিজনের আলাদা ডাটা মোছা হয় না
+    function toGroup() {
+      let b = 0, all = []; tempApplicants.forEach(a => { b += nz(a.bill); all = all.concat(a.pays || []); });
+      tempGroup = { bill: b || '', pays: mergePays(all) };
+    }
+    function setFormAcctMode(m) {
+      syncTempInputs(); if (m === tempAcctMode) return;
+      const T = formTotals(), multi = tempApplicants.length > 1;
+      if (multi && (T.b > 0 || T.p > 0)) {
+        const msg = m === 'PERSON' ? '👤 জনপ্রতি হিসাবে নিলে গ্রুপের মোট বিল ও প্রতিটি জমা সবার মধ্যে সমান ভাগ হয়ে যাবে (মোট একই থাকবে)। পরে প্রত্যেকের টা আলাদা বদলাতে পারবেন।\n\nনিশ্চিত?'
+                                     : '👥 গ্রুপ হিসাবে নিলে সবার বিল যোগ হয়ে একটা বিল হবে, আর সবার জমা এক তালিকায় আসবে (মোট একই থাকবে)।\n\nনিশ্চিত?';
+        if (!confirm(msg)) return;
+      }
+      if (m === 'PERSON') toPerson(); else toGroup();
+      tempAcctMode = m; renderApplicantForms(); renderAcctModeUI();
+    }
+
     // ---- অ্যাপয়েন্টমেন্ট / ডেলিভারি তারিখ (ফর্ম) ----
     function onApptToggle(user) { const c = document.getElementById('isAppointed').checked, d = document.getElementById('appointmentDate'); document.getElementById('apptDateBox').classList.toggle('hidden', !c); if (c) { if (user && !d.value) d.value = getTodayStr(); } else d.value = ''; }
     function onApptDateChange() { const c = document.getElementById('isAppointed'), d = document.getElementById('appointmentDate'); if (d.value && !c.checked) { c.checked = true; document.getElementById('apptDateBox').classList.remove('hidden'); } }
@@ -1870,21 +2059,33 @@
       if (f.isDelivered && !f.isReturned) h += '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-100 border border-emerald-400 text-emerald-900 text-[10px] font-extrabold"><i class="fa-solid fa-box-archive"></i> Delivered: ' + (f.deliveredDate ? escHtml(fmtDate(f.deliveredDate)) : 'তারিখ নেই') + '</span>';
       return h ? '<div class="flex flex-wrap gap-1 mt-1">' + h + '</div>' : '';
     }
-    // কার্ডে প্রতিজনের হিসাব (শুধু অ্যাডমিন, হিসাব ট্যাবের মতো)
+    // কার্ডে হিসাব (শুধু অ্যাডমিন): জনপ্রতি হলে প্রতিজনের কার্ডে, গ্রুপ হলে ফাইলের ওপরে একটা বার
     function cardLedgerHtml(f, a) {
-      if (!isAdmin || !f.pp) return '';
+      if (!isAdmin || !isPerPerson(f)) return '';
       const pd = ledPaid(a), bl = nz(a.bill), d = bl - pd; if (!bl && !pd) return '';
       const pays = (a.pays || []).map(p => '<div class="flex justify-between gap-2"><span class="text-emerald-700">+ ৳' + fmtTk(p.amt) + '</span><span class="text-slate-400 text-right">' + escHtml(fmtPayDT(p)) + '</span></div>').join('');
       return '<div class="mt-3 bg-emerald-50/60 border border-emerald-100 rounded-xl p-2 text-[10px] font-bold"><div class="flex justify-between gap-2 font-extrabold mb-1"><span>💰 বিল ৳' + fmtTk(bl) + '</span><span class="text-emerald-700">জমা ৳' + fmtTk(pd) + '</span><span class="' + (d > 0 ? 'text-rose-600' : 'text-emerald-600') + '">বাকি ৳' + fmtTk(Math.max(0, d)) + '</span></div>' + pays + '</div>';
     }
+    function groupCardLedgerHtml(f) {
+      if (!isAdmin || isPerPerson(f)) return '';
+      const g = groupLedgerOf(f), paid = sumPays(g.pays); if (!g.bill && !paid) return '';
+      const due = Math.max(0, g.bill - paid), over = Math.max(0, paid - g.bill);
+      const pays = g.pays.map(p => '<div class="flex justify-between gap-3"><span class="text-emerald-700">+ ৳' + fmtTk(p.amt) + '</span><span class="text-slate-400">' + escHtml(fmtPayDT(p)) + (p.by ? ' · ' + escHtml(p.by) : '') + '</span></div>').join('');
+      return '<div class="px-5 py-3 bg-emerald-50/50 border-b border-emerald-100 text-[11px] font-extrabold"><div class="flex flex-wrap items-center gap-x-4 gap-y-1"><span class="text-emerald-800">💰 ' + (f.applicants.length > 1 ? '👥 গ্রুপ হিসাব' : 'হিসাব') + '</span><span class="text-blue-700">বিল ৳' + fmtTk(g.bill) + '</span><span class="text-emerald-700">জমা ৳' + fmtTk(paid) + '</span><span class="' + (due > 0 ? 'text-rose-600' : 'text-emerald-600') + '">বাকি ৳' + fmtTk(due) + '</span>' + (over > 0 ? '<span class="text-amber-600">বেশি জমা ৳' + fmtTk(over) + '</span>' : '') + '</div>'
+        + (pays ? '<details class="mt-1"><summary class="text-[10px] font-extrabold text-sky-700 cursor-pointer">জমার তালিকা (' + g.pays.length + ')</summary><div class="mt-1 text-[10px] font-bold space-y-0.5 max-w-xs">' + pays + '</div></details>' : '') + '</div>';
+    }
     function acctLedgerHtml(f) {
-      if (!f.pp) return '';
-      const parts = (f.applicants || []).map(a => {
-        const pd = ledPaid(a), bl = nz(a.bill), d = bl - pd;
-        const pays = (a.pays || []).map(p => '<div class="text-[10px] text-emerald-700 font-bold">+ ' + fmtTk(p.amt) + ' <span class="text-slate-400">· ' + escHtml(fmtPayDT(p)) + (p.by ? ' · ' + escHtml(p.by) : '') + '</span></div>').join('');
-        return '<div class="mt-1 pl-2 border-l-2 border-slate-200"><div class="text-[10px] font-extrabold text-slate-700">' + escHtml(a.name || 'Unnamed') + ' <span class="text-slate-400">· বিল ' + fmtTk(bl) + ' · জমা ' + fmtTk(pd) + ' · </span><span class="' + (d > 0 ? 'text-rose-600' : 'text-emerald-600') + '">বাকি ' + fmtTk(Math.max(0, d)) + '</span></div>' + pays + '</div>';
-      }).join('');
-      return '<details onclick="event.stopPropagation()" class="mt-1"><summary class="text-[10px] font-extrabold text-sky-700 cursor-pointer">👥 জনপ্রতি হিসাব ও জমার তারিখ</summary>' + parts + '</details>';
+      if (isPerPerson(f)) {
+        const parts = (f.applicants || []).map(a => {
+          const pd = ledPaid(a), bl = nz(a.bill), d = bl - pd;
+          const pays = (a.pays || []).map(p => '<div class="text-[10px] text-emerald-700 font-bold">+ ' + fmtTk(p.amt) + ' <span class="text-slate-400">· ' + escHtml(fmtPayDT(p)) + (p.by ? ' · ' + escHtml(p.by) : '') + '</span></div>').join('');
+          return '<div class="mt-1 pl-2 border-l-2 border-slate-200"><div class="text-[10px] font-extrabold text-slate-700">' + escHtml(a.name || 'Unnamed') + ' <span class="text-slate-400">· বিল ' + fmtTk(bl) + ' · জমা ' + fmtTk(pd) + ' · </span><span class="' + (d > 0 ? 'text-rose-600' : (d < 0 ? 'text-amber-600' : 'text-emerald-600')) + '">' + (d < 0 ? 'বেশি জমা ' + fmtTk(-d) : 'বাকি ' + fmtTk(d)) + '</span></div>' + pays + '</div>';
+        }).join('');
+        return '<details onclick="event.stopPropagation()" class="mt-1"><summary class="text-[10px] font-extrabold text-sky-700 cursor-pointer">👤 জনপ্রতি হিসাব ও জমার তারিখ</summary>' + parts + '</details>';
+      }
+      const g = groupLedgerOf(f); if (!g.pays.length) return '';
+      const pays = g.pays.map(p => '<div class="text-[10px] text-emerald-700 font-bold">+ ' + fmtTk(p.amt) + ' <span class="text-slate-400">· ' + escHtml(fmtPayDT(p)) + (p.by ? ' · ' + escHtml(p.by) : '') + '</span></div>').join('');
+      return '<details onclick="event.stopPropagation()" class="mt-1"><summary class="text-[10px] font-extrabold text-sky-700 cursor-pointer">💰 জমার তালিকা ও তারিখ (' + g.pays.length + ')</summary><div class="mt-1 pl-2 border-l-2 border-slate-200">' + pays + '</div></details>';
     }
 
     // ---- ডেলিভারি তারিখ মডাল ----
@@ -1910,7 +2111,7 @@
     }
 
     function renderApplicantForms() {
-      tempApplicants.forEach(ledInit);
+      if (tempAcctMode === 'PERSON') tempApplicants.forEach(ledInit);   // জনপ্রতি হলেই প্রত্যেকের হিসাবের ঘর লাগে
       if (!baseFeeManual) { const bf = document.getElementById('baseVisaFee'); if (bf) { bf.value = VISA_FEE_PER_PERSON * tempApplicants.length; calcDue(); } }
       document.getElementById('btnAddCoApplicant').style.display = tempApplicants.length >= 4 ? 'none' : 'inline-flex';
       document.getElementById('applicantsContainer').innerHTML = tempApplicants.map((a, i) => `
@@ -1936,7 +2137,7 @@
               <div class="flex items-center gap-1.5"><label class="cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold flex-1 text-center truncate transition"><i class="fa-solid fa-upload"></i> ${a.driveFileId ? 'রি-আপলোড / বদলান' : 'PDF আপলোড'}<input type="file" accept="application/pdf" onchange="handlePdfUpload(${i}, event)" class="hidden"></label>${(a.driveFileId) ? `<button type="button" onclick="removeFormPdf(${i})" class="text-rose-500 bg-rose-50 px-2 py-1.5 rounded-lg text-xs hover:bg-rose-500 hover:text-white transition"><i class="fa-solid fa-xmark"></i></button>` : ''}</div>
             </div>
           </div>
-        ${ledgerBoxHtml(a, i)}
+        ${tempAcctMode === 'PERSON' ? ledgerBoxHtml(a, i) : ''}
         </div>
       `).join('');
       ledRefresh(false);
@@ -1978,7 +2179,10 @@
         catch (e) { savingSet = false; alert('⚠️ সিরিয়াল নম্বর আনা যায়নি, ফাইল সেভ হয়নি।\n\nইন্টারনেট ঠিক আছে কিনা দেখে আবার "সেভ" চাপুন।\nবারবার হলে অ্যাডমিনকে জানান (Firebase Rules এ rtc_counter এর পারমিশন লাগতে পারে)।\n\n' + ((e && e.message) || e)); return; }
         savingSet = false; syncTempInputs();
       }
-      tempApplicants.forEach(a => { ledInit(a); a.bill = nz(a.bill); a.pays = (a.pays || []).filter(p => nz(p.amt) > 0).map(p => { const q = { amt: nz(p.amt), d: p.d || '', t: p.t || '', by: p.by || (p.d ? whoAmI() : '') }; if (p.m) q.m = 1; if (p.dm) q.dm = 1; return q; }); });
+      tempApplicants.forEach(a => {
+        if (tempAcctMode !== 'PERSON' && !Array.isArray(a.pays) && (a.bill === undefined || a.bill === null)) return;   // গ্রুপ ফাইলে জনপ্রতি ডাটা না থাকলে নতুন করে বানানো হয় না
+        a.bill = nz(a.bill); a.pays = (a.pays || []).filter(p => nz(p.amt) > 0).map(p => { const q = { amt: nz(p.amt), d: p.d || '', t: p.t || '', by: p.by || '' }; if (p.m) q.m = 1; if (p.dm) q.dm = 1; return q; });
+      });
       const fileObj = {
         id: editId || modalSetKey || 'SET_' + Date.now(),
         visaType: document.getElementById('visaType').value, worker: document.getElementById('workerName').value.trim(),
@@ -1998,7 +2202,12 @@
         updatedAt: new Date().toLocaleString('en-GB', BD_TIME_OPTS), updatedBy: whoAmI()
       };
             const prevSet = editId ? visaFiles.find(x => x.id === editId) : null;
-      fileObj.pp = true; recalcFileTotals(fileObj);   // ফাইলের মোট = সবার যোগফল
+      fileObj.acctMode = tempAcctMode;   // গ্রুপ: ফাইলের একটাই বিল/জমা | জনপ্রতি: প্রত্যেকের নিজের
+      if (tempAcctMode === 'GROUP') {
+        fileObj.billTotal = nz(tempGroup.bill);
+        fileObj.pays = (tempGroup.pays || []).filter(p => nz(p.amt) > 0).map(p => ({ amt: nz(p.amt), d: p.d || '', t: p.t || '', by: p.by || '' }));
+      } else delete fileObj.pays;
+      recalcFileTotals(fileObj);   // ফাইলের মোট বিল/জমা/বাকি ঠিক করে বসানো
       fileObj.serial = prevSet ? (prevSet.serial || '') : (newSerial || '');
       fileObj.transferLog = prevSet ? (prevSet.transferLog || []) : [];
       fileObj.driveStatus = modalFolderNew ? modalStatusAtCreate : (prevSet ? (prevSet.driveStatus || '') : '');
@@ -2080,6 +2289,7 @@
         const a = old[d[0]], b = f[d[0]]; if ((a == null ? '' : a) === (b == null ? '' : b)) return;
         if (d[2] === 'label') parts.push(d[1] + ' বদল'); else parts.push(d[1] + ': ' + logVal(a, d[2]) + ' → ' + logVal(b, d[2]));
       });
+      if (acctModeOf(old) !== acctModeOf(f)) parts.push('হিসাবের ধরন: ' + (acctModeOf(old) === 'PERSON' ? 'জনপ্রতি' : 'গ্রুপ') + ' → ' + (acctModeOf(f) === 'PERSON' ? 'জনপ্রতি' : 'গ্রুপ'));
       const oa = old.applicants || [], na = f.applicants || [];
       const oNames = oa.map(function (p) { return p.name || ''; }), nNames = na.map(function (p) { return p.name || ''; });
       const added = nNames.filter(function (n) { return oNames.indexOf(n) < 0; }), removed = oNames.filter(function (n) { return nNames.indexOf(n) < 0; });
@@ -2089,7 +2299,7 @@
         const q = oa.find(function (x) { return (x.name || '') === (p.name || ''); }); if (!q) return;
         const ch = LOG_PERSON_FIELDS.filter(function (d) { return (q[d[0]] == null ? '' : q[d[0]]) !== (p[d[0]] == null ? '' : p[d[0]]); }).map(function (d) { return d[1]; });
         if (ch.length) parts.push((p.name || 'নামহীন') + ': ' + ch.join(', '));
-        if (old.pp && f.pp) { const ob = nz(q.bill), nb = nz(p.bill), op = ledPaid(q), np = ledPaid(p); if (ob !== nb) parts.push((p.name || 'নামহীন') + ': বিল ' + ob + ' → ' + nb); if (op !== np) parts.push((p.name || 'নামহীন') + ': জমা ' + op + ' → ' + np); }
+        if (isPerPerson(old) && isPerPerson(f)) { const ob = nz(q.bill), nb = nz(p.bill), op = ledPaid(q), np = ledPaid(p); if (ob !== nb) parts.push((p.name || 'নামহীন') + ': বিল ' + ob + ' → ' + nb); if (op !== np) parts.push((p.name || 'নামহীন') + ': জমা ' + op + ' → ' + np); }
       });
       if ((old.invoiceFileId || '') !== (f.invoiceFileId || '')) parts.push('ইনভয়েস PDF ' + (f.invoiceFileId ? 'আপলোড/বদল' : 'মোছা'));
       if ((old.invitationFileId || '') !== (f.invitationFileId || '')) parts.push('Invitation Letter PDF ' + (f.invitationFileId ? 'আপলোড/বদল' : 'মোছা'));
@@ -2192,18 +2402,20 @@
       const num = v => parseFloat(v) || 0;
       const ret = !!f.isReturned; const del = !ret && !!f.isDelivered; const appt = isAppt(f);
       const paid = num(f.billAdvance);
-      let bill, due, refund, expense, profit, kept, spent, pending = 0, expected = 0, realized = 0;
+      let bill, due, refund, expense, profit, kept, spent, pending = 0, expected = 0, realized = 0, over = 0;
       if (ret) {   // ফেরত ফাইল: চার্জ হিসেবে যা রাখা হয়েছে সেটাই আয়; বাকি নেই; কোনো খরচ নেই
         kept = num(f.keptCharge); bill = kept; due = 0; refund = num(f.refundAmount); expense = 0; spent = 0; profit = kept; realized = kept; expected = kept;
       } else {
-        bill = num(f.billTotal); kept = 0; due = Math.max(0, bill - paid); refund = 0;
+        bill = num(f.billTotal); kept = 0; refund = 0;
+        if (isPerPerson(f)) { due = personDueSum(f); over = personOverSum(f); }   // জনপ্রতি: একজনের বেশি জমা অন্যজনের বাকি ঢাকে না
+        else { due = Math.max(0, bill - paid); over = Math.max(0, paid - bill); }
         const written = num(f.baseVisaFee) + num(f.softwareCharge);
         if (del || appt) { expense = written; spent = written; profit = bill - written; realized = paid - written; expected = profit; }   // ডেলিভারড বা অ্যাপয়েন্টেড: সব খরচ হয়ে গেছে
         else { expense = 0; spent = 0; profit = 0; pending = written; expected = bill - written; }   // রানিং, Appt হয়নি: লেখা খরচ আলাদা, লাভ/ক্যাশ থেকে কাটে না
       }
-      const noBill = !ret && bill === 0 && paid === 0;
+      const noBill = !ret && bill === 0;   // বিল দেওয়া হয়নি (জমা থাকলেও "পরিশোধ" দেখাবে না)
       const state = ret ? 'RETURNED' : (noBill ? 'NOBILL' : (due > 0 ? 'DUE' : 'CLEAR'));
-      return { f: f, ret: ret, mode: ret ? 'RETURNED' : (del ? 'DELIVERED' : (appt ? 'APPOINTED' : 'RUNNING')), bill: bill, paid: paid, due: due, refund: refund, expense: expense, profit: profit, kept: kept, spent: spent, pending: pending, expected: expected, realized: realized,
+      return { f: f, ret: ret, mode: ret ? 'RETURNED' : (del ? 'DELIVERED' : (appt ? 'APPOINTED' : 'RUNNING')), bill: bill, paid: paid, due: due, over: over, pmode: acctModeOf(f), refund: refund, expense: expense, profit: profit, kept: kept, spent: spent, pending: pending, expected: expected, realized: realized,
         refundable: (!ret && !del && !appt) ? paid : 0, cash: Math.max(0, paid - refund), noBill: noBill, state: state,
         name: mainNameOf(f), others: (f.applicants || []).slice(1).map(a => a.name).filter(Boolean) };
     }
@@ -2354,13 +2566,13 @@
           const f = r.f;
           return '<tr onclick="openFileModal(\'' + escHtml(f.id) + '\')" class="hover:bg-sky-50/60 cursor-pointer">'
             + '<td class="px-3 py-2.5">' + serialBadge(f) + '</td>'
-            + '<td class="px-3 py-2.5 min-w-[180px]"><div class="text-xs font-extrabold text-[#0b132b]">' + escHtml(r.name) + '</div>'
+            + '<td class="px-3 py-2.5 min-w-[180px]"><div class="text-xs font-extrabold text-[#0b132b]">' + escHtml(r.name) + (r.f.applicants.length > 1 ? ' <span class="align-middle px-1.5 py-0.5 rounded text-[9px] font-extrabold ' + (r.pmode === 'PERSON' ? 'bg-violet-100 text-violet-700' : 'bg-sky-100 text-sky-700') + '">' + (r.pmode === 'PERSON' ? '👤 জনপ্রতি' : '👥 গ্রুপ') + '</span>' : '') + '</div>'
             + (r.others.length ? '<div class="text-[10px] text-slate-400 font-bold">+ ' + escHtml(r.others.join(', ')) + '</div>' : '') + acctTransferNotes(f) + acctLedgerHtml(f)
             + '<div class="text-[10px] text-slate-400 font-bold mono-type">' + (f.accountPhone ? waPhone(f.accountPhone) : '') + (f.worker ? ' · ' + escHtml(f.worker) : '') + '</div></td>'
             + '<td class="px-3 py-2.5">' + stBadge(r) + '<div class="text-[10px] text-slate-400 font-bold mt-0.5">' + progress(f) + '</div></td>'
             + '<td class="' + td + ' text-[#0b132b]">' + fmtTk(r.bill) + (r.ret ? '<div class="text-[9px] text-orange-500 font-bold">চার্জ রাখা</div>' : '') + '</td>'
             + '<td class="' + td + ' text-emerald-600">' + fmtTk(r.paid) + '</td>'
-            + '<td class="' + td + (r.due > 0 ? ' text-rose-600 bg-rose-50/60' : ' text-slate-300') + '">' + fmtTk(r.due) + '</td>'
+            + '<td class="' + td + (r.due > 0 ? ' text-rose-600 bg-rose-50/60' : ' text-slate-300') + '">' + fmtTk(r.due) + (r.over > 0 ? '<div class="text-[9px] text-amber-600 font-bold">বেশি জমা ' + fmtTk(r.over) + '</div>' : '') + '</td>'
             + '<td class="' + td + (r.refund > 0 ? ' text-orange-600' : ' text-slate-300') + '">' + fmtTk(r.refund) + '</td>'
             + '<td class="' + td + ' text-amber-600" title="ভিসা ফি ' + fmtTk(f.baseVisaFee) + ' + সফটওয়্যার/অন্য ' + fmtTk(f.softwareCharge) + '">' + fmtTk(r.expense) + (r.pending > 0 ? '<div class="text-[9px] text-slate-400 font-bold">লেখা ' + fmtTk(r.pending) + ' (Appt হলে)</div>' : '') + '</td>'
             + '<td class="' + td + (r.profit >= 0 ? ' text-sky-600' : ' text-rose-600') + '">' + fmtTk(r.profit) + (r.mode === 'RUNNING' && !isAppt(f) && (r.pending > 0 || r.bill > 0) ? '<div class="text-[9px] text-slate-400 font-bold">সম্ভাব্য ' + fmtTk(r.expected) + '</div>' : '') + '</td>'
@@ -2372,7 +2584,7 @@
       const notes = {
         DELIVERED: 'ℹ️ Delivered = কাজ শেষ। এখানে সব খরচ (ভিসা ফি + SMS/অন্য) হয়ে গেছে ধরা হয়। <b>সম্পূর্ণ লাভ</b> = বিল − খরচ (বাকি পেলে যা হবে)। <b>আসল লাভ</b> = ক্যাশ এসেছে (জমা) − খরচ (এখন পর্যন্ত যা সত্যিই লাভ)। <b>বাকি</b> = যা এখনো ক্লায়েন্টের কাছে পাব; সর্বোচ্চ পাওয়া যায় মোট বিল পর্যন্ত। যেকোনো সারিতে চাপলে ফাইল এডিট খুলবে।',
         RUNNING: 'ℹ️ Running = কাজ চলছে। ক্লায়েন্টের <b>জমা</b> আমার কাছে রাখা টাকা, এখনো আমার লাভ না; Appointment না হলে ফেরত দিতে হতে পারে (উপরে "ফেরত দিতে হতে পারে")। Appointment হয়ে গেলে ফাইলটা 📅 Appointed ট্যাবে চলে যায় (সেখানে খরচ হয়ে গেছে ধরা হয়)। এখানে লেখা খরচ ছোট করে দেখায়, কাটে না। কাজ শেষ করে Delivered করলে হিসাব Delivered ট্যাবে চলে যাবে।',
-        APPOINTED: 'ℹ️ Appointed = Appointment (স্লট) হয়ে গেছে কিন্তু এখনো ডেলিভারি হয়নি। Appointment হলে ভিসা ফি + SMS/অন্য খরচ হয়ে যায়, তাই খরচ ধরা আছে। <b>বাকি</b> = যা এখনো ক্লায়েন্টের কাছে পাব। ডেলিভারি করলে ফাইল Delivered ট্যাবে চলে যাবে। সারির 👥 জনপ্রতি হিসাব খুললে প্রতিজনের জমা তারিখ-সময়সহ দেখাবে।',
+        APPOINTED: 'ℹ️ Appointed = Appointment (স্লট) হয়ে গেছে কিন্তু এখনো ডেলিভারি হয়নি। Appointment হলে ভিসা ফি + SMS/অন্য খরচ হয়ে যায়, তাই খরচ ধরা আছে। <b>বাকি</b> = যা এখনো ক্লায়েন্টের কাছে পাব। ডেলিভারি করলে ফাইল Delivered ট্যাবে চলে যাবে। সারির 💰 জমার তালিকা খুললে জমা তারিখ-সময়সহ দেখাবে।',
         RETURNED: 'ℹ️ Returned = ফেরত ফাইল। ক্লায়েন্টকে টাকা ফেরত দেওয়ার সময় যে চার্জ রাখা হয় সেটাই লাভ, কোনো খরচ ধরা হয় না।',
         ALL: 'ℹ️ এখানে Delivered, Appointed, Running ও Returned একসাথে মিশে আছে, তাই "হাতে আছে" এ রানিং ফাইলের ক্লায়েন্টের জমাও ধরা। আসল লাভ-খরচ দেখতে ওপরে Delivered ট্যাব দেখুন।'
       };
@@ -2384,8 +2596,8 @@
       const rows = acctModeRows(); if (!rows.length) { showToast('কোনো ডাটা নেই'); return; }
       const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
       const mlb = { DELIVERED: 'Delivered', APPOINTED: 'Appointed', RUNNING: 'Running', RETURNED: 'Returned' };
-      const head = ['ফাইল নং', 'নাম', 'সহ-আবেদনকারী', 'ফোন', 'ধরন', 'অবস্থা', 'বিল', 'জমা', 'বাকি', 'ফেরত', 'খরচ', 'লাভ', 'আসল লাভ (জমা−খরচ)', 'হাতে আছে', 'Appointment তারিখ', 'ডেলিভারি তারিখ'];
-      const lines = [head.map(q).join(',')].concat(rows.map(r => [r.f.serial || '', r.name, r.others.join(' / '), r.f.accountPhone || '', mlb[r.mode], r.state, r.bill, r.paid, r.due, r.refund, r.expense, r.profit, r.mode === 'DELIVERED' ? r.realized : '', r.cash, r.f.appointmentDate || '', r.f.deliveredDate || ''].map(q).join(',')));
+      const head = ['ফাইল নং', 'নাম', 'সহ-আবেদনকারী', 'ফোন', 'ধরন', 'অবস্থা', 'হিসাবের ধরন', 'বিল', 'জমা', 'বাকি', 'বেশি জমা', 'ফেরত', 'খরচ', 'লাভ', 'আসল লাভ (জমা−খরচ)', 'হাতে আছে', 'Appointment তারিখ', 'ডেলিভারি তারিখ'];
+      const lines = [head.map(q).join(',')].concat(rows.map(r => [r.f.serial || '', r.name, r.others.join(' / '), r.f.accountPhone || '', mlb[r.mode], r.state, (r.pmode === 'PERSON' ? 'জনপ্রতি' : 'গ্রুপ'), r.bill, r.paid, r.due, r.over, r.refund, r.expense, r.profit, r.mode === 'DELIVERED' ? r.realized : '', r.cash, r.f.appointmentDate || '', r.f.deliveredDate || ''].map(q).join(',')));
       const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' })); a.download = 'RTC-hisab-' + acctMode.toLowerCase() + '-' + getTodayStr() + '.csv'; document.body.appendChild(a); a.click(); a.remove();
     }
 
