@@ -946,6 +946,26 @@
       }
       return out;
     }
+    // 🔎 PDF থেকে লেখা পড়ে তারিখ বের করা (Invoice → Appointment Date, BGD ফর্ম → Web Registration Date)
+    // PDF-এ লেখা না থাকলে (স্ক্যান/ছবি) বা না পেলে null ফেরত দেয় — তখন আগের মতো আজকের তারিখ বসে, কিছু ভাঙে না
+    const MON_NUM = { JAN: 1, FEB: 2, MAR: 3, APR: 4, MAY: 5, JUN: 6, JUL: 7, AUG: 8, SEP: 9, OCT: 10, NOV: 11, DEC: 12 };
+    function validYmd(y, m, d) { const dt = new Date(Date.UTC(y, m - 1, d)); return dt.getUTCFullYear() === y && dt.getUTCMonth() === m - 1 && dt.getUTCDate() === d; }
+    function ymdStr(y, m, d) { return validYmd(y, m, d) ? y + '-' + String(m).padStart(2, '0') + '-' + String(d).padStart(2, '0') : null; }
+    async function readPdfText(file, maxPages) {
+      try {
+        const lib = await loadPdfJs(); const doc = await lib.getDocument({ data: await file.arrayBuffer() }).promise; let txt = '';
+        for (let i = 1; i <= Math.min(doc.numPages, maxPages || 3); i++) { const pg = await doc.getPage(i); const c = await pg.getTextContent(); txt += ' ' + c.items.map(it => it.str).join(' '); }
+        return txt.replace(/\s+/g, ' ');
+      } catch (e) { console.warn('PDF text read failed', e); return ''; }
+    }
+    async function extractInvoiceApptDate(file) {
+      const t = await readPdfText(file, 3); const m = t.match(/Appointment\s*Date\s*:?\s*(\d{4})-(\d{1,2})-(\d{1,2})/i);
+      return m ? ymdStr(+m[1], +m[2], +m[3]) : null;
+    }
+    async function extractBgdRegDate(file) {
+      const t = await readPdfText(file, 2); const m = t.match(/Web\s*Registration\s*Date\s*:?\s*(\d{1,2})-([A-Za-z]{3})-(\d{4})/i);
+      return m && MON_NUM[m[2].toUpperCase()] ? ymdStr(+m[3], MON_NUM[m[2].toUpperCase()], +m[1]) : null;
+    }
     // পাসপোর্ট: ছবি বা PDF যা-ই দিন, ফল PDF এবং KB সীমার ভেতরে। সীমার ভেতরের PDF হলে অপরিবর্তিত থাকে
     async function processPassport(file) {
       const L = INDIA_PASSPORT, isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name || '');
@@ -1317,13 +1337,14 @@
       if (f.invoiceFileId && !confirm('এই Invoice দিয়ে আগেরটা বদলাবেন?\nআগের Invoice Drive থেকে মুছে যাবে।')) { event.target.value = ''; return; }
       cloudBusy++; showToast('⏳ Invoice আপলোড হচ্ছে...');
       try {
+        const invDate = await extractInvoiceApptDate(file);   // Invoice-এর Appointment Date
         const hadFolder = !!f.driveFolderId;
         const res = await driveUploadApplicant({ setKey: f.id, folderId: f.driveFolderId || '', folderName: f.applicants[0].name, fileName: invoiceFileNameFor(f), file: file, replaceFileId: f.invoiceFileId || '', status: driveStatusOf(f), sms: smsOf(f), visaType: visaTypeOf(f) });
         if (!hadFolder) f.driveStatus = driveLocOf(f);
         f.driveFolderId = res.folderId; f.driveFolderName = res.folderName;
-        f.invoiceFileId = res.fileId; f.invoiceFileName = res.fileName; f.invoiceName = file.name; f.invoiceBy = whoAmI(); f.invoiceAt = stampNow(); f.isAppointed = true; if (!f.appointmentDate) f.appointmentDate = getTodayStr();
+        f.invoiceFileId = res.fileId; f.invoiceFileName = res.fileName; f.invoiceName = file.name; f.invoiceBy = whoAmI(); f.invoiceAt = stampNow(); f.isAppointed = true; if (invDate) f.appointmentDate = invDate; else if (!f.appointmentDate) f.appointmentDate = getTodayStr();
         f.updatedAt = stampNow(); f.updatedBy = whoAmI();
-        renderFiles(); await syncToCloud(); showToast('🧾 Invoice সেভ হয়েছে, Appointed হয়েছে!');
+        renderFiles(); await syncToCloud(); showToast(invDate ? ('🧾 Invoice সেভ হয়েছে, Appointment তারিখ ' + invDate + ' (Invoice থেকে)') : '⚠️ Invoice সেভ হয়েছে, কিন্তু তারিখ পড়া যায়নি — আজকের তারিখ বসেছে, কার্ড থেকে ঠিক করুন');
       } catch (e) { console.error(e); alert('Invoice আপলোড হয়নি!\n\nকারণ: ' + ((e && e.message) || e)); }
       finally { cloudBusy = Math.max(0, cloudBusy - 1); event.target.value = ''; }
     }
@@ -1373,12 +1394,13 @@
       
       cloudBusy++; showToast('⏳ PDF আপলোড হচ্ছে...');
       try {
+        const regDate = await extractBgdRegDate(file);   // BGD ফর্মের Web Registration Date
         const hadFolder = !!f.driveFolderId;
           const res = await driveUploadApplicant({ setKey: f.id, folderId: f.driveFolderId || '', folderName: f.applicants[0].name, idx: appIdx, name: a.name, file: file, replaceFileId: a.driveFileId || '', status: driveStatusIfRenewed(f, appIdx), sms: smsOf(f), visaType: visaTypeOf(f) });
           if (!hadFolder) f.driveStatus = driveLocOf(f);
           f.driveFolderId = res.folderId; f.driveFolderName = res.folderName; a.driveFileId = res.fileId; a.driveFileName = res.fileName;
         
-        delete a.renewing; a.pdfName = file.name; a.bgdUploadedBy = whoAmI(); a.bgdUploadedAt = stampNow(); a.isSubmitted = true; if (!a.subDate || isDateExpired(a.subDate)) a.subDate = getTodayStr(); f.updatedAt = stampNow(); f.updatedBy = whoAmI(); f.driveStatus = driveLocOf(f);
+        delete a.renewing; a.pdfName = file.name; a.bgdUploadedBy = whoAmI(); a.bgdUploadedAt = stampNow(); a.isSubmitted = true; if (regDate) a.subDate = regDate; else if (!a.subDate || isDateExpired(a.subDate)) a.subDate = getTodayStr(); f.updatedAt = stampNow(); f.updatedBy = whoAmI(); f.driveStatus = driveLocOf(f);
         
         renderFiles(); 
         await syncToCloud(); // 🔥 FIX: Database-e save howar jonno wait korbe
@@ -1790,6 +1812,7 @@
       if (!document.getElementById('visaType').value) { alert('আগে ভিসা টাইপ সিলেক্ট করুন, তারপর PDF দিন।'); event.target.value = ''; return; }
       cloudBusy++; showToast('⏳ PDF আপলোড হচ্ছে...');
       try {
+        const regDate = await extractBgdRegDate(file);   // BGD ফর্মের Web Registration Date
         const t0 = tempApplicants[idx];
         const stNow = document.getElementById('isReturned').checked ? 'Returned' : (document.getElementById('isDelivered').checked ? 'Delivered' : 'Running');
         const smsNow = ((document.getElementById('smsApp').value || '').trim()) || 'Rtcsms';
@@ -1800,7 +1823,7 @@
         if (t0 && t0.driveFileId) modalOrphanDriveIds.push(t0.driveFileId);
         const patch = { driveFileId: res.fileId, driveFileName: res.fileName };
         syncTempInputs(); const t = tempApplicants[idx];
-        if (t) { Object.assign(t, patch); delete t.renewing; t.pdfName = file.name; t.bgdUploadedBy = whoAmI(); t.bgdUploadedAt = stampNow(); t.isSubmitted = true; if (!t.subDate || isDateExpired(t.subDate)) t.subDate = getTodayStr(); }
+        if (t) { Object.assign(t, patch); delete t.renewing; t.pdfName = file.name; t.bgdUploadedBy = whoAmI(); t.bgdUploadedAt = stampNow(); t.isSubmitted = true; if (regDate) t.subDate = regDate; else if (!t.subDate || isDateExpired(t.subDate)) t.subDate = getTodayStr(); }
         
         renderApplicantForms(); 
         await syncToCloud(); // 🔥 FIX: Database-e save howar jonno wait korbe
