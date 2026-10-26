@@ -195,16 +195,21 @@
 
           <div class="flex items-end">
             <label class="inline-flex items-center cursor-pointer bg-emerald-50 px-4 py-2.5 rounded-xl border border-emerald-200 w-full hover:bg-emerald-100 transition">
-              <input type="checkbox" id="isDelivered" onchange="if(this.checked) document.getElementById('isReturned').checked=false; toggleRefundBox();" class="w-4 h-4 accent-emerald-600">
+              <input type="checkbox" id="isDelivered" onchange="if(this.checked) document.getElementById('isReturned').checked=false; toggleRefundBox(); onDeliveredToggle(true);" class="w-4 h-4 accent-emerald-600">
               <span class="ml-2.5 text-xs font-extrabold text-emerald-900">📦 ডেলিভারি সম্পন্ন</span>
             </label>
           </div>
 
           <div class="flex items-end">
             <label class="inline-flex items-center cursor-pointer bg-rose-50 px-4 py-2.5 rounded-xl border border-rose-200 w-full hover:bg-rose-100 transition">
-              <input type="checkbox" id="isReturned" onchange="if(this.checked) document.getElementById('isDelivered').checked=false; toggleRefundBox();" class="w-4 h-4 accent-rose-600">
+              <input type="checkbox" id="isReturned" onchange="if(this.checked) document.getElementById('isDelivered').checked=false; toggleRefundBox(); onDeliveredToggle(false);" class="w-4 h-4 accent-rose-600">
               <span class="ml-2.5 text-xs font-extrabold text-rose-900">🔙 ফাইল ফেরত</span>
             </label>
+          </div>
+
+          <div id="deliveredDateBox" class="hidden col-span-full p-2.5 rounded-xl bg-emerald-50 border-2 border-emerald-400 shadow-sm">
+            <label class="block text-[10px] font-extrabold text-emerald-800 mb-1">📦 ডেলিভারি কবে হয়েছে? (আজকের তারিখ অটো, বদলানো যাবে)</label>
+            <input type="date" id="deliveredDate" class="w-full md:w-1/3 px-3 py-1.5 rounded-lg border border-emerald-300 text-xs font-extrabold bg-white text-emerald-900 focus:outline-none">
           </div>
         </div>
 
@@ -315,7 +320,8 @@
             </div>
             <div>
               <label class="block text-[11px] font-bold text-slate-500 mb-1">অ্যাপয়েন্টমেন্ট</label>
-              <label class="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-sky-200 bg-sky-50 cursor-pointer"><input type="checkbox" id="isAppointed" class="w-4 h-4 accent-sky-600"><span class="text-xs font-extrabold text-sky-800">📅 Appointed (স্লট পাওয়া গেছে)</span></label>
+              <label class="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-sky-200 bg-sky-50 cursor-pointer"><input type="checkbox" id="isAppointed" onchange="onApptToggle(true)" class="w-4 h-4 accent-sky-600"><span class="text-xs font-extrabold text-sky-800">📅 Appointed (স্লট পাওয়া গেছে)</span></label>
+              <div id="apptDateBox" class="hidden mt-2 p-2.5 rounded-xl bg-amber-50 border-2 border-amber-400 shadow-sm"><label class="block text-[10px] font-extrabold text-amber-800 mb-1">📅 Appointment তারিখ (আজকের তারিখ অটো, বদলানো যাবে)</label><input type="date" id="appointmentDate" onchange="onApptDateChange()" class="w-full px-3 py-1.5 rounded-lg border border-amber-300 text-xs font-extrabold bg-white text-amber-900 focus:outline-none"></div>
             </div>
             <div>
               <label class="block text-[11px] font-bold text-slate-500 mb-1">ভিসা ফি খরচ (জনপ্রতি ১৫০০, অটো)</label>
@@ -329,12 +335,12 @@
 
           <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pl-2">
             <div>
-              <label class="block text-[11px] font-bold text-slate-500 mb-1">কাস্টমারের মোট বিল</label>
-              <input type="number" id="billTotal" oninput="calcDue()" placeholder="0" class="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs font-extrabold bg-blue-50 text-blue-700">
+              <label class="block text-[11px] font-bold text-slate-500 mb-1">মোট বিল (সবার যোগফল)</label>
+              <input type="number" id="billTotal" readonly title="প্রতিজনের বিলের যোগফল। নিচে আবেদনকারীর কার্ডে লিখুন" placeholder="0" class="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs font-extrabold bg-blue-50 text-blue-700">
             </div>
             <div>
-              <label class="block text-[11px] font-bold text-slate-500 mb-1">জমা (Advance)</label>
-              <input type="number" id="billAdvance" oninput="calcDue(); calcRefund();" placeholder="0" class="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs font-bold bg-slate-50">
+              <label class="block text-[11px] font-bold text-slate-500 mb-1">মোট জমা (সবার যোগফল)</label>
+              <input type="number" id="billAdvance" readonly title="প্রতিজনের জমার যোগফল। নিচে আবেদনকারীর কার্ডে লিখুন" placeholder="0" class="w-full px-3 py-1.5 rounded-xl border border-slate-300 text-xs font-bold bg-slate-50">
             </div>
             <div>
               <label class="block text-[11px] font-bold text-slate-500 mb-1">বাকি (Due)</label>
@@ -346,6 +352,8 @@
             </div>
           </div>
 
+          <p class="mt-2 pl-2 text-[10px] font-bold text-emerald-700 leading-relaxed">💡 বিল ও জমা এখন জনপ্রতি: নিচে "আবেদনকারী তালিকা"-র প্রতিটি কার্ডে লিখুন (জমার তারিখ-সময় অটো বসে)। এখানে শুধু সবার মোট দেখাচ্ছে।</p>
+          <p id="ledTotalsLine" class="mt-1 pl-2 text-[11px] font-bold text-slate-600"></p>
           <div id="refundCalcBox" class="mt-4 p-4 rounded-xl bg-rose-50 border border-rose-200 hidden ml-2">
             <p class="text-[11px] font-extrabold text-rose-800 uppercase mb-2"><i class="fa-solid fa-rotate-left mr-1"></i> পেমেন্ট রিফান্ড হিসাব</p>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -383,7 +391,9 @@
   <!-- OTHER MODALS -->
   <div id="quickReturnModal" class="fixed inset-0 modal-bg hidden z-50 flex items-center justify-center p-3"><div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-md overflow-hidden border border-slate-200"><div class="bg-[#d90429] text-white px-6 py-4 flex justify-between items-center"><h3 class="font-extrabold text-sm flex items-center gap-2"><i class="fa-solid fa-rotate-left"></i> ফাইল ফেরত</h3><button onclick="closeQuickReturnModal()" class="text-white text-xl">&times;</button></div><div class="p-6 space-y-4 text-xs"><input type="hidden" id="returnTargetFileId"><div class="bg-slate-50 p-3 rounded-xl border font-bold text-slate-700" id="returnCustomerSummary"></div><div><label class="block font-bold text-slate-500 mb-1">মোট জমা (Advance Tk):</label><input type="number" id="qRetAdvance" oninput="calcQuickReturn()" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-extrabold bg-white"></div><div><label class="block font-bold text-slate-500 mb-1">✂️ চার্জ রাখা হলো (Tk):</label><input type="number" id="qRetKept" oninput="calcQuickReturn()" class="w-full px-3 py-2 rounded-xl border-2 border-amber-400 font-extrabold bg-amber-50"></div><div><label class="block font-bold text-slate-500 mb-1">💸 ফেরত দেওয়া হলো (Tk):</label><input type="number" id="qRetRefund" class="w-full px-3 py-2 rounded-xl border-2 border-[#d90429] font-extrabold bg-rose-50 text-[#d90429]"></div><div><label class="block font-bold text-slate-500 mb-1">নোট:</label><input type="text" id="qRetNote" value="স্লট না পাওয়ায় ফেরত" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold bg-white"></div></div><div class="bg-slate-50 px-6 py-3.5 flex justify-end gap-2 border-t border-slate-200"><button onclick="closeQuickReturnModal()" class="px-4 py-2 rounded-xl border bg-white font-bold">বাতিল</button><button onclick="confirmQuickReturn()" class="bg-[#d90429] text-white px-5 py-2 rounded-xl font-extrabold shadow">🔙 কনফার্ম</button></div></div></div>
 
-  <div id="moveApplicantModal" class="fixed inset-0 modal-bg hidden z-50 flex items-center justify-center p-3"><div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-md overflow-hidden border border-slate-200"><div class="bg-[#0077b6] text-white px-6 py-4 flex justify-between items-center"><h3 class="font-extrabold text-sm flex items-center gap-2"><i class="fa-solid fa-arrow-right-arrow-left"></i> ট্রান্সফার</h3><button onclick="closeMoveModal()" class="text-white text-xl">&times;</button></div><div class="p-6 space-y-4 text-xs"><input type="hidden" id="moveSourceFileId"><input type="hidden" id="moveAppIdx"><div class="bg-slate-50 p-4 rounded-xl border border-slate-200"><p class="font-bold text-slate-500 mb-1">যাকে সরাতে চান:</p><p class="text-base font-extrabold text-slate-900" id="moveApplicantName"></p></div><div><label class="block font-bold text-slate-500 mb-2">কোথায় পাঠাতে চান?</label><select id="moveTargetSet" class="w-full px-3 py-2.5 rounded-xl border-2 border-[#00b4d8] font-bold bg-white focus:outline-none"></select></div><div id="moveMoneyBox" style="display:none" class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 space-y-2"><p class="font-extrabold text-emerald-800">💰 হিসাব (শুধু অ্যাডমিন)</p><div class="grid grid-cols-2 gap-2"><div><label class="block font-bold text-slate-500 mb-1">বিল সাথে নেবে (৳)</label><input type="number" min="0" id="moveBillAmt" placeholder="0" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold"></div><div><label class="block font-bold text-slate-500 mb-1">জমা সাথে নেবে (৳)</label><input type="number" min="0" id="movePaidAmt" placeholder="0" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold"></div></div><p id="moveMoneyHint" class="text-[10px] font-bold text-slate-500 leading-relaxed"></p></div></div><div class="bg-slate-50 px-6 py-3.5 flex justify-end gap-2 border-t border-slate-200"><button onclick="closeMoveModal()" class="px-4 py-2 rounded-xl border bg-white font-bold">বাতিল</button><button onclick="confirmMoveApplicant()" class="btn-primary-rtc text-white px-5 py-2 rounded-xl font-extrabold shadow"><i class="fa-solid fa-check mr-1"></i> কনফার্ম</button></div></div></div>
+  <div id="deliveryDateModal" class="fixed inset-0 modal-bg hidden z-50 flex items-center justify-center p-3"><div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-sm overflow-hidden border border-slate-200"><div class="bg-emerald-600 text-white px-6 py-4 flex justify-between items-center"><h3 class="font-extrabold text-sm flex items-center gap-2"><i class="fa-solid fa-box-archive"></i> ডেলিভারি তারিখ</h3><button onclick="closeDeliveryDateModal()" class="text-white text-xl">&times;</button></div><div class="p-6 space-y-3 text-xs"><input type="hidden" id="deliveryTargetId"><input type="hidden" id="deliveryFresh"><div id="deliveryWho" class="bg-slate-50 p-3 rounded-xl border font-bold text-slate-700"></div><div><label class="block font-bold text-slate-500 mb-1">📦 কবে ডেলিভারি হয়েছে?</label><input type="date" id="deliveryDateInput" class="w-full px-3 py-2.5 rounded-xl border-2 border-emerald-400 font-extrabold bg-emerald-50 focus:outline-none"></div><p class="text-[10px] font-bold text-slate-400 leading-relaxed">আজকের তারিখ অটো বসানো আছে। আগের দিনে ডেলিভারি হয়ে থাকলে তারিখ বদলে নিন।</p></div><div class="bg-slate-50 px-6 py-3.5 flex justify-end gap-2 border-t border-slate-200"><button onclick="closeDeliveryDateModal()" class="px-4 py-2 rounded-xl border bg-white font-bold">বাতিল</button><button onclick="confirmDeliveryDate()" class="bg-emerald-600 text-white px-5 py-2 rounded-xl font-extrabold shadow"><i class="fa-solid fa-check mr-1"></i> কনফার্ম</button></div></div></div>
+
+  <div id="moveApplicantModal" class="fixed inset-0 modal-bg hidden z-50 flex items-center justify-center p-3"><div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-md overflow-hidden border border-slate-200"><div class="bg-[#0077b6] text-white px-6 py-4 flex justify-between items-center"><h3 class="font-extrabold text-sm flex items-center gap-2"><i class="fa-solid fa-arrow-right-arrow-left"></i> ট্রান্সফার</h3><button onclick="closeMoveModal()" class="text-white text-xl">&times;</button></div><div class="p-6 space-y-4 text-xs"><input type="hidden" id="moveSourceFileId"><input type="hidden" id="moveAppIdx"><div class="bg-slate-50 p-4 rounded-xl border border-slate-200"><p class="font-bold text-slate-500 mb-1">যাকে সরাতে চান:</p><p class="text-base font-extrabold text-slate-900" id="moveApplicantName"></p></div><div><label class="block font-bold text-slate-500 mb-2">কোথায় পাঠাতে চান?</label><select id="moveTargetSet" class="w-full px-3 py-2.5 rounded-xl border-2 border-[#00b4d8] font-bold bg-white focus:outline-none"></select></div><div id="moveMoneyBox" style="display:none" class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 space-y-2"><p class="font-extrabold text-emerald-800">💰 এই জনের হিসাব (অটো সাথে যাবে)</p><div class="grid grid-cols-2 gap-2"><div><label class="block font-bold text-slate-500 mb-1">বিল সাথে নেবে (৳)</label><input type="number" min="0" id="moveBillAmt" readonly placeholder="0" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold"></div><div><label class="block font-bold text-slate-500 mb-1">জমা সাথে নেবে (৳)</label><input type="number" min="0" id="movePaidAmt" readonly placeholder="0" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold"></div></div><p id="moveMoneyHint" class="text-[10px] font-bold text-slate-500 leading-relaxed"></p></div></div><div class="bg-slate-50 px-6 py-3.5 flex justify-end gap-2 border-t border-slate-200"><button onclick="closeMoveModal()" class="px-4 py-2 rounded-xl border bg-white font-bold">বাতিল</button><button onclick="confirmMoveApplicant()" class="btn-primary-rtc text-white px-5 py-2 rounded-xl font-extrabold shadow"><i class="fa-solid fa-check mr-1"></i> কনফার্ম</button></div></div></div>
 
   <div id="settingsModal" class="fixed inset-0 modal-bg hidden z-50 flex items-center justify-center p-3"><div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-lg overflow-hidden border border-slate-200"><div class="bg-[#0b132b] text-white px-6 py-4 flex justify-between items-center"><h3 class="font-extrabold text-sm flex items-center gap-2"><i class="fa-solid fa-sliders text-[#00b4d8]"></i> সেটিংস</h3><button onclick="closeSettingsModal()" class="text-white text-xl">&times;</button></div><div class="p-6 space-y-4 text-xs max-h-[68vh] overflow-y-auto">
     
@@ -537,9 +547,10 @@
       select.innerHTML = '<option value="NEW">✨ আলাদা নতুন ফাইল তৈরি করুন</option>';
       visaFiles.forEach(t => { if (t.id !== fileId && !t.isDeleted && !t.isDelivered && !t.isReturned) select.innerHTML += `<option value="${t.id}">📂 যুক্ত করুন: ${escHtml(t.applicants[0]?.name)} (${escHtml(t.accountPhone)}) - ${t.applicants.length} জন</option>`; });
       const single = f.applicants.length === 1;
-      document.getElementById('moveBillAmt').value = single ? (f.billTotal || '') : ''; document.getElementById('movePaidAmt').value = single ? (f.billAdvance || '') : '';
+      const cl = JSON.parse(JSON.stringify(f)); ensureLedger(cl); const cp = cl.applicants[appIdx] || {}; const cb = nz(cp.bill), cpd = ledPaid(cp);
+      document.getElementById('moveBillAmt').value = cb || ''; document.getElementById('movePaidAmt').value = cpd || '';
       document.getElementById('moveMoneyBox').style.display = isAdmin ? '' : 'none';
-      document.getElementById('moveMoneyHint').innerText = single ? 'এটাই ফাইলের একমাত্র জন, তাই পুরো বিল/জমা সাথে যাবে (দরকারে বদলান)।' : 'এই জনের যতটুকু বিল/জমা নতুন ফাইলে ধরতে চান লিখুন। ফাঁকা (০) রাখলে টাকা পুরনো ফাইলেই থাকবে, হিসাবে ট্রান্সফারের নোট দেখাবে।';
+      document.getElementById('moveMoneyHint').innerText = '✅ এই জনের নিজের বিল ও জমা (তারিখসহ) অটো সাথে যাবে, আর এই ফাইলের মোট অটো কমে যাবে।' + ((f.pp || single) ? '' : ' পুরনো ফাইল তাই মোট বিল/জমা সমান ভাগ ধরা হয়েছে, ট্রান্সফারের পর দুই ফাইল এডিট করে মিলিয়ে নিন।');
       document.getElementById('moveApplicantModal').classList.remove('hidden');
     }
     function closeMoveModal() { document.getElementById('moveApplicantModal').classList.add('hidden'); }
@@ -548,10 +559,8 @@
       const sFile = visaFiles.find(x => x.id === sId); if (!sFile) return;
       if (tId !== 'NEW') { const tChk = visaFiles.find(x => x.id === tId); if (!tChk) return; if (tChk.applicants.length >= 4) { alert('ফাইলে ৪ জন পূর্ণ!'); return; } }
       const sOldCount = sFile.applicants.length; const fromMain = mainNameOf(sFile); const fromSerial = sFile.serial || '';
-      let mBill = 0, mPaid = 0;   // 💰 এই জনের সাথে যত টাকার বিল/জমা যাবে (অ্যাডমিন বসায়; একজনের ফাইল হলে পুরোটা অটো যায় যাতে হিসাব হারিয়ে না যায়)
-      if (isAdmin) { mBill = parseFloat(document.getElementById('moveBillAmt').value) || 0; mPaid = parseFloat(document.getElementById('movePaidAmt').value) || 0; }
-      else if (sOldCount === 1) { mBill = parseFloat(sFile.billTotal) || 0; mPaid = parseFloat(sFile.billAdvance) || 0; }
-      mBill = Math.max(0, Math.min(mBill, parseFloat(sFile.billTotal) || 0)); mPaid = Math.max(0, Math.min(mPaid, parseFloat(sFile.billAdvance) || 0));
+      ensureLedger(sFile); if (tId !== 'NEW') ensureLedger(visaFiles.find(x => x.id === tId));
+      const mPerson = sFile.applicants[aIdx]; const mBill = nz(mPerson.bill), mPaid = ledPaid(mPerson);   // 💰 এই জনের নিজের বিল ও জমা (তারিখসহ) সাথে যায়
       const appToMove = sFile.applicants.splice(aIdx, 1)[0];
       if (sFile.serial) { appToMove.prevSerials = (appToMove.prevSerials || []).filter(s => String(s) !== String(sFile.serial)).concat(String(sFile.serial)); }   // আগের ফাইলের নম্বর মনে রাখা (ফিজিক্যাল ফাইলের নম্বর দিয়ে খোঁজার জন্য)
       const now = new Date().toLocaleString('en-GB', BD_TIME_OPTS);
@@ -568,10 +577,7 @@
       const sRemoved = sFile.applicants.length === 0;
       // 💰 বিল/জমা সরানো + দুই ফাইলেই ট্রান্সফারের হিসাব-ইতিহাস রাখা (হিসাব ট্যাবে দেখায়)
       const sB0 = { b: parseFloat(sFile.billTotal) || 0, p: parseFloat(sFile.billAdvance) || 0 }, dB0 = { b: parseFloat(dest.billTotal) || 0, p: parseFloat(dest.billAdvance) || 0 };
-      if (mBill || mPaid) {
-        sFile.billTotal = Math.max(0, (parseFloat(sFile.billTotal) || 0) - mBill); sFile.billAdvance = Math.max(0, (parseFloat(sFile.billAdvance) || 0) - mPaid); sFile.billDue = Math.max(0, sFile.billTotal - sFile.billAdvance);
-        dest.billTotal = (parseFloat(dest.billTotal) || 0) + mBill; dest.billAdvance = (parseFloat(dest.billAdvance) || 0) + mPaid; dest.billDue = Math.max(0, dest.billTotal - dest.billAdvance);
-      }
+      recalcFileTotals(sFile); recalcFileTotals(dest);   // দুই ফাইলের মোট = নিজ নিজ জনদের যোগফল
       const trEntry = { at: now, by: whoAmI(), name: appToMove.name || '', fromId: sId, fromSerial: fromSerial, fromMain: fromMain, toId: dest.id, toSerial: dest.serial || '', toMain: mainNameOf(dest), bill: mBill, paid: mPaid, ts: Date.now(),
         sBefore: sB0, sAfter: { b: parseFloat(sFile.billTotal) || 0, p: parseFloat(sFile.billAdvance) || 0 }, dBefore: dB0, dAfter: { b: parseFloat(dest.billTotal) || 0, p: parseFloat(dest.billAdvance) || 0 }, sGone: sRemoved };
       try { pushLog({ type: 'transfer', setId: dest.id, name: appToMove.name || '', detail: (fromSerial ? '#' + fromSerial + ' ' : '') + fromMain + ' ফাইল থেকে ' + mainNameOf(dest) + ' ফাইলে' + ((mBill || mPaid) ? ' · বিল ' + mBill + ', জমা ' + mPaid + ' সাথে গেছে' : ' · টাকা সরানো হয়নি') }); } catch (e) { }
@@ -598,13 +604,13 @@
       const f = visaFiles.find(x => x.id === fileId);
       if (f.isReturned) { if (confirm('রানিং ফাইলে আনবেন?')) { f.isReturned = false; renderFiles(); syncToCloud(); showToast('রানিং বোর্ডে ফিরেছে!'); } return; }
       document.getElementById('returnTargetFileId').value = f.id; document.getElementById('returnCustomerSummary').innerText = `মেইন: ${f.applicants[0]?.name} | ফোন: ${f.accountPhone || 'N/A'}`;
-      document.getElementById('qRetAdvance').value = f.billAdvance || 0; document.getElementById('qRetKept').value = f.keptCharge || 0; calcQuickReturn(); document.getElementById('quickReturnModal').classList.remove('hidden');
+      document.getElementById('qRetAdvance').value = f.billAdvance || 0; document.getElementById('qRetAdvance').readOnly = !!f.pp; document.getElementById('qRetKept').value = f.keptCharge || 0; calcQuickReturn(); document.getElementById('quickReturnModal').classList.remove('hidden');
     }
     function closeQuickReturnModal() { document.getElementById('quickReturnModal').classList.add('hidden'); }
     function calcQuickReturn() { document.getElementById('qRetRefund').value = Math.max(0, (parseFloat(document.getElementById('qRetAdvance').value)||0) - (parseFloat(document.getElementById('qRetKept').value)||0)); }
     function confirmQuickReturn() {
       const f = visaFiles.find(x => x.id === document.getElementById('returnTargetFileId').value);
-      f.isReturned = true; f.isDelivered = false; f.billAdvance = parseFloat(document.getElementById('qRetAdvance').value)||0; f.keptCharge = parseFloat(document.getElementById('qRetKept').value)||0; f.refundAmount = parseFloat(document.getElementById('qRetRefund').value)||0; f.returnReason = document.getElementById('qRetNote').value.trim(); f.billDue = 0; f.updatedAt = new Date().toLocaleString('en-GB', BD_TIME_OPTS); f.updatedBy = whoAmI();
+      f.isReturned = true; f.isDelivered = false; f.deliveredDate = ''; f.billAdvance = parseFloat(document.getElementById('qRetAdvance').value)||0; f.keptCharge = parseFloat(document.getElementById('qRetKept').value)||0; f.refundAmount = parseFloat(document.getElementById('qRetRefund').value)||0; f.returnReason = document.getElementById('qRetNote').value.trim(); f.billDue = 0; f.updatedAt = new Date().toLocaleString('en-GB', BD_TIME_OPTS); f.updatedBy = whoAmI();
       closeQuickReturnModal(); renderFiles(); syncToCloud(); showToast('🔙 ফাইল ফেরত সম্পন্ন!');
     }
 
@@ -1162,9 +1168,11 @@
     }
 
     function toggleDelivery(fileId) {
-      const f = visaFiles.find(x => x.id === fileId); f.isDelivered = !f.isDelivered; if (f.isDelivered) f.isReturned = false;
+      const f = visaFiles.find(x => x.id === fileId); if (!f) return;
+      if (!f.isDelivered) { openDeliveryDateModal(fileId, true); return; }   // ডেলিভারি করার আগে তারিখ জিজ্ঞেস করে
+      f.isDelivered = false; f.deliveredDate = '';
       f.updatedAt = new Date().toLocaleString('en-GB', BD_TIME_OPTS); f.updatedBy = whoAmI();
-      renderFiles(); syncToCloud(); showToast(f.isDelivered ? '📦 ডেলিভারি সম্পন্ন!' : '📂 রানিং বোর্ডে রিস্টোর হয়েছে');
+      renderFiles(); syncToCloud(); showToast('📂 রানিং বোর্ডে রিস্টোর হয়েছে');
     }
         function invoiceFileNameFor(f) { return 'INVOICE - ' + safeName(f.applicants[0] && f.applicants[0].name) + '.pdf'; }
         // ================= 📱 SMS অ্যাপ =================
@@ -1255,7 +1263,7 @@
     }
     function toggleCardAppointed(fileId) {
       const f = visaFiles.find(x => x.id === fileId); if (!f) return;
-      const now = isAppt(f); f.isAppointed = !now; if (now) f.appointmentDate = '';
+      const now = isAppt(f); f.isAppointed = !now; f.appointmentDate = now ? '' : getTodayStr();   // Appointed করলে আজকের তারিখ অটো
       f.updatedAt = stampNow(); f.updatedBy = whoAmI(); renderFiles(); syncToCloud(); showToast(f.isAppointed ? '📅 Appointed করা হয়েছে!' : 'Appointed বাতিল করা হয়েছে');
     }
     function openInvoice(fileId) {
@@ -1277,7 +1285,7 @@
         const res = await driveUploadApplicant({ setKey: f.id, folderId: f.driveFolderId || '', folderName: f.applicants[0].name, fileName: invoiceFileNameFor(f), file: file, replaceFileId: f.invoiceFileId || '', status: driveStatusOf(f), sms: smsOf(f), visaType: visaTypeOf(f) });
         if (!hadFolder) f.driveStatus = driveLocOf(f);
         f.driveFolderId = res.folderId; f.driveFolderName = res.folderName;
-        f.invoiceFileId = res.fileId; f.invoiceFileName = res.fileName; f.invoiceName = file.name; f.invoiceBy = whoAmI(); f.invoiceAt = stampNow(); f.isAppointed = true;
+        f.invoiceFileId = res.fileId; f.invoiceFileName = res.fileName; f.invoiceName = file.name; f.invoiceBy = whoAmI(); f.invoiceAt = stampNow(); f.isAppointed = true; if (!f.appointmentDate) f.appointmentDate = getTodayStr();
         f.updatedAt = stampNow(); f.updatedBy = whoAmI();
         renderFiles(); await syncToCloud(); showToast('🧾 Invoice সেভ হয়েছে, Appointed হয়েছে!');
       } catch (e) { console.error(e); alert('Invoice আপলোড হয়নি!\n\nকারণ: ' + ((e && e.message) || e)); }
@@ -1418,7 +1426,7 @@
               const exPpl = expiredPeople(f);
               return `<tr class="hover:bg-[#f4f7fa] transition ${exPpl.length ? 'bg-red-50/40' : ''}">
                 <td class="p-3.5">${noteBlock(f)}${f.serial ? '<div class="mb-1">' + serialBadge(f) + '</div>' : ''}<div class="font-extrabold text-[#0b132b] text-sm">${escHtml(f.applicants[0]?.name || 'Unnamed')}</div><div class="text-[10px] text-slate-500 font-bold uppercase mt-0.5">মোট ${f.applicants.length} জন</div>${f.updatedBy ? `<div class="text-[10px] text-slate-400 font-bold mt-0.5">শেষ আপডেট: ${escHtml(f.updatedBy)}${f.updatedAt ? ' · ' + escHtml(f.updatedAt) : ''}</div>` : ''}${exPpl.length ? `<div class="text-[10px] text-red-600 font-extrabold mt-0.5">⚠ Expired: ${exPpl.map(a => escHtml(a.name)).join(', ')}</div>` : ''}</td>
-                <td class="p-3.5 space-y-1.5"><span class="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-slate-100 text-slate-600">${escHtml(f.visaType)}</span>${bgdSetBadge(f)}${f.visaType === 'Medical' ? medicalChips(f) : ''}<div class="flex flex-wrap gap-1 mt-1">${getDocChecklistBadges(f)}</div></td>
+                <td class="p-3.5 space-y-1.5"><span class="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-slate-100 text-slate-600">${escHtml(f.visaType)}</span>${bgdSetBadge(f)}${dateChips(f)}${f.visaType === 'Medical' ? medicalChips(f) : ''}<div class="flex flex-wrap gap-1 mt-1">${getDocChecklistBadges(f)}</div></td>
                 <td class="p-3.5"><div class="mono-type font-extrabold text-[#0b132b]">${waPhone(f.accountPhone)}</div>${f.border ? `<div class="text-[10px] text-indigo-600 font-bold mt-0.5">${escHtml(f.border)}</div>` : ''}<div class="text-[10px] text-slate-500 font-bold mt-0.5">📱 ${escHtml(smsOf(f))}</div><div class="text-[10px] font-extrabold mt-0.5 ${f.appGiven ? 'text-emerald-600' : 'text-amber-600'}">${f.appGiven ? '✅ অ্যাপ দেওয়া হয়েছে' : '⚠️ অ্যাপ দেওয়া হয়নি'}</div></td>
                 <td class="p-3.5 space-y-1.5">${f.applicants.map((a, i) => {
                   const st = personState(a, f); const exp = getBgdExpiryInfo(a, f);
@@ -1447,7 +1455,7 @@
               <h3 class="text-base font-extrabold text-[#0b132b] tracking-tight">${escHtml(f.applicants[0]?.name || 'Unnamed')}</h3>
               <span class="bg-slate-50 text-slate-500 px-2 py-0.5 rounded text-[10px] font-bold border border-slate-200">${f.applicants.length > 1 ? `মোট ${f.applicants.length} জন` : 'সিঙ্গেল ফাইল'}</span>
               ${f.worker ? `<span class="bg-[#00b4d8]/10 text-[#0077b6] px-2 py-0.5 rounded text-[10px] font-extrabold"><i class="fa-solid fa-user-gear mr-1"></i>${escHtml(f.worker)}</span>` : ''}
-              ${f.updatedBy ? `<span class="bg-slate-100 text-slate-500 px-2 py-0.5 rounded text-[10px] font-bold"><i class="fa-regular fa-clock mr-1"></i>শেষ আপডেট: ${escHtml(f.updatedBy)}${f.updatedAt ? ' · ' + escHtml(f.updatedAt) : ''}</span>` : ''}
+              ${(f.isDelivered && !f.isReturned) ? `<button onclick="openDeliveryDateModal('${f.id}', false)" title="ডেলিভারির তারিখ বদলান" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-100 border-2 border-emerald-400 text-emerald-900 text-[11px] font-extrabold shadow-sm hover:bg-emerald-200"><i class="fa-solid fa-box-archive"></i> Delivered: ${f.deliveredDate ? escHtml(fmtDate(f.deliveredDate)) : 'তারিখ দিন'}</button>` : ''}${f.updatedBy ? `<span class="bg-slate-100 text-slate-500 px-2 py-0.5 rounded text-[10px] font-bold"><i class="fa-regular fa-clock mr-1"></i>শেষ আপডেট: ${escHtml(f.updatedBy)}${f.updatedAt ? ' · ' + escHtml(f.updatedAt) : ''}</span>` : ''}
             </div>
             <div class="flex flex-wrap items-center gap-2 text-xs">
               <button onclick="openQuickReturnModal('${f.id}')" class="px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1 ${f.isReturned ? 'bg-slate-100 text-rose-600 hover:bg-slate-200' : 'bg-white text-rose-500 border border-rose-200 hover:bg-rose-50'}"><i class="fa-solid fa-rotate-left"></i>${f.isReturned ? 'রানিং' : 'ফেরত'}</button>
@@ -1463,6 +1471,7 @@
             <div class="flex flex-wrap items-center gap-3">
               <button onclick="toggleCardSignUp('${f.id}')" class="px-3 py-1.5 rounded-xl font-extrabold shadow-sm transition flex items-center gap-1.5 ${f.isSignedUp ? 'bg-purple-600 text-white' : 'bg-rose-500 text-white'}"><i class="fa-solid ${f.isSignedUp ? 'fa-circle-check' : 'fa-circle-exclamation'}"></i>${f.isSignedUp ? 'SIGNED UP' : 'NOT SIGNED UP'}</button>
  <button onclick="toggleCardAppointed('${f.id}')" class="px-3 py-1.5 rounded-xl font-extrabold shadow-sm transition flex items-center gap-1.5 ${isAppt(f) ? 'bg-sky-600 text-white' : 'bg-white text-slate-500 border border-slate-200'}"><i class="fa-solid ${isAppt(f) ? 'fa-calendar-check' : 'fa-calendar'}"></i>${isAppt(f) ? 'APPOINTED' : 'NOT APPOINTED'}</button>
+ ${isAppt(f) ? `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-100 border-2 border-amber-400 text-amber-900 text-[11px] font-extrabold shadow-sm"><i class="fa-solid fa-calendar-day"></i> Appt তারিখ: <input type="date" value="${f.appointmentDate || ''}" onchange="setCardApptDate('${f.id}', this.value)" class="bg-transparent font-extrabold focus:outline-none"></span>` : ''}
  ${f.invoiceFileId ? `<button onclick="openInvoice('${f.id}')" class="px-3 py-1.5 rounded-xl font-bold bg-sky-50 text-sky-700 border border-sky-200 hover:bg-sky-100 transition flex items-center gap-1.5"><i class="fa-solid fa-file-invoice"></i> Invoice ওপেন</button><label title="নতুন Invoice দিয়ে বদলান" class="cursor-pointer px-2.5 py-1.5 rounded-xl font-bold bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition flex items-center gap-1"><i class="fa-solid fa-arrows-rotate"></i> রি-আপলোড<input type="file" accept="application/pdf" onchange="quickUploadInvoice('${f.id}', event)" class="hidden"></label>` : `<label class="cursor-pointer px-3 py-1.5 rounded-xl font-bold bg-white text-sky-700 border border-sky-200 hover:bg-sky-50 transition flex items-center gap-1.5"><i class="fa-solid fa-file-invoice"></i> Invoice আপলোড<input type="file" accept="application/pdf" onchange="quickUploadInvoice('${f.id}', event)" class="hidden"></label>`}
  ${f.invoiceFileId && f.invoiceBy ? `<span class="text-[9px] text-slate-400 font-bold">Invoice: ${escHtml(f.invoiceBy)}${f.invoiceAt ? ' · ' + escHtml(f.invoiceAt) : ''}</span>` : ''}
               <div class="bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm"><span class="text-[10px] font-extrabold text-slate-400 block uppercase">ফোন</span><span class="mono-type text-sm font-extrabold text-slate-700">${f.accountPhone ? waPhone(f.accountPhone) : '---'}</span></div>
@@ -1514,6 +1523,7 @@
  ${a.isSubmitted ? `<div class="mt-3"><div class="flex justify-between items-center mb-1"><span class="text-[10px] font-extrabold text-slate-500 uppercase">BGD জমার তারিখ (৩০ দিন এখান থেকে)</span></div><input type="date" id="quick_subdate_${f.id}_${idx}" value="${a.subDate || ''}" onchange="quickSaveSubDate('${f.id}', ${idx})" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-bold text-slate-800 bg-slate-50 focus:border-[#00b4d8] focus:bg-white focus:outline-none"></div>` : ''}
                 </div>
 
+                ${cardLedgerHtml(f, a)}
                 <div class="mt-4 flex gap-1.5">
                   ${(a.driveFileId) ? `<button onclick="openPdf('${f.id}', ${idx})" class="flex-1 bg-emerald-50 text-emerald-700 border border-emerald-200 py-1.5 px-2 rounded-xl text-xs font-bold hover:bg-emerald-100 transition"><i class="fa-solid fa-file-pdf"></i> PDF ওপেন</button><label title="নতুন PDF দিয়ে বদলান" class="cursor-pointer bg-amber-50 text-amber-700 border border-amber-200 py-1.5 px-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1 hover:bg-amber-100 transition"><i class="fa-solid fa-arrows-rotate"></i> রি-আপলোড / বদলান<input type="file" accept="application/pdf" onchange="quickUploadCardPdf('${f.id}', ${idx}, event)" class="hidden"></label>` : `<label class="w-full cursor-pointer bg-slate-50 text-slate-600 border border-slate-200 py-1.5 px-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1 hover:bg-slate-100 transition"><i class="fa-solid fa-upload"></i> PDF রাখুন<input type="file" accept="application/pdf" onchange="quickUploadCardPdf('${f.id}', ${idx}, event)" class="hidden"></label>`}
                 </div>
@@ -1664,7 +1674,7 @@
         document.getElementById('accountPassword').value = f.accountPassword || defaultPass || '';
         document.getElementById('docTrade').value = f.docTrade || 'NONE'; document.getElementById('docNoc').value = f.docNoc || 'NONE'; document.getElementById('docBank').value = f.docBank || 'CUSTOMER';
         document.getElementById('docPassportHeld').value = f.docPassportHeld || 'CUSTOMER'; document.getElementById('feeStatus').value = f.feeStatus || 'UNPAID';
-        document.getElementById('isAppointed').checked = !!(f.isAppointed || f.appointmentDate); 
+        document.getElementById('isAppointed').checked = !!(f.isAppointed || f.appointmentDate); document.getElementById('appointmentDate').value = f.appointmentDate || ''; document.getElementById('deliveredDate').value = f.deliveredDate || ''; 
         
         // Load fee values
         document.getElementById('baseVisaFee').value = f.baseVisaFee !== undefined ? f.baseVisaFee : 1500;
@@ -1675,7 +1685,7 @@
         document.getElementById('billAdvance').value = f.billAdvance || ''; document.getElementById('billDue').value = f.billDue || '';
         document.getElementById('keptCharge').value = f.keptCharge || ''; document.getElementById('refundAmount').value = f.refundAmount || '';
         document.getElementById('returnReason').value = f.returnReason || ''; document.getElementById('fileNote').value = f.note || '';
-        tempApplicants = JSON.parse(JSON.stringify(f.applicants));
+        tempApplicants = JSON.parse(JSON.stringify(f.applicants)); if (!f.pp) legacyLedger(tempApplicants, f.billTotal, f.billAdvance);
         loadModalLetters(f); document.getElementById('hospitalName').value = f.hospitalName || '';
       } else {
         document.getElementById('editFileId').value = ''; document.getElementById('visaType').value = ''; document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-folder-plus text-[#00b4d8]"></i> ভিসা ফাইল প্রসেসিং <span class="text-xs font-bold text-white/60">(সেভ করলে ফাইল নম্বর পাবেন)</span>';
@@ -1687,7 +1697,7 @@
         document.getElementById('isSignedUp').checked = false; document.getElementById('entryBorder').value = ''; document.getElementById('appGiven').checked = false; refreshSmsDatalist('Rtcsms'); document.getElementById('isDelivered').checked = false; document.getElementById('isReturned').checked = false;
         document.getElementById('accountPhone').value = ''; document.getElementById('accountGmail').value = ''; document.getElementById('accountPassword').value = defaultPass || '';
         document.getElementById('docTrade').value = 'NONE'; document.getElementById('docNoc').value = 'NONE'; document.getElementById('docBank').value = 'CUSTOMER';
-        document.getElementById('docPassportHeld').value = 'CUSTOMER'; document.getElementById('feeStatus').value = 'UNPAID'; document.getElementById('isAppointed').checked = false;
+        document.getElementById('docPassportHeld').value = 'CUSTOMER'; document.getElementById('feeStatus').value = 'UNPAID'; document.getElementById('isAppointed').checked = false; document.getElementById('appointmentDate').value = ''; document.getElementById('deliveredDate').value = '';
         
         // Reset fee values
         document.getElementById('baseVisaFee').value = 1500; baseFeeManual = false;
@@ -1699,7 +1709,7 @@
         tempApplicants = [{ name: '', passport: '', dob: '', nid: '', tempId: '', bgdNo: '', isSubmitted: false, subDate: '', prevBgd: '', pdfName: '' }];
         modalLet = { mode: 'COMBINED', invitation: {}, apptLetter: {}, undertaking: {}, consult: {} }; modalMedFolderId = ''; modalMedFolderName = ''; modalMedFolderNew = false; document.getElementById('hospitalName').value = '';
       }
-      toggleRefundBox(); renderApplicantForms(); toggleMedicalBox();
+      toggleRefundBox(); onApptToggle(false); onDeliveredToggle(false); renderApplicantForms(); toggleMedicalBox();
       setTimeout(calcDue, 50); // Instantly update profit visual
     }
 
@@ -1726,8 +1736,8 @@
       });
     }
 
-    function addApplicantForm() { syncTempInputs(); if (tempApplicants.length >= 4) { alert('সর্বোচ্চ ৪ জন যোগ করা যাবে!'); return; } tempApplicants.push({ name: '', passport: '', dob: '', nid: '', tempId: '', bgdNo: '', isSubmitted: false, subDate: '', prevBgd: '', pdfName: '' }); renderApplicantForms(); }
-    function removeApplicantForm(idx) { syncTempInputs(); tempApplicants.splice(idx, 1); renderApplicantForms(); }
+    function addApplicantForm() { syncTempInputs(); if (tempApplicants.length >= 4) { alert('সর্বোচ্চ ৪ জন যোগ করা যাবে!'); return; } const na = { name: '', passport: '', dob: '', nid: '', tempId: '', bgdNo: '', isSubmitted: false, subDate: '', prevBgd: '', pdfName: '' }; tempApplicants.push(na); ledInit(na); if (nz(tempApplicants[0].bill)) na.bill = tempApplicants[0].bill; const mp = tempApplicants[0].pays && tempApplicants[0].pays[0]; if (mp && nz(mp.amt) > 0) { na.pays[0].amt = mp.amt; na.pays[0].d = mp.d; na.pays[0].t = mp.t; } renderApplicantForms(); }
+    function removeApplicantForm(idx) { syncTempInputs(); const ra = tempApplicants[idx]; if (ra && (nz(ra.bill) || ledPaid(ra)) && !confirm('এই জনের বিল ৳' + fmtTk(nz(ra.bill)) + ' ও জমা ৳' + fmtTk(ledPaid(ra)) + ' ও মুছে যাবে। নিশ্চিত?')) return; tempApplicants.splice(idx, 1); renderApplicantForms(); }
 
     async function handlePdfUpload(idx, event) {
       if (cloudBusy > 0) { alert('⏳ একটি PDF আপলোড হচ্ছে, অনুগ্রহ করে শেষ হওয়া পর্যন্ত অপেক্ষা করুন!'); event.target.value = ''; return; }
@@ -1758,7 +1768,149 @@
       finally { cloudBusy = Math.max(0, cloudBusy - 1); event.target.value = ''; }
     }
 
+    // ================= 💰 জনপ্রতি হিসাব (প্রত্যেকের নিজের বিল ও জমা) + 📅 অ্যাপয়েন্টমেন্ট/ডেলিভারি তারিখ =================
+    // প্রতিটি আবেদনকারীর ভেতরে: a.bill (বিল), a.pays = [{amt, d: তারিখ, t: সময়, by}], a.billM / p.m / p.dm = হাতে বদলানো হয়েছে কিনা (তাহলে মেইনের সাথে আর অটো মেলে না)
+    // ফাইলের মোট (billTotal / billAdvance / billDue) সবসময় সবার যোগফল থেকে আসে, তাই হিসাব ট্যাব আগের মতোই কাজ করে। f.pp = true মানে এই ফাইলে জনপ্রতি হিসাব চালু।
+    const MON_EN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    function fmtDate(ds) { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(ds || '')); return m ? (parseInt(m[3], 10) + ' ' + MON_EN[parseInt(m[2], 10) - 1] + ' ' + m[1]) : String(ds || ''); }
+    function fmtTime12(t) { const m = /^(\d{1,2}):(\d{2})/.exec(String(t || '')); if (!m) return ''; let h = parseInt(m[1], 10); const ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12; return h + ':' + m[2] + ' ' + ap; }
+    function fmtPayDT(p) { return (p && p.d) ? (fmtDate(p.d) + (p.t ? ', ' + fmtTime12(p.t) : '')) : 'আগের জমা (তারিখ নেই)'; }
+    function nowTime() { return new Date(Date.now() + 6 * 3600 * 1000).toISOString().slice(11, 16); }
+    function nz(v) { const n = parseFloat(v); return isFinite(n) ? n : 0; }
+    function newPay(amt) { return { amt: amt === undefined ? '' : amt, d: getTodayStr(), t: nowTime() }; }
+    function ledPaid(a) { return (a && Array.isArray(a.pays) ? a.pays : []).reduce((t, p) => t + nz(p && p.amt), 0); }
+    function ledInit(a) { if (!Array.isArray(a.pays)) a.pays = []; if (!a.pays.length) a.pays.push(newPay()); if (a.bill === undefined || a.bill === null) a.bill = ''; }
+
+    // পুরনো ফাইল (জনপ্রতি হিসাব ছিল না): ফাইলের মোট বিল ও জমা সমান ভাগ করে প্রত্যেককে দেওয়া হয় (ভাগশেষ মেইন পায়), মোট একই থাকে। জমার তারিখ জানা নেই, তাই ফাঁকা
+    function splitAmt(total, n, i) { total = nz(total); const base = Math.floor(total / n); return i === 0 ? Math.round((total - base * (n - 1)) * 100) / 100 : base; }
+    function legacyLedger(apps, billTotal, billAdvance) {
+      const n = Math.max(1, apps.length);
+      apps.forEach((a, i) => { a.bill = splitAmt(billTotal, n, i); const pd = splitAmt(billAdvance, n, i); a.pays = pd > 0 ? [{ amt: pd, d: '', t: '', m: i > 0 ? 1 : 0, dm: 1 }] : []; a.billM = i > 0 ? 1 : 0; });
+    }
+    function ensureLedger(f) { if (!f || f.pp) return; legacyLedger(f.applicants || [], f.billTotal, f.billAdvance); f.pp = true; }
+    function recalcFileTotals(f) { if (!f || !f.pp) return; let b = 0, p = 0; (f.applicants || []).forEach(a => { b += nz(a.bill); p += ledPaid(a); }); f.billTotal = b; f.billAdvance = p; f.billDue = Math.max(0, b - p); }
+
+    // ---- ফর্মের হিসাব বক্স ----
+    function ledRefresh(userEdit) {
+      let b = 0, p = 0;
+      tempApplicants.forEach((a, i) => {
+        const pd = ledPaid(a), bl = nz(a.bill), d = bl - pd; b += bl; p += pd;
+        const ep = document.getElementById('led_paid_' + i), ed = document.getElementById('led_due_' + i);
+        if (ep) ep.innerText = fmtTk(pd);
+        if (ed) { ed.innerText = d < 0 ? ('+' + fmtTk(-d) + ' বেশি') : fmtTk(d); ed.className = 'mono-type font-extrabold ' + (d > 0 ? 'text-rose-600' : (d < 0 ? 'text-amber-600' : 'text-emerald-600')); }
+      });
+      const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+      set('billTotal', b || ''); set('billAdvance', p || ''); set('billDue', Math.max(0, b - p) || '');
+      const lt = document.getElementById('ledTotalsLine');
+      if (lt) lt.innerHTML = '👥 সবার মোট: বিল <b>' + fmtTk(b) + '</b> · জমা <b class="text-emerald-700">' + fmtTk(p) + '</b> · বাকি <b class="text-rose-600">' + fmtTk(Math.max(0, b - p)) + '</b>';
+      calcDue(); if (userEdit) calcRefund();
+    }
+    function ledMirrorBill() { const v = tempApplicants[0].bill; tempApplicants.forEach((x, j) => { if (j > 0 && !x.billM) { x.bill = v; const el = document.getElementById('led_bill_' + j); if (el) el.value = nz(v) ? v : ''; } }); }
+    function ledBill(i, v) { tempApplicants[i].bill = v; if (i === 0) ledMirrorBill(); else tempApplicants[i].billM = 1; ledRefresh(true); }
+    function ledSetPayDom(i, k, p) { const e1 = document.getElementById('led_pd_' + i + '_' + k), e2 = document.getElementById('led_pt_' + i + '_' + k); if (e1) e1.value = p.d || ''; if (e2) e2.value = p.t || ''; }
+    // মেইনের k-তম জমা বদলালে বাকিদের k-তম জমা (যেটা হাতে বদলানো হয়নি) একই টাকা/তারিখ/সময় পায়
+    function ledMirrorPay(k) {
+      const mp = tempApplicants[0].pays[k]; if (!mp) return;
+      tempApplicants.forEach((x, j) => {
+        if (j === 0 || !x.pays || !x.pays[k]) return; const q = x.pays[k];
+        if (!q.m) { q.amt = mp.amt; const e = document.getElementById('led_pa_' + j + '_' + k); if (e) e.value = (q.amt === '' || q.amt == null) ? '' : q.amt; }
+        if (!q.dm) { q.d = mp.d; q.t = mp.t; ledSetPayDom(j, k, q); }
+      });
+    }
+    function ledPayAmt(i, k, v) {
+      const p = tempApplicants[i].pays[k]; const was = nz(p.amt) > 0; p.amt = v;
+      if (!was && nz(v) > 0 && !p.dm) { p.d = getTodayStr(); p.t = nowTime(); ledSetPayDom(i, k, p); }   // টাকা লেখার মুহূর্তের তারিখ-সময় অটো বসে
+      if (i === 0) ledMirrorPay(k); else p.m = 1;
+      ledRefresh(true);
+    }
+    function ledPayDate(i, k, v) { const p = tempApplicants[i].pays[k]; p.d = v; p.dm = 1; if (i === 0) ledMirrorPay(k); }
+    function ledPayTime(i, k, v) { const p = tempApplicants[i].pays[k]; p.t = v; p.dm = 1; if (i === 0) ledMirrorPay(k); }
+    function ledAddPay(i) { syncTempInputs(); tempApplicants[i].pays.push(newPay()); renderApplicantForms(); }
+    function ledAddPayAll() { syncTempInputs(); tempApplicants.forEach(a => { a.pays.push(newPay()); }); renderApplicantForms(); }
+    function ledDelPay(i, k) {
+      const p = tempApplicants[i].pays[k];
+      if (nz(p.amt) > 0 && !confirm('এই জমার এন্ট্রি (৳' + fmtTk(p.amt) + ' · ' + fmtPayDT(p) + ') মুছবেন?')) return;
+      syncTempInputs(); tempApplicants[i].pays.splice(k, 1);
+      if (i === 0) tempApplicants.forEach((x, j) => { if (j > 0) (x.pays || []).forEach(q => { q.m = 1; q.dm = 1; }); });   // মেইনের লাইন সরলে বাকিদের লাইন আর অটো মেলে না
+      renderApplicantForms(); ledRefresh(true);
+    }
+    function ledgerBoxHtml(a, i) {
+      const pays = a.pays || []; const multi = tempApplicants.length > 1;
+      const inp = 'px-2 py-1.5 rounded-lg border border-slate-300 text-xs font-bold bg-white focus:outline-none focus:border-emerald-400';
+      const rows = pays.map((p, k) => `<div class="grid grid-cols-12 gap-1.5 items-center">
+          <div class="col-span-5 md:col-span-3 relative"><span class="absolute left-2 top-1.5 text-[11px] font-extrabold text-emerald-600">৳</span><input type="number" min="0" id="led_pa_${i}_${k}" value="${(p.amt === '' || p.amt == null) ? '' : p.amt}" oninput="ledPayAmt(${i},${k},this.value)" placeholder="জমা" class="${inp} w-full pl-5 text-emerald-700 font-extrabold"></div>
+          <div class="col-span-7 md:col-span-4"><input type="date" id="led_pd_${i}_${k}" value="${p.d || ''}" onchange="ledPayDate(${i},${k},this.value)" class="${inp} w-full"></div>
+          <div class="col-span-8 md:col-span-3"><input type="time" id="led_pt_${i}_${k}" value="${p.t || ''}" onchange="ledPayTime(${i},${k},this.value)" class="${inp} w-full"></div>
+          <div class="col-span-4 md:col-span-2 flex items-center justify-end gap-1.5">${(!p.d && nz(p.amt) > 0) ? '<span class="text-[9px] font-extrabold text-amber-600">আগের</span>' : ''}<button type="button" onclick="ledDelPay(${i},${k})" title="এই জমা মুছুন" class="text-rose-500 hover:text-white hover:bg-rose-500 px-2 py-1 rounded text-[10px] font-bold transition"><i class="fa-solid fa-xmark"></i></button></div>
+        </div>`).join('');
+      return `<div class="mt-3 pt-3 border-t border-slate-100"><div class="bg-emerald-50/50 border border-emerald-200 rounded-xl p-3">
+        <div class="flex flex-wrap items-end justify-between gap-3 mb-2.5">
+          <div><span class="text-[11px] font-extrabold text-emerald-800 uppercase">💰 ${i === 0 ? 'মেইনের' : 'এই জনের'} হিসাব</span>${(i > 0 && !a.billM) ? '<div class="text-[9px] font-bold text-slate-400">বিল মেইনের সমান বসেছে, বদলানো যাবে</div>' : ''}</div>
+          <div class="flex items-end gap-3 text-[11px] font-bold">
+            <div><label class="block text-[10px] font-extrabold text-blue-700 mb-0.5">মোট বিল</label><input type="number" min="0" id="led_bill_${i}" value="${nz(a.bill) ? a.bill : ''}" oninput="ledBill(${i},this.value)" placeholder="0" class="w-28 px-2 py-1.5 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 text-xs font-extrabold focus:outline-none"></div>
+            <div class="text-right"><span class="block text-[10px] font-extrabold text-slate-500">জমা</span><span id="led_paid_${i}" class="mono-type font-extrabold text-emerald-700">0</span></div>
+            <div class="text-right"><span class="block text-[10px] font-extrabold text-slate-500">বাকি</span><span id="led_due_${i}" class="mono-type font-extrabold text-rose-600">0</span></div>
+          </div>
+        </div>
+        <div class="text-[10px] font-extrabold text-slate-500 mb-1">জমার এন্ট্রি (টাকা · তারিখ · সময়)${(i === 0 && multi) ? ' — মেইন লিখলে বাকিদের একই টাকা অটো বসবে, দরকারে বাকিদের টা বদলান' : ''}</div>
+        <div class="space-y-1.5">${rows}</div>
+        <div class="flex flex-wrap gap-2 mt-2"><button type="button" onclick="ledAddPay(${i})" class="bg-white text-emerald-700 border border-emerald-300 hover:bg-emerald-50 px-3 py-1.5 rounded-lg text-[11px] font-extrabold transition"><i class="fa-solid fa-plus mr-1"></i>আরেকটা জমা যোগ</button>${(i === 0 && multi) ? '<button type="button" onclick="ledAddPayAll()" class="bg-emerald-600 text-white hover:bg-emerald-700 px-3 py-1.5 rounded-lg text-[11px] font-extrabold transition"><i class="fa-solid fa-users mr-1"></i>সবার জন্য একসাথে জমার ঘর</button>' : ''}</div>
+      </div></div>`;
+    }
+
+    // ---- অ্যাপয়েন্টমেন্ট / ডেলিভারি তারিখ (ফর্ম) ----
+    function onApptToggle(user) { const c = document.getElementById('isAppointed').checked, d = document.getElementById('appointmentDate'); document.getElementById('apptDateBox').classList.toggle('hidden', !c); if (c) { if (user && !d.value) d.value = getTodayStr(); } else d.value = ''; }
+    function onApptDateChange() { const c = document.getElementById('isAppointed'), d = document.getElementById('appointmentDate'); if (d.value && !c.checked) { c.checked = true; document.getElementById('apptDateBox').classList.remove('hidden'); } }
+    function onDeliveredToggle(user) { const c = document.getElementById('isDelivered').checked, d = document.getElementById('deliveredDate'); document.getElementById('deliveredDateBox').classList.toggle('hidden', !c); if (c) { if (user && !d.value) d.value = getTodayStr(); } else d.value = ''; }
+
+    // ---- কার্ড/টেবিলে তারিখের হাইলাইট ----
+    function dateChips(f) {
+      let h = '';
+      if (isAppt(f)) h += '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-100 border border-amber-400 text-amber-900 text-[10px] font-extrabold"><i class="fa-solid fa-calendar-day"></i> Appt: ' + (f.appointmentDate ? escHtml(fmtDate(f.appointmentDate)) : 'তারিখ নেই') + '</span>';
+      if (f.isDelivered && !f.isReturned) h += '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-100 border border-emerald-400 text-emerald-900 text-[10px] font-extrabold"><i class="fa-solid fa-box-archive"></i> Delivered: ' + (f.deliveredDate ? escHtml(fmtDate(f.deliveredDate)) : 'তারিখ নেই') + '</span>';
+      return h ? '<div class="flex flex-wrap gap-1 mt-1">' + h + '</div>' : '';
+    }
+    // কার্ডে প্রতিজনের হিসাব (শুধু অ্যাডমিন, হিসাব ট্যাবের মতো)
+    function cardLedgerHtml(f, a) {
+      if (!isAdmin || !f.pp) return '';
+      const pd = ledPaid(a), bl = nz(a.bill), d = bl - pd; if (!bl && !pd) return '';
+      const pays = (a.pays || []).map(p => '<div class="flex justify-between gap-2"><span class="text-emerald-700">+ ৳' + fmtTk(p.amt) + '</span><span class="text-slate-400 text-right">' + escHtml(fmtPayDT(p)) + '</span></div>').join('');
+      return '<div class="mt-3 bg-emerald-50/60 border border-emerald-100 rounded-xl p-2 text-[10px] font-bold"><div class="flex justify-between gap-2 font-extrabold mb-1"><span>💰 বিল ৳' + fmtTk(bl) + '</span><span class="text-emerald-700">জমা ৳' + fmtTk(pd) + '</span><span class="' + (d > 0 ? 'text-rose-600' : 'text-emerald-600') + '">বাকি ৳' + fmtTk(Math.max(0, d)) + '</span></div>' + pays + '</div>';
+    }
+    function acctLedgerHtml(f) {
+      if (!f.pp) return '';
+      const parts = (f.applicants || []).map(a => {
+        const pd = ledPaid(a), bl = nz(a.bill), d = bl - pd;
+        const pays = (a.pays || []).map(p => '<div class="text-[10px] text-emerald-700 font-bold">+ ' + fmtTk(p.amt) + ' <span class="text-slate-400">· ' + escHtml(fmtPayDT(p)) + (p.by ? ' · ' + escHtml(p.by) : '') + '</span></div>').join('');
+        return '<div class="mt-1 pl-2 border-l-2 border-slate-200"><div class="text-[10px] font-extrabold text-slate-700">' + escHtml(a.name || 'Unnamed') + ' <span class="text-slate-400">· বিল ' + fmtTk(bl) + ' · জমা ' + fmtTk(pd) + ' · </span><span class="' + (d > 0 ? 'text-rose-600' : 'text-emerald-600') + '">বাকি ' + fmtTk(Math.max(0, d)) + '</span></div>' + pays + '</div>';
+      }).join('');
+      return '<details onclick="event.stopPropagation()" class="mt-1"><summary class="text-[10px] font-extrabold text-sky-700 cursor-pointer">👥 জনপ্রতি হিসাব ও জমার তারিখ</summary>' + parts + '</details>';
+    }
+
+    // ---- ডেলিভারি তারিখ মডাল ----
+    function openDeliveryDateModal(fileId, fresh) {
+      const f = visaFiles.find(x => x.id === fileId); if (!f) return;
+      document.getElementById('deliveryTargetId').value = fileId; document.getElementById('deliveryFresh').value = fresh ? '1' : '';
+      document.getElementById('deliveryWho').innerText = (f.serial ? '#' + f.serial + ' · ' : '') + mainNameOf(f) + (f.applicants.length > 1 ? ' + ' + (f.applicants.length - 1) + ' জন' : '');
+      document.getElementById('deliveryDateInput').value = f.deliveredDate || getTodayStr();
+      document.getElementById('deliveryDateModal').classList.remove('hidden');
+    }
+    function closeDeliveryDateModal() { document.getElementById('deliveryDateModal').classList.add('hidden'); }
+    function confirmDeliveryDate() {
+      const f = visaFiles.find(x => x.id === document.getElementById('deliveryTargetId').value); if (!f) { closeDeliveryDateModal(); return; }
+      const v = document.getElementById('deliveryDateInput').value || getTodayStr();
+      f.isDelivered = true; f.isReturned = false; f.deliveredDate = v;
+      f.updatedAt = stampNow(); f.updatedBy = whoAmI();
+      closeDeliveryDateModal(); renderFiles(); syncToCloud(); showToast('📦 ডেলিভারি সম্পন্ন · ' + fmtDate(v));
+    }
+    function setCardApptDate(fileId, v) {
+      const f = visaFiles.find(x => x.id === fileId); if (!f) return;
+      f.appointmentDate = v || ''; if (v) f.isAppointed = true;
+      f.updatedAt = stampNow(); f.updatedBy = whoAmI(); renderFiles(); syncToCloud(); showToast(v ? '📅 Appointment তারিখ: ' + fmtDate(v) : 'Appointment তারিখ মোছা হয়েছে');
+    }
+
     function renderApplicantForms() {
+      tempApplicants.forEach(ledInit);
       if (!baseFeeManual) { const bf = document.getElementById('baseVisaFee'); if (bf) { bf.value = VISA_FEE_PER_PERSON * tempApplicants.length; calcDue(); } }
       document.getElementById('btnAddCoApplicant').style.display = tempApplicants.length >= 4 ? 'none' : 'inline-flex';
       document.getElementById('applicantsContainer').innerHTML = tempApplicants.map((a, i) => `
@@ -1784,8 +1936,10 @@
               <div class="flex items-center gap-1.5"><label class="cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold flex-1 text-center truncate transition"><i class="fa-solid fa-upload"></i> ${a.driveFileId ? 'রি-আপলোড / বদলান' : 'PDF আপলোড'}<input type="file" accept="application/pdf" onchange="handlePdfUpload(${i}, event)" class="hidden"></label>${(a.driveFileId) ? `<button type="button" onclick="removeFormPdf(${i})" class="text-rose-500 bg-rose-50 px-2 py-1.5 rounded-lg text-xs hover:bg-rose-500 hover:text-white transition"><i class="fa-solid fa-xmark"></i></button>` : ''}</div>
             </div>
           </div>
+        ${ledgerBoxHtml(a, i)}
         </div>
       `).join('');
+      ledRefresh(false);
     }
 
     // ================= 🔢 অটো সিরিয়াল নম্বর (প্র্যাকটিক্যাল ফাইলে লেখার জন্য) =================
@@ -1824,6 +1978,7 @@
         catch (e) { savingSet = false; alert('⚠️ সিরিয়াল নম্বর আনা যায়নি, ফাইল সেভ হয়নি।\n\nইন্টারনেট ঠিক আছে কিনা দেখে আবার "সেভ" চাপুন।\nবারবার হলে অ্যাডমিনকে জানান (Firebase Rules এ rtc_counter এর পারমিশন লাগতে পারে)।\n\n' + ((e && e.message) || e)); return; }
         savingSet = false; syncTempInputs();
       }
+      tempApplicants.forEach(a => { ledInit(a); a.bill = nz(a.bill); a.pays = (a.pays || []).filter(p => nz(p.amt) > 0).map(p => { const q = { amt: nz(p.amt), d: p.d || '', t: p.t || '', by: p.by || (p.d ? whoAmI() : '') }; if (p.m) q.m = 1; if (p.dm) q.dm = 1; return q; }); });
       const fileObj = {
         id: editId || modalSetKey || 'SET_' + Date.now(),
         visaType: document.getElementById('visaType').value, worker: document.getElementById('workerName').value.trim(),
@@ -1831,6 +1986,8 @@
         border: document.getElementById('entryBorder').value, smsApp: normSmsName(document.getElementById('smsApp').value), appGiven: document.getElementById('appGiven').checked, accountPhone: document.getElementById('accountPhone').value.trim(), accountGmail: document.getElementById('accountGmail').value.trim(), accountPassword: document.getElementById('accountPassword').value.trim(),
         docTrade: document.getElementById('docTrade').value, docNoc: document.getElementById('docNoc').value, docBank: document.getElementById('docBank').value, docPassportHeld: document.getElementById('docPassportHeld').value,
         feeStatus: document.getElementById('feeStatus').value, isAppointed: document.getElementById('isAppointed').checked,
+        appointmentDate: document.getElementById('isAppointed').checked ? (document.getElementById('appointmentDate').value || '') : '',
+        deliveredDate: (document.getElementById('isDelivered').checked && !document.getElementById('isReturned').checked) ? (document.getElementById('deliveredDate').value || '') : '',
         
         baseVisaFee: parseFloat(document.getElementById('baseVisaFee').value) || 1500,
         softwareCharge: parseFloat(document.getElementById('softwareCharge').value) || 0,
@@ -1841,6 +1998,7 @@
         updatedAt: new Date().toLocaleString('en-GB', BD_TIME_OPTS), updatedBy: whoAmI()
       };
             const prevSet = editId ? visaFiles.find(x => x.id === editId) : null;
+      fileObj.pp = true; recalcFileTotals(fileObj);   // ফাইলের মোট = সবার যোগফল
       fileObj.serial = prevSet ? (prevSet.serial || '') : (newSerial || '');
       fileObj.transferLog = prevSet ? (prevSet.transferLog || []) : [];
       fileObj.driveStatus = modalFolderNew ? modalStatusAtCreate : (prevSet ? (prevSet.driveStatus || '') : '');
@@ -1902,7 +2060,7 @@
     // ================= 🕘 অ্যাক্টিভিটি লগ (কে কী করেছে, কখন) =================
     // প্রতিবার সফল সিঙ্কের পর, আগের অবস্থার সাথে তুলনা করে কী বদলেছে তার এন্ট্রি Firebase এর rtc_activity_log এ জমা হয় (শুধু নতুন এন্ট্রি যোগ হয়, কিছু বদলায় না)
     const LOG_FIELDS = [
-      ['visaType', 'ভিসা টাইপ'], ['worker', 'ওয়ার্কার'], ['isSignedUp', 'সাইন-আপ', 'bool'], ['isDelivered', 'ডেলিভারি', 'bool'], ['isReturned', 'ফেরত', 'bool'], ['isAppointed', 'অ্যাপয়েন্টমেন্ট', 'bool'], ['appointmentDate', 'অ্যাপয়েন্টমেন্ট তারিখ'],
+      ['visaType', 'ভিসা টাইপ'], ['worker', 'ওয়ার্কার'], ['isSignedUp', 'সাইন-আপ', 'bool'], ['isDelivered', 'ডেলিভারি', 'bool'], ['isReturned', 'ফেরত', 'bool'], ['isAppointed', 'অ্যাপয়েন্টমেন্ট', 'bool'], ['appointmentDate', 'অ্যাপয়েন্টমেন্ট তারিখ'], ['deliveredDate', 'ডেলিভারি তারিখ'],
       ['border', 'বর্ডার'], ['smsApp', 'SMS অ্যাপ'], ['appGiven', 'অ্যাপ দেওয়া হয়েছে', 'bool'], ['accountPhone', 'ফোন', 'label'], ['accountGmail', 'জিমেইল', 'label'], ['accountPassword', 'পাসওয়ার্ড', 'label'],
       ['docTrade', 'ট্রেড ডক'], ['docNoc', 'NOC'], ['docBank', 'ব্যাংক ডক'], ['docPassportHeld', 'পাসপোর্ট জমা'], ['feeStatus', 'ফি স্ট্যাটাস'],
       ['baseVisaFee', 'ভিসা ফি', 'num'], ['softwareCharge', 'সফটওয়্যার চার্জ', 'num'], ['billTotal', 'মোট বিল', 'num'], ['billAdvance', 'অ্যাডভান্স', 'num'], ['billDue', 'বাকি', 'num'], ['keptCharge', 'রাখা চার্জ', 'num'], ['refundAmount', 'ফেরত টাকা', 'num'],
@@ -1931,6 +2089,7 @@
         const q = oa.find(function (x) { return (x.name || '') === (p.name || ''); }); if (!q) return;
         const ch = LOG_PERSON_FIELDS.filter(function (d) { return (q[d[0]] == null ? '' : q[d[0]]) !== (p[d[0]] == null ? '' : p[d[0]]); }).map(function (d) { return d[1]; });
         if (ch.length) parts.push((p.name || 'নামহীন') + ': ' + ch.join(', '));
+        if (old.pp && f.pp) { const ob = nz(q.bill), nb = nz(p.bill), op = ledPaid(q), np = ledPaid(p); if (ob !== nb) parts.push((p.name || 'নামহীন') + ': বিল ' + ob + ' → ' + nb); if (op !== np) parts.push((p.name || 'নামহীন') + ': জমা ' + op + ' → ' + np); }
       });
       if ((old.invoiceFileId || '') !== (f.invoiceFileId || '')) parts.push('ইনভয়েস PDF ' + (f.invoiceFileId ? 'আপলোড/বদল' : 'মোছা'));
       if ((old.invitationFileId || '') !== (f.invitationFileId || '')) parts.push('Invitation Letter PDF ' + (f.invitationFileId ? 'আপলোড/বদল' : 'মোছা'));
@@ -2044,7 +2203,7 @@
       }
       const noBill = !ret && bill === 0 && paid === 0;
       const state = ret ? 'RETURNED' : (noBill ? 'NOBILL' : (due > 0 ? 'DUE' : 'CLEAR'));
-      return { f: f, ret: ret, mode: ret ? 'RETURNED' : (del ? 'DELIVERED' : 'RUNNING'), bill: bill, paid: paid, due: due, refund: refund, expense: expense, profit: profit, kept: kept, spent: spent, pending: pending, expected: expected, realized: realized,
+      return { f: f, ret: ret, mode: ret ? 'RETURNED' : (del ? 'DELIVERED' : (appt ? 'APPOINTED' : 'RUNNING')), bill: bill, paid: paid, due: due, refund: refund, expense: expense, profit: profit, kept: kept, spent: spent, pending: pending, expected: expected, realized: realized,
         refundable: (!ret && !del && !appt) ? paid : 0, cash: Math.max(0, paid - refund), noBill: noBill, state: state,
         name: mainNameOf(f), others: (f.applicants || []).slice(1).map(a => a.name).filter(Boolean) };
     }
@@ -2093,7 +2252,7 @@
     function renderAccountsView(container, files) {
       container = container || document.getElementById('fileListContainer'); if (files) acctLast = files;
       const allRows = acctLast.map(acctRow);
-      const mc = { DELIVERED: 0, RUNNING: 0, RETURNED: 0, ALL: allRows.length }; allRows.forEach(r => { mc[r.mode]++; });
+      const mc = { DELIVERED: 0, APPOINTED: 0, RUNNING: 0, RETURNED: 0, ALL: allRows.length }; allRows.forEach(r => { mc[r.mode]++; });
       const rows = allRows.filter(r => acctMode === 'ALL' || r.mode === acctMode);
       const sum = k => rows.reduce((t, r) => t + r[k], 0);
       const T = { bill: sum('bill'), paid: sum('paid'), due: sum('due'), refund: sum('refund'), expense: sum('expense'), profit: sum('profit'), cash: sum('cash'), pending: sum('pending'), realized: sum('realized'), refundable: sum('refundable'), expected: sum('expected') };
@@ -2107,15 +2266,18 @@
       const modeBtn = (k, lb, sub) => '<button onclick="setAcctMode(\'' + k + '\')" class="flex-1 min-w-[130px] px-4 py-3 rounded-2xl border-2 text-left transition ' + (acctMode === k ? 'bg-[#0b132b] text-white border-[#0b132b] shadow-md' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50') + '"><div class="text-sm font-extrabold">' + lb + ' <span class="opacity-70">' + mc[k] + '</span></div><div class="text-[10px] font-bold ' + (acctMode === k ? 'text-slate-300' : 'text-slate-400') + '">' + sub + '</div></button>';
       // 📊 সব ট্যাবের উপরে সবসময়: Running / Delivered / Returned ও মোট, এক নজরে
       const agg = m => { const a = { n: 0, bill: 0, paid: 0, refund: 0, due: 0, expense: 0, refundable: 0, profit: 0, expected: 0, hand: 0 }; allRows.forEach(r => { if (m && r.mode !== m) return; a.n++; a.bill += r.bill; a.paid += r.paid; a.refund += r.refund; a.due += r.due; a.expense += r.expense; a.refundable += r.refundable; a.profit += r.profit; a.expected += r.expected; a.hand += r.paid - r.refund - r.expense; }); return a; };
-      const aR = agg('RUNNING'), aD = agg('DELIVERED'), aX = agg('RETURNED'), aT = agg(null);
+      const aR = agg('RUNNING'), aA = agg('APPOINTED'), aD = agg('DELIVERED'), aX = agg('RETURNED'), aT = agg(null);
       const sgnC = v => v >= 0 ? 'text-teal-600' : 'text-rose-600';
       const ovRow = (lb, v, cls) => '<div class="flex items-center justify-between py-1"><span class="text-[11px] font-bold text-slate-500">' + lb + '</span><span class="mono-type text-xs font-extrabold ' + (cls || 'text-[#0b132b]') + '">' + fmtTk(v) + ' ৳</span></div>';
       const ovBig = (lb, v, cls) => '<div class="flex items-center justify-between border-t-2 border-slate-200 mt-1.5 pt-2"><span class="text-[11px] font-extrabold text-slate-700">' + lb + '</span><span class="mono-type text-base font-extrabold ' + cls + '">' + fmtTk(v) + ' ৳</span></div>';
       const ovCard = (title, n, border, body) => '<div class="bg-white rounded-2xl border-2 ' + border + ' shadow-sm p-4"><div class="flex items-center justify-between mb-1.5"><p class="text-xs font-extrabold text-[#0b132b]">' + title + '</p><span class="text-[10px] font-extrabold bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">' + n + 'টি ফাইল</span></div>' + body + '</div>';
-      const strip = '<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 mb-4">'
+      const strip = '<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3 mb-4">'
         + ovCard('📂 Running', aR.n, 'border-sky-200',
           ovRow('মোট বিল', aR.bill) + ovRow('জমা (ক্লায়েন্টের)', aR.paid, 'text-emerald-600') + ovRow('ফেরত হতে পারে', aR.refundable, 'text-orange-600') + ovRow('বাকি', aR.due, 'text-rose-600') + ovRow('খরচ হয়ে গেছে', aR.expense, 'text-amber-600') + ovRow('সম্ভাব্য লাভ', aR.expected, sgnC(aR.expected))
           + ovBig('🏦 ক্যাশ (ক্লায়েন্টের রাখা)', aR.hand, sgnC(aR.hand)))
+        + ovCard('📅 Appointed', aA.n, 'border-amber-300',
+          ovRow('মোট বিল', aA.bill) + ovRow('জমা', aA.paid, 'text-emerald-600') + ovRow('বাকি (পাব)', aA.due, 'text-rose-600') + ovRow('খরচ (হয়ে গেছে)', aA.expense, 'text-amber-600') + ovRow('সম্ভাব্য লাভ (বাকি পেলে)', aA.expected, sgnC(aA.expected))
+          + ovBig('🏦 ক্যাশ (জমা − খরচ)', aA.hand, sgnC(aA.hand)))
         + ovCard('📦 Delivered', aD.n, 'border-emerald-300',
           ovRow('মোট বিল', aD.bill) + ovRow('জমা (এসেছে)', aD.paid, 'text-emerald-600') + ovRow('বাকি (পাব)', aD.due, 'text-rose-600') + ovRow('খরচ', aD.expense, 'text-amber-600') + ovRow('সম্পূর্ণ লাভ (বাকি পেলে)', aD.profit, sgnC(aD.profit))
           + ovBig('💵 ক্যাশ আমার (জমা − খরচ)', aD.hand, sgnC(aD.hand)))
@@ -2124,10 +2286,10 @@
           + ovBig('💵 রাখা চার্জ (আমার)', aX.hand, sgnC(aX.hand)))
         + ovCard('📊 মোট', aT.n, 'border-[#0b132b]',
           ovRow('মোট বিল', aT.bill) + ovRow('জমা', aT.paid, 'text-emerald-600') + ovRow('ফেরত', aT.refund, 'text-orange-600') + ovRow('বাকি', aT.due, 'text-rose-600') + ovRow('খরচ', aT.expense, 'text-amber-600')
-          + ovRow('✅ আমার নিজের (Delivered+Returned)', aD.hand + aX.hand, sgnC(aD.hand + aX.hand)) + ovRow('🏦 ক্লায়েন্টের রাখা (Running)', aR.hand, sgnC(aR.hand))
+          + ovRow('✅ আমার নিজের (Delivered+Returned)', aD.hand + aX.hand, sgnC(aD.hand + aX.hand)) + ovRow('🏦 ক্লায়েন্টের রাখা (Running+Appointed)', aR.hand + aA.hand, sgnC(aR.hand + aA.hand))
           + ovBig('💵 মোট ক্যাশ আমার কাছে', aT.hand, sgnC(aT.hand)))
         + '</div>';
-      let html = strip + '<div class="flex flex-wrap gap-2 mb-4">' + modeBtn('DELIVERED', '📦 Delivered', 'কাজ শেষ · আসল লাভ-খরচ-ক্যাশ') + modeBtn('RUNNING', '📂 Running', 'চলছে · ক্লায়েন্টের জমা') + modeBtn('RETURNED', '🔙 Returned', 'ফেরত · রাখা চার্জ') + modeBtn('ALL', '📊 সব একসাথে', 'মিশ্র হিসাব') + '</div>';
+      let html = strip + '<div class="flex flex-wrap gap-2 mb-4">' + modeBtn('DELIVERED', '📦 Delivered', 'কাজ শেষ · আসল লাভ-খরচ-ক্যাশ') + modeBtn('APPOINTED', '📅 Appointed', 'স্লট পাওয়া · খরচ হয়ে গেছে') + modeBtn('RUNNING', '📂 Running', 'চলছে · ক্লায়েন্টের জমা') + modeBtn('RETURNED', '🔙 Returned', 'ফেরত · রাখা চার্জ') + modeBtn('ALL', '📊 সব একসাথে', 'মিশ্র হিসাব') + '</div>';
       if (acctMode === 'DELIVERED') {
         html += '<div class="grid grid-cols-2 lg:grid-cols-3 gap-3 mb-4">'
           + card('মোট বিল', T.bill, ['border-slate-200', 'text-[#0b132b]'], mc.DELIVERED + 'টি ডেলিভারড ফাইল · সর্বোচ্চ যা পেতে পারি')
@@ -2137,13 +2299,21 @@
           + card('✅ আসল লাভ (এখন পর্যন্ত)', T.realized, sgn(T.realized), 'ক্যাশ এসেছে − খরচ')
           + card('📈 সম্পূর্ণ লাভ (বাকি পেলে)', T.profit, sgn(T.profit), 'মোট বিল − খরচ')
           + '</div>';
+      } else if (acctMode === 'APPOINTED') {
+        html += '<div class="grid grid-cols-2 lg:grid-cols-3 gap-3 mb-4">'
+          + card('মোট বিল', T.bill, ['border-slate-200', 'text-[#0b132b]'], mc.APPOINTED + 'টি Appointed ফাইল')
+          + card('💵 জমা (ক্লায়েন্ট দিয়েছে)', T.paid, ['border-emerald-200', 'text-emerald-600'], 'ডেলিভারির আগেই Appointment হয়ে গেছে')
+          + card('⏳ এখনো পাব (বাকি)', T.due, ['border-rose-300', 'text-rose-600'], cnt.DUE + ' জনের কাছে')
+          + card('মোট খরচ', T.expense, ['border-amber-200', 'text-amber-600'], 'Appointment হয়ে গেছে, তাই ভিসা ফি + SMS/অন্য খরচ হয়ে গেছে')
+          + card('✅ ক্যাশ − খরচ', T.realized, sgn(T.realized), 'জমা − খরচ (এখন পর্যন্ত)')
+          + card('📈 সম্ভাব্য লাভ (বাকি পেলে)', T.profit, sgn(T.profit), 'মোট বিল − খরচ')
+          + '</div>';
       } else if (acctMode === 'RUNNING') {
         html += '<div class="grid grid-cols-2 lg:grid-cols-3 gap-3 mb-4">'
           + card('🏦 ক্লায়েন্টের জমা (আমার কাছে)', T.paid, ['border-teal-300', 'text-teal-600'], 'এখনো আমার লাভ না, কাজ শেষ হলে লাভ হবে')
           + card('↩️ ফেরত দিতে হতে পারে', T.refundable, ['border-orange-200', 'text-orange-600'], 'Appointment হয়নি এমন ফাইলের জমা')
           + card('মোট বিল', T.bill, ['border-slate-200', 'text-[#0b132b]'], mc.RUNNING + 'টি রানিং ফাইল')
           + card('বাকি (পাব)', T.due, ['border-rose-300', 'text-rose-600'], cnt.DUE + ' জনের কাছে')
-          + card('খরচ হয়ে গেছে (Appt হয়েছে)', T.expense, ['border-amber-200', 'text-amber-600'], 'Appointed ফাইলের ভিসা ফি + SMS/অন্য')
           + card('⏳ লেখা খরচ (Appt হয়নি)', T.pending, ['border-slate-300', 'text-slate-500'], 'এখনো খরচ হয়নি, কাটা হয়নি')
           + card('📈 সম্ভাব্য লাভ (ডেলিভারি হলে)', T.expected, sgn(T.expected), 'বিল − খরচ, সব রানিং ফাইল ধরে')
           + '</div>';
@@ -2174,9 +2344,9 @@
         + '<button onclick="exportAccountsCsv()" class="bg-white hover:bg-slate-50 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-bold border border-slate-200 shadow-sm"><i class="fa-solid fa-file-csv text-emerald-600 mr-1"></i> CSV</button></div>';
       if (!list.length) { container.innerHTML = html + '<div class="bg-white rounded-3xl p-12 text-center border border-slate-200 shadow-sm"><h4 class="font-extrabold text-slate-700 text-base">এই ফিল্টারে কোনো ফাইল নেই</h4></div>'; return; }
       const stBadge = r => r.state === 'RETURNED' ? '<span class="bg-orange-100 text-orange-700 px-2 py-0.5 rounded-md text-[10px] font-extrabold">🔙 ফেরত</span>' : (r.state === 'NOBILL' ? '<span class="bg-slate-100 text-slate-500 px-2 py-0.5 rounded-md text-[10px] font-extrabold">❔ বিল নেই</span>' : (r.state === 'DUE' ? '<span class="bg-rose-100 text-rose-700 px-2 py-0.5 rounded-md text-[10px] font-extrabold">⏳ বাকি</span>' : '<span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-md text-[10px] font-extrabold">✅ পরিশোধ</span>'));
-      const progress = f => (isAppt(f) ? '📅 Appointed · ' : '') + (f.isDelivered ? '📦 ডেলিভারড' : (f.isReturned ? '' : '📂 রানিং'));
+      const progress = f => (isAppt(f) ? '<span class="inline-block bg-amber-100 text-amber-900 border border-amber-400 px-1.5 py-0.5 rounded font-extrabold mb-0.5">📅 Appointed' + (f.appointmentDate ? ' · ' + escHtml(fmtDate(f.appointmentDate)) : '') + '</span><br>' : '') + (f.isDelivered ? '<span class="inline-block bg-emerald-100 text-emerald-900 border border-emerald-400 px-1.5 py-0.5 rounded font-extrabold">📦 ডেলিভারড' + (f.deliveredDate ? ' · ' + escHtml(fmtDate(f.deliveredDate)) : '') + '</span>' : (f.isReturned ? '' : '📂 রানিং'));
       const td = 'px-3 py-2.5 text-right mono-type text-xs font-bold whitespace-nowrap';
-      const ex = acctMode === 'DELIVERED';   // ডেলিভারডে আলাদা "আসল লাভ" কলাম
+      const ex = acctMode === 'DELIVERED' || acctMode === 'APPOINTED';   // ডেলিভারডে আলাদা "আসল লাভ" কলাম
       const cashLb = acctMode === 'RUNNING' ? 'ক্লায়েন্টের জমা' : (acctMode === 'DELIVERED' ? 'ক্যাশ এসেছে' : 'হাতে আছে');
       html += '<div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden"><div class="overflow-x-auto"><table class="w-full min-w-[1000px] text-left">'
         + '<thead class="bg-[#0b132b] text-white text-[11px] uppercase tracking-wide"><tr><th class="px-3 py-3">#</th><th class="px-3 py-3">নাম</th><th class="px-3 py-3">অবস্থা</th><th class="px-3 py-3 text-right">বিল</th><th class="px-3 py-3 text-right">জমা</th><th class="px-3 py-3 text-right">বাকি</th><th class="px-3 py-3 text-right">ফেরত</th><th class="px-3 py-3 text-right">খরচ</th><th class="px-3 py-3 text-right">' + (ex ? 'সম্পূর্ণ লাভ' : 'লাভ') + '</th>' + (ex ? '<th class="px-3 py-3 text-right">আসল লাভ</th>' : '') + '<th class="px-3 py-3 text-right">' + cashLb + '</th></tr></thead><tbody class="divide-y divide-slate-100">'
@@ -2185,7 +2355,7 @@
           return '<tr onclick="openFileModal(\'' + escHtml(f.id) + '\')" class="hover:bg-sky-50/60 cursor-pointer">'
             + '<td class="px-3 py-2.5">' + serialBadge(f) + '</td>'
             + '<td class="px-3 py-2.5 min-w-[180px]"><div class="text-xs font-extrabold text-[#0b132b]">' + escHtml(r.name) + '</div>'
-            + (r.others.length ? '<div class="text-[10px] text-slate-400 font-bold">+ ' + escHtml(r.others.join(', ')) + '</div>' : '') + acctTransferNotes(f)
+            + (r.others.length ? '<div class="text-[10px] text-slate-400 font-bold">+ ' + escHtml(r.others.join(', ')) + '</div>' : '') + acctTransferNotes(f) + acctLedgerHtml(f)
             + '<div class="text-[10px] text-slate-400 font-bold mono-type">' + (f.accountPhone ? waPhone(f.accountPhone) : '') + (f.worker ? ' · ' + escHtml(f.worker) : '') + '</div></td>'
             + '<td class="px-3 py-2.5">' + stBadge(r) + '<div class="text-[10px] text-slate-400 font-bold mt-0.5">' + progress(f) + '</div></td>'
             + '<td class="' + td + ' text-[#0b132b]">' + fmtTk(r.bill) + (r.ret ? '<div class="text-[9px] text-orange-500 font-bold">চার্জ রাখা</div>' : '') + '</td>'
@@ -2201,9 +2371,10 @@
         + '<td class="' + td + ' text-[#0b132b]">' + fmtTk(L.bill) + '</td><td class="' + td + ' text-emerald-600">' + fmtTk(L.paid) + '</td><td class="' + td + ' text-rose-600">' + fmtTk(L.due) + '</td><td class="' + td + ' text-orange-600">' + fmtTk(L.refund) + '</td><td class="' + td + ' text-amber-600">' + fmtTk(L.expense) + '</td><td class="' + td + (L.profit >= 0 ? ' text-sky-600' : ' text-rose-600') + '">' + fmtTk(L.profit) + '</td>' + (ex ? '<td class="' + td + (L.realized >= 0 ? ' text-emerald-700' : ' text-rose-600') + '">' + fmtTk(L.realized) + '</td>' : '') + '<td class="' + td + (L.cash >= 0 ? ' text-teal-600' : ' text-rose-600') + '">' + fmtTk(L.cash) + '</td></tr></tfoot></table></div></div>';
       const notes = {
         DELIVERED: 'ℹ️ Delivered = কাজ শেষ। এখানে সব খরচ (ভিসা ফি + SMS/অন্য) হয়ে গেছে ধরা হয়। <b>সম্পূর্ণ লাভ</b> = বিল − খরচ (বাকি পেলে যা হবে)। <b>আসল লাভ</b> = ক্যাশ এসেছে (জমা) − খরচ (এখন পর্যন্ত যা সত্যিই লাভ)। <b>বাকি</b> = যা এখনো ক্লায়েন্টের কাছে পাব; সর্বোচ্চ পাওয়া যায় মোট বিল পর্যন্ত। যেকোনো সারিতে চাপলে ফাইল এডিট খুলবে।',
-        RUNNING: 'ℹ️ Running = কাজ চলছে। ক্লায়েন্টের <b>জমা</b> আমার কাছে রাখা টাকা, এখনো আমার লাভ না; Appointment না হলে ফেরত দিতে হতে পারে (উপরে "ফেরত দিতে হতে পারে")। Appointment হলেই ভিসা ফি + SMS/অন্য খরচ হয়ে যায় (খরচ কলাম)। Appointment না হলে লেখা খরচ ছোট করে দেখায়, কাটে না। কাজ শেষ করে Delivered করলে হিসাব Delivered ট্যাবে চলে যাবে।',
+        RUNNING: 'ℹ️ Running = কাজ চলছে। ক্লায়েন্টের <b>জমা</b> আমার কাছে রাখা টাকা, এখনো আমার লাভ না; Appointment না হলে ফেরত দিতে হতে পারে (উপরে "ফেরত দিতে হতে পারে")। Appointment হয়ে গেলে ফাইলটা 📅 Appointed ট্যাবে চলে যায় (সেখানে খরচ হয়ে গেছে ধরা হয়)। এখানে লেখা খরচ ছোট করে দেখায়, কাটে না। কাজ শেষ করে Delivered করলে হিসাব Delivered ট্যাবে চলে যাবে।',
+        APPOINTED: 'ℹ️ Appointed = Appointment (স্লট) হয়ে গেছে কিন্তু এখনো ডেলিভারি হয়নি। Appointment হলে ভিসা ফি + SMS/অন্য খরচ হয়ে যায়, তাই খরচ ধরা আছে। <b>বাকি</b> = যা এখনো ক্লায়েন্টের কাছে পাব। ডেলিভারি করলে ফাইল Delivered ট্যাবে চলে যাবে। সারির 👥 জনপ্রতি হিসাব খুললে প্রতিজনের জমা তারিখ-সময়সহ দেখাবে।',
         RETURNED: 'ℹ️ Returned = ফেরত ফাইল। ক্লায়েন্টকে টাকা ফেরত দেওয়ার সময় যে চার্জ রাখা হয় সেটাই লাভ, কোনো খরচ ধরা হয় না।',
-        ALL: 'ℹ️ এখানে Delivered, Running ও Returned একসাথে মিশে আছে, তাই "হাতে আছে" এ রানিং ফাইলের ক্লায়েন্টের জমাও ধরা। আসল লাভ-খরচ দেখতে ওপরে Delivered ট্যাব দেখুন।'
+        ALL: 'ℹ️ এখানে Delivered, Appointed, Running ও Returned একসাথে মিশে আছে, তাই "হাতে আছে" এ রানিং ফাইলের ক্লায়েন্টের জমাও ধরা। আসল লাভ-খরচ দেখতে ওপরে Delivered ট্যাব দেখুন।'
       };
       html += '<p class="text-[11px] text-slate-400 font-bold mt-3 leading-relaxed">' + notes[acctMode] + ' উপরের সার্চ, SMS অ্যাপ, ওয়ার্কার ও ভিসা-টাইপ ফিল্টার এখানেও কাজ করে।</p>';
       container.innerHTML = html;
@@ -2212,9 +2383,9 @@
       if (!isAdmin) return;
       const rows = acctModeRows(); if (!rows.length) { showToast('কোনো ডাটা নেই'); return; }
       const q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
-      const mlb = { DELIVERED: 'Delivered', RUNNING: 'Running', RETURNED: 'Returned' };
-      const head = ['ফাইল নং', 'নাম', 'সহ-আবেদনকারী', 'ফোন', 'ধরন', 'অবস্থা', 'বিল', 'জমা', 'বাকি', 'ফেরত', 'খরচ', 'লাভ', 'আসল লাভ (জমা−খরচ)', 'হাতে আছে'];
-      const lines = [head.map(q).join(',')].concat(rows.map(r => [r.f.serial || '', r.name, r.others.join(' / '), r.f.accountPhone || '', mlb[r.mode], r.state, r.bill, r.paid, r.due, r.refund, r.expense, r.profit, r.mode === 'DELIVERED' ? r.realized : '', r.cash].map(q).join(',')));
+      const mlb = { DELIVERED: 'Delivered', APPOINTED: 'Appointed', RUNNING: 'Running', RETURNED: 'Returned' };
+      const head = ['ফাইল নং', 'নাম', 'সহ-আবেদনকারী', 'ফোন', 'ধরন', 'অবস্থা', 'বিল', 'জমা', 'বাকি', 'ফেরত', 'খরচ', 'লাভ', 'আসল লাভ (জমা−খরচ)', 'হাতে আছে', 'Appointment তারিখ', 'ডেলিভারি তারিখ'];
+      const lines = [head.map(q).join(',')].concat(rows.map(r => [r.f.serial || '', r.name, r.others.join(' / '), r.f.accountPhone || '', mlb[r.mode], r.state, r.bill, r.paid, r.due, r.refund, r.expense, r.profit, r.mode === 'DELIVERED' ? r.realized : '', r.cash, r.f.appointmentDate || '', r.f.deliveredDate || ''].map(q).join(',')));
       const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' })); a.download = 'RTC-hisab-' + acctMode.toLowerCase() + '-' + getTodayStr() + '.csv'; document.body.appendChild(a); a.click(); a.remove();
     }
 
