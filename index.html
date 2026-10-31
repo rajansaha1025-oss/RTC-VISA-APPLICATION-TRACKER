@@ -1691,7 +1691,7 @@
         const k = (inc ? 'in|' : 'out|') + (e.name || ''); if (seen[k]) return; seen[k] = 1;
         let tgt = e; if (outg) { let g = 0; while (g++ < 12) { const cf = visaFiles.find(x => x.id === tgt.toId); if (!cf) break; const nx = (cf.transferLog || []).find(y => y.fromId === tgt.toId && y.name === tgt.name && (y.ts || 0) > (tgt.ts || 0)); if (!nx) break; tgt = nx; } }   // চেইন মুভে এখন কোন কার্ডে আছে সেটা দেখায়
         const oid = inc ? e.fromId : tgt.toId, of = visaFiles.find(x => x.id === oid);
-        const sn = inc ? ser(e.fromId, e.fromSerial) : ser(tgt.toId, tgt.toSerial), nm = of ? mainNameOf(of) : (inc ? e.fromMain : tgt.toMain); const other = (sn ? '#' + escHtml(String(sn)) + ' ' : '') + escHtml(nm || '');
+        const sn = inc ? ser(e.fromId, e.fromSerial) : ser(tgt.toId, tgt.toSerial), nm = of ? mainNameOf(of) : (inc ? e.fromMain : tgt.toMain); const other = (sn ? '<span class="bg-[#0b132b] text-white px-1.5 py-0.5 rounded mono-type text-[11px]">#' + escHtml(String(sn)) + '</span> ' : '') + escHtml(nm || '');
         out.push(inc ? '📥 <b>' + escHtml(e.name || 'Unnamed') + '</b> এসেছে ' + other + ' ফাইল থেকে' + (e.at ? ' · ' + escHtml(e.at) : '') + ' <span class="text-sky-600">(হিসাব ওই ফাইলেই)</span>'
                      : '📤 <b>' + escHtml(e.name || 'Unnamed') + '</b> চলে গেছে ' + other + ' ফাইলে' + (e.at ? ' · ' + escHtml(e.at) : '') + ' <span class="text-emerald-700">(হিসাব এই কার্ডেই আছে)</span>');
       });
