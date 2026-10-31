@@ -553,25 +553,16 @@
     }
     function makeMainForm(idx) { syncTempInputs(); tempApplicants.unshift(tempApplicants.splice(idx, 1)[0]); renderApplicantForms(); }
 
-    // কোন ধরনের ট্রান্সফার:
-    //   NONE = গ্রুপ ফাইলে আরও লোক থাকছে → টাকা সরে না, শুধু রেকর্ড থাকে কোন সিরিয়াল/ফাইল থেকে এসেছে
-    //   SUB  = পুরনো কার্ড আর থাকছে না (শেষ জন) বা জনপ্রতি → গ্রুপ ফাইলে যাচ্ছে: হিসাব পুরনো সিরিয়াল সহ গন্তব্যে "আলাদা হিসাব" হয়ে বসে
-    //   OWN  = জনপ্রতি → জনপ্রতি (টাকা ব্যক্তির সাথেই) বা নতুন ফাইল (হিসাব নতুন ফাইলের নিজের হয়)
-    function moveKind(sFile, dest) {
-      const sMode = acctModeOf(sFile), single = sFile.applicants.length === 1;
-      if (sMode === 'GROUP') return single ? (dest ? 'SUB' : 'OWN') : 'NONE';
-      if (!dest) return 'OWN';
-      return acctModeOf(dest) === 'PERSON' ? 'OWN' : 'SUB';
-    }
+    // 🔄 ট্রান্সফার নিয়ম (নতুন): টাকা-হিসাব (বিল, জমা, বাকি, খরচ) সবসময় পুরনো কার্ডেই থাকে — কখনো সরে না।
+    //   শুধু আবেদনকারী (Temp ID, BGD, PDF, ছবি, পাসপোর্ট) নতুন জায়গায় যায়; দুই কার্ডেই লেখা থাকে কোন সিরিয়াল/ফাইল থেকে এসেছে।
+    //   শেষ জন সরলেও পুরনো কার্ড (সিরিয়াল ও হিসাব সহ) থেকে যায়, শুধু আবেদনকারী ছাড়া।
+    // 🏠 অতিথি = অন্য কার্ড থেকে ট্রান্সফারে আসা জন; তার ভিসা ফি/খরচ আসল কার্ডেই থাকে, তাই এই কার্ডের অটো ফি-তে ধরা হয় না
+    function isGuest(a, fid) { return !!(a && a.homeId && a.homeId !== fid); }
+    function feeCount(list, fid) { return (list || []).filter(a => !isGuest(a, fid)).length; }
+    function moveKind(sFile, dest) { return 'STAY'; }
     function moveHintText(sFile, dest) {
-      const k = moveKind(sFile, dest), ref = sFile.serial ? '#' + sFile.serial : 'পুরনো';
-      if (k === 'NONE') return '👥 গ্রুপ হিসাব: ' + ref + ' ফাইলে আরও লোক থাকছে, তাই কোনো টাকা সরবে না — হিসাব ' + ref + ' ফাইলেই থাকবে। শুধু রেকর্ড থাকবে যে এই জন ' + ref + ' ফাইল থেকে এসেছে। (এই ফাইলের শেষ জন সরলে পুরো হিসাব ' + ref + ' সিরিয়াল সহ আলাদা হিসাব হয়ে গন্তব্য ফাইলে যাবে।)';
-      if (k === 'SUB') return acctModeOf(sFile) === 'GROUP'
-        ? '✅ ফাইলে শুধু ১ জন, পুরনো কার্ড (' + ref + ') আর থাকবে না। পুরো হিসাব (বিল ও জমা, তারিখসহ) ' + ref + ' সিরিয়াল সহ গন্তব্য ফাইলে আলাদা হিসাব হয়ে বসবে — অন্য হিসাবের সাথে মিশবে না।'
-        : '👤 জনপ্রতি হিসাব: এই জনের নিজের বিল ও জমা (তারিখসহ) সাথে যাবে, আর গন্তব্য ফাইলে ' + ref + ' সিরিয়াল সহ আলাদা হিসাব হয়ে বসবে।';
-      return acctModeOf(sFile) === 'PERSON'
-        ? '👤 জনপ্রতি হিসাব: এই জনের নিজের বিল ও জমা (তারিখসহ) সাথেই যাবে; কোন ফাইল (' + ref + ') থেকে এসেছে সেটাও লেখা থাকবে।'
-        : '✅ ফাইলে শুধু ১ জন, তাই পুরো হিসাব (বিল ও জমা, তারিখসহ) নতুন ফাইলে যাবে।';
+      const ref = sFile.serial ? '#' + sFile.serial : 'পুরনো';
+      return '💰 কোনো টাকা সরবে না — বিল, জমা, বাকি, খরচ সব ' + ref + ' কার্ডেই থাকবে। শুধু আবেদনকারী (Temp ID, BGD, PDF, ছবি, পাসপোর্ট) নতুন জায়গায় যাবে, আর সেখানে লেখা থাকবে কোন ' + ref + ' ফাইল থেকে এসেছে।';
     }
     function updateMoveHint() {
       const f = visaFiles.find(x => x.id === document.getElementById('moveSourceFileId').value); if (!f) return;
@@ -590,7 +581,7 @@
     }
     function closeMoveModal() { document.getElementById('moveApplicantModal').classList.add('hidden'); }
 
-    // ===== 🔄 ট্রান্সফারের আগে নিশ্চিতকরণ স্ক্রিন: কোন ফাইল থেকে কোথায়, কত টাকা সাথে যাচ্ছে, আর দুই ফাইলে বাকি বিল/জমা কত থাকছে (কিছু বদলানোর আগেই হিসাব করে দেখায়) =====
+    // ===== 🔄 ট্রান্সফারের আগে নিশ্চিতকরণ স্ক্রিন: কোন ফাইল থেকে কোথায়, মেইন কে থাকবে/বদলাবে, টাকা কোথায় থাকছে =====
     function calcMovePlan() {
       const sId = document.getElementById('moveSourceFileId').value, aIdx = parseInt(document.getElementById('moveAppIdx').value), tId = document.getElementById('moveTargetSet').value;
       const sFile = visaFiles.find(x => x.id === sId); if (!sFile) return { err: 'সোর্স ফাইল পাওয়া যায়নি।' };
@@ -598,52 +589,39 @@
       const dest = tId !== 'NEW' ? visaFiles.find(x => x.id === tId) : null;
       if (tId !== 'NEW' && !dest) return { err: 'গন্তব্য ফাইল পাওয়া যায়নি।' };
       if (dest && dest.applicants.length >= 4) return { err: 'ফাইলে ৪ জন পূর্ণ!' };
-      const sMode = acctModeOf(sFile), dMode = dest ? acctModeOf(dest) : sMode, sSingle = sFile.applicants.length === 1;
-      const kind = moveKind(sFile, dest); const warns = [];
-      let mBill = 0, mPays = [];
-      if (kind !== 'NONE') {
-        if (sMode === 'PERSON') { mBill = nz(person.bill); mPays = (person.pays || []).filter(p => nz(p.amt) > 0).map(p => ({ amt: nz(p.amt), d: p.d || '', t: p.t || '', by: p.by || '' })); }
-        else { const gl = groupLedgerOf(sFile); mBill = nz(gl.bill); mPays = gl.pays.filter(p => nz(p.amt) > 0).map(p => Object.assign({}, p)); }
-      }
-      mBill = r2(mBill); const mPaid = r2(sumPays(mPays));
-      const carry = sSingle ? subsOf(sFile) : [];   // পুরনো কার্ড সরে গেলে তাতে থাকা আলাদা হিসাবগুলোও সাথে যায়
-      const cB = r2(carry.reduce((t, s) => t + nz(s.bill), 0)), cP = r2(carry.reduce((t, s) => t + sumPays(s.pays), 0)), cD = r2(carry.reduce((t, s) => t + Math.max(0, nz(s.bill) - sumPays(s.pays)), 0));
-      const sBefore = fileTotals(sFile);
-      const sAfter = sSingle ? { b: 0, p: 0, due: 0 } : (sMode === 'PERSON' ? fileTotals(Object.assign({}, sFile, { applicants: sFile.applicants.filter((x, i) => i !== aIdx) })) : sBefore);
-      const dBefore = dest ? fileTotals(dest) : { b: 0, p: 0, due: 0 };
-      const dAfter = kind === 'NONE' ? dBefore : { b: r2(dBefore.b + mBill + cB), p: r2(dBefore.p + mPaid + cP), due: r2(dBefore.due + Math.max(0, mBill - mPaid) + cD) };
-      const feeManual = (sFile.baseVisaFee !== undefined && sFile.baseVisaFee !== VISA_FEE_PER_PERSON * sFile.applicants.length) || (!!dest && dest.baseVisaFee !== undefined && dest.baseVisaFee !== VISA_FEE_PER_PERSON * dest.applicants.length);
-      if (feeManual) warns.push('ভিসা ফি হাতে লেখা আছে, তাই অটো বদলাবে না। ট্রান্সফারের পর দুই ফাইলের "ভিসা ফি" একবার মিলিয়ে নিন।');
-      if (sSingle && nz(sFile.softwareCharge) > 0) warns.push('পুরনো ফাইলের সফটওয়্যার চার্জ ৳' + fmtTk(sFile.softwareCharge) + ' গন্তব্য ফাইলে যোগ হয়ে যাবে।');
-      return { sFile: sFile, dest: dest, person: person, sMode: sMode, dMode: dMode, sSingle: sSingle, kind: kind, mBill: mBill, mPaid: mPaid, mPays: mPays, carry: carry.length, sBefore: sBefore, sAfter: sAfter, dBefore: dBefore, dAfter: dAfter, warns: warns };
+      const sMode = acctModeOf(sFile), sSingle = sFile.applicants.length === 1;
+      const sBefore = fileTotals(sFile), dBefore = dest ? fileTotals(dest) : { b: 0, p: 0, due: 0 };
+      const rest = sFile.applicants.filter((x, i) => i !== aIdx);
+      const sMainOld = mainNameOf(sFile), sMainNew = rest.length ? (rest[0].name || 'Unnamed') : '';
+      const sMainChanges = rest.length > 0 && aIdx === 0;
+      const dMainOld = (dest && dest.applicants.length) ? mainNameOf(dest) : '';
+      const dMainNew = dMainOld || (person.name || 'Unnamed');
+      const kept = sMode === 'PERSON' ? { bill: r2(nz(person.bill)), paid: r2(ledPaid(person)) } : null;
+      let restore = null; if (dest && person.homeId === dest.id && isPerPerson(dest)) { const rs = subsOf(dest).find(sb => sb.out && sb.mode === 'PERSON' && (sb.names || []).indexOf(person.name || '') >= 0); if (rs) restore = { bill: r2(nz(rs.bill)), paid: r2(sumPays(rs.pays)) }; }
+      return { sFile: sFile, dest: dest, person: person, aIdx: aIdx, sMode: sMode, sSingle: sSingle, sBefore: sBefore, dBefore: dBefore, sMainOld: sMainOld, sMainNew: sMainNew, sMainChanges: sMainChanges, dMainOld: dMainOld, dMainNew: dMainNew, dMainChanges: !dMainOld, kept: kept, restore: restore, home: !!(dest && person.homeId === dest.id) };
     }
     function openMoveConfirm() {
       const pl = calcMovePlan(); if (pl.err) { alert(pl.err); return; }
-      const fl = (f) => f ? ((f.serial ? '#' + escHtml(String(f.serial)) + ' ' : '') + escHtml(mainNameOf(f))) : '✨ নতুন ফাইল (নতুন সিরিয়াল পাবে)';
-      const modeLb = (m) => m === 'PERSON' ? 'জনপ্রতি হিসাব' : 'গ্রুপ হিসাব';
       const ref = pl.sFile.serial ? '#' + escHtml(String(pl.sFile.serial)) : 'পুরনো';
-      const row = (lb, a, b, cls) => '<tr><td class="py-1 text-slate-500">' + lb + '</td><td class="py-1 text-right mono-type">' + (a === null ? '-' : '৳' + fmtTk(a)) + '</td><td class="py-1 text-right mono-type font-extrabold ' + (cls || '') + '">' + (b === null ? '—' : '৳' + fmtTk(b)) + '</td></tr>';
-      const block = (icon, title, f, mode, bf, af, gone) => '<div class="rounded-xl border border-slate-200 p-3"><p class="font-extrabold text-[#0b132b]">' + icon + ' ' + title + ': ' + fl(f) + '</p><p class="text-[10px] text-slate-400 font-bold mb-1">' + modeLb(mode) + (gone ? ' · <span class="text-rose-600">ফাইলটি ফাঁকা হয়ে সরে যাবে</span>' : '') + '</p>'
-        + '<table class="w-full text-[11px] font-bold"><tr class="text-[10px] text-slate-400"><td></td><td class="text-right">আগে</td><td class="text-right">পরে</td></tr>'
-        + row('বিল', bf.b, gone ? null : af.b) + row('জমা', bf.p, gone ? null : af.p, 'text-emerald-700') + row('বাকি', bf.due, gone ? null : af.due, (af.due > 0 ? 'text-rose-600' : 'text-emerald-700')) + '</table></div>';
-      let h = '<div class="bg-slate-50 rounded-xl border p-3 font-extrabold text-sm text-[#0b132b]">👤 ' + escHtml(pl.person.name || 'Unnamed') + '</div>';
-      const payList = pl.mPays.length ? '<div class="mt-1 text-[10px] text-sky-700">জমার এন্ট্রি: ' + pl.mPays.slice(0, 6).map(p => escHtml(fmtPayDT(p)) + ' — ৳' + fmtTk(p.amt)).join(' &nbsp;|&nbsp; ') + (pl.mPays.length > 6 ? ' …' : '') + '</div>' : '';
-      if (pl.kind === 'NONE') {
-        h += '<div class="rounded-xl p-3 border bg-slate-50 border-slate-300 text-slate-700 font-bold">📝 <b>কোনো টাকা সরছে না</b> — গ্রুপ হিসাব (বিল ৳' + fmtTk(pl.sBefore.b) + ' · জমা ৳' + fmtTk(pl.sBefore.p) + ') ' + ref + ' ফাইলেই থাকছে।<div class="mt-1 text-[10px] text-slate-500">শুধু রেকর্ড থাকবে: ' + escHtml(pl.person.name || 'Unnamed') + ' এসেছে ' + ref + ' ' + escHtml(mainNameOf(pl.sFile)) + ' ফাইল থেকে।</div></div>';
-      } else if (pl.kind === 'SUB') {
-        h += '<div class="rounded-xl p-3 border bg-sky-50 border-sky-200 text-sky-800 font-bold">🧾 <b>আলাদা হিসাব</b> হয়ে যাচ্ছে (' + ref + ' সিরিয়াল সহ): বিল <b>৳' + fmtTk(pl.mBill) + '</b> · জমা <b>৳' + fmtTk(pl.mPaid) + '</b>' + payList
-          + (pl.sSingle ? '<div class="mt-1 text-[10px] text-sky-700">পুরনো কার্ড ' + ref + ' আর থাকবে না; গন্তব্য ফাইলে এই হিসাব নিজের সিরিয়াল নম্বর সহ আলাদা থাকবে, অন্য হিসাবের সাথে মিশবে না।</div>' : '')
-          + (pl.carry ? '<div class="mt-1 text-[10px] text-sky-700">এই ফাইলে আগে থেকে থাকা ' + pl.carry + 'টি আলাদা হিসাবও সাথে যাবে।</div>' : '') + '</div>';
-      } else {
-        const moving = pl.mBill > 0 || pl.mPaid > 0;
-        h += '<div class="rounded-xl p-3 border ' + (moving ? 'bg-sky-50 border-sky-200 text-sky-800' : 'bg-amber-50 border-amber-300 text-amber-800') + ' font-bold">'
-          + (moving ? '💰 সাথে যাচ্ছে: বিল <b>৳' + fmtTk(pl.mBill) + '</b> · জমা <b>৳' + fmtTk(pl.mPaid) + '</b>' : '⚠️ কোনো টাকা সাথে যাচ্ছে না (বিল ৳০, জমা ৳০)') + payList
-          + (pl.carry ? '<div class="mt-1 text-[10px] text-sky-700">এই ফাইলে আগে থেকে থাকা ' + pl.carry + 'টি আলাদা হিসাবও সাথে যাবে।</div>' : '') + '</div>';
-      }
-      h += block('📤', 'যে ফাইল থেকে', pl.sFile, pl.sMode, pl.sBefore, pl.sAfter, pl.sSingle);
-      h += block('📥', 'যে ফাইলে', pl.dest, pl.dMode, pl.dBefore, pl.dAfter, false);
-      if (pl.warns.length) h += '<div class="rounded-xl bg-amber-50 border border-amber-300 p-3 text-amber-800 font-bold space-y-1">' + pl.warns.map(w => '<div>⚠️ ' + escHtml(w) + '</div>').join('') + '</div>';
-      h += '<p class="text-[10px] text-slate-400 font-bold text-center">📝 এই ট্রান্সফার, কোন ফাইল/সিরিয়াল থেকে এসেছে ও দুই ফাইলের আগে-পরের হিসাবসহ, হিসাব ট্যাবের "ট্রান্সফার ইতিহাসে" লেখা থাকবে।</p>';
+      const fl = (f) => f ? ((f.serial ? '#' + escHtml(String(f.serial)) + ' ' : '') + escHtml(mainNameOf(f))) : '✨ নতুন ফাইল (নতুন সিরিয়াল পাবে)';
+      const nm = escHtml(pl.person.name || 'Unnamed');
+      const tk = (t) => '৳' + fmtTk(t);
+      let h = '<div class="bg-slate-50 rounded-xl border p-3 font-extrabold text-sm text-[#0b132b]">👤 ' + nm + '<div class="text-[11px] font-bold text-slate-500 mt-0.5">📤 ' + fl(pl.sFile) + ' &nbsp;→&nbsp; 📥 ' + fl(pl.dest) + '</div></div>';
+      // 💰 টাকা
+      h += '<div class="rounded-xl p-3 border bg-emerald-50 border-emerald-300 text-emerald-800 font-bold">💰 <b>কোনো টাকা সরছে না</b> — ' + ref + ' কার্ডের বিল <b>' + tk(pl.sBefore.b) + '</b> · জমা <b>' + tk(pl.sBefore.p) + '</b> · বাকি <b>' + tk(pl.sBefore.due) + '</b> ' + ref + ' কার্ডেই থাকছে (কোনো পরিবর্তন নেই)।'
+        + (pl.kept ? '<div class="mt-1 text-[10px] text-emerald-700">জনপ্রতি হিসাব: এই জনের বিল ' + tk(pl.kept.bill) + ' ও জমা ' + tk(pl.kept.paid) + ' (তারিখসহ) ' + ref + ' কার্ডে "আলাদা হিসাব" হয়ে থাকবে।</div>' : '')
+        + (pl.home ? '<div class="mt-1 text-[10px] text-sky-700">↩ ' + nm + ' নিজের আসল কার্ডে ফিরছে।' + (pl.restore ? ' জনপ্রতি হিসাব (বিল ' + tk(pl.restore.bill) + ', জমা ' + tk(pl.restore.paid) + ') আবার তার নামে ফিরে আসবে।' : '') + '</div>' : '')
+        + '<div class="mt-1 text-[10px] text-emerald-700">ভিসা ফি ও সফটওয়্যার খরচও ' + ref + ' কার্ডেই থাকবে। গন্তব্য কার্ডের হিসাব (' + tk(pl.dBefore.b) + ' / ' + tk(pl.dBefore.p) + ') একই থাকবে।</div></div>';
+      // 👑 মেইন
+      let src, dst;
+      if (pl.sMainChanges) src = '<div class="rounded-lg p-2 bg-amber-100 border border-amber-400 text-amber-900">📤 ' + ref + ' কার্ডে মেইন <b>বদলাবে</b>: <s>' + escHtml(pl.sMainOld) + '</s> → <b>' + escHtml(pl.sMainNew) + '</b> নতুন মেইন হবে (পরের জন)। Drive ফোল্ডার/Invoice/Letter এর নামও নতুন মেইন অনুযায়ী বদলাবে।</div>';
+      else if (pl.sSingle) src = '<div class="rounded-lg p-2 bg-amber-50 border border-amber-300 text-amber-800">📤 ' + ref + ' কার্ডে আর কোনো আবেদনকারী থাকবে না। কার্ডটা হিসাব নিয়ে থেকে যাবে (নাম: <b>' + escHtml(pl.sMainOld) + '</b>)।</div>';
+      else src = '<div class="rounded-lg p-2 bg-white border border-slate-200">📤 ' + ref + ' কার্ডে মেইন <b>আগেরটাই থাকবে</b>: ' + escHtml(pl.sMainOld) + '</div>';
+      if (!pl.dest) dst = '<div class="rounded-lg p-2 bg-amber-100 border border-amber-400 text-amber-900">📥 নতুন ফাইল: <b>' + nm + '</b>-ই মেইন হবে।</div>';
+      else if (pl.dMainChanges) dst = '<div class="rounded-lg p-2 bg-amber-100 border border-amber-400 text-amber-900">📥 ' + fl(pl.dest) + ' কার্ডে এখন কোনো আবেদনকারী নেই, তাই <b>' + nm + '</b> মেইন হবে।</div>';
+      else dst = '<div class="rounded-lg p-2 bg-white border border-slate-200">📥 ' + fl(pl.dest) + ' কার্ডে মেইন <b>আগেরটাই থাকবে</b>: ' + escHtml(pl.dMainOld) + '। <b>' + nm + '</b> কো-অ্যাপ্লিক্যান্ট হিসেবে যোগ হবে।</div>';
+      h += '<div class="rounded-xl border border-slate-200 p-3 space-y-1.5 font-bold text-slate-700"><p class="font-extrabold text-[#0b132b]">👑 মেইন ফাইল কে থাকবে?</p>' + src + dst + '</div>';
+      h += '<p class="text-[10px] text-slate-500 font-bold text-center leading-relaxed">📝 দুই কার্ডের ওপরেই লেখা থাকবে ' + nm + ' কোন সিরিয়াল/ফাইল থেকে এসেছে বা কোথায় গেছে। শুধু BGD ফাইল (PDF) নতুন জায়গায় যাবে, ছবি/পাসপোর্ট আগের মতোই থাকবে। হিসাব ট্যাবের "ট্রান্সফার ইতিহাসেও" লেখা থাকবে।</p>';
       document.getElementById('moveConfirmBody').innerHTML = h;
       document.getElementById('moveConfirmModal').classList.remove('hidden');
     }
@@ -651,56 +629,54 @@
     function confirmMoveApplicant() { openMoveConfirm(); }   // 'ট্রান্সফার' বাটন: আগে নিশ্চিতকরণ স্ক্রিন; সেখানে ✅ চাপলে তবেই doMoveApplicant() চলে
 
     function doMoveApplicant() {
-      const sId = document.getElementById('moveSourceFileId').value; const aIdx = parseInt(document.getElementById('moveAppIdx').value); const tId = document.getElementById('moveTargetSet').value;
-      const sFile = visaFiles.find(x => x.id === sId); if (!sFile) return;
-      const pl = calcMovePlan(); if (pl.err) { alert(pl.err); return; }   // ফাইল ৪ জন পূর্ণ কিনা ইত্যাদি এখানেই আটকায়
-      const kind = pl.kind, sMode = pl.sMode, sSingle = pl.sSingle, isNew = tId === 'NEW';
-      const sOldCount = sFile.applicants.length; const fromMain = mainNameOf(sFile); const fromSerial = sFile.serial || '';
-      // 💰 আগের অবস্থা (ট্রান্সফার ইতিহাসের জন্য) — কিছু বদলানোর আগেই নেওয়া
+      const sId = document.getElementById('moveSourceFileId').value; const tId = document.getElementById('moveTargetSet').value;
+      if (cloudBusy > 0) { alert('⏳ একটি আপলোড/Drive কাজ চলছে (আগের ট্রান্সফারের PDF সরানোও হতে পারে)। শেষ হওয়া পর্যন্ত অপেক্ষা করে আবার ট্রান্সফার করুন।'); return; }
+      const pl = calcMovePlan(); if (pl.err) { alert(pl.err); return; }
+      const sFile = pl.sFile, aIdx = pl.aIdx, sMode = pl.sMode, isNew = tId === 'NEW';
+      const fromMain = pl.sMainOld, fromSerial = sFile.serial || '';
       const sB0 = { b: pl.sBefore.b, p: pl.sBefore.p }, dB0 = { b: pl.dBefore.b, p: pl.dBefore.p };
-      const mBill = pl.mBill, mPays = pl.mPays.map(p => Object.assign({}, p)), mPaid = r2(sumPays(mPays));
-      const carry = sSingle ? JSON.parse(JSON.stringify(subsOf(sFile))) : [];   // পুরনো কার্ড সরে গেলে তার আলাদা হিসাবগুলোও যায়
-      const earlier = (sFile.groupMovedOut || []).map(x => x.n).filter(Boolean);   // এই গ্রুপ ফাইল থেকে আগে যারা টাকা ছাড়া সরে গেছে
-      const appToMove = sFile.applicants.splice(aIdx, 1)[0]; const movedName = appToMove.name || '';
-      if (sFile.serial) { appToMove.prevSerials = (appToMove.prevSerials || []).filter(s => String(s) !== String(sFile.serial)).concat(String(sFile.serial)); }   // আগের ফাইলের নম্বর মনে রাখা (ফিজিক্যাল ফাইলের নম্বর দিয়ে খোঁজার জন্য)
       const now = new Date().toLocaleString('en-GB', BD_TIME_OPTS);
+      const appToMove = sFile.applicants.splice(aIdx, 1)[0]; const movedName = appToMove.name || '';
+      const sEmpty = sFile.applicants.length === 0; if (sEmpty) sFile.ghostMain = fromMain;   // শেষ জন সরলে কার্ড হিসাব নিয়ে থেকে যায়, নাম মনে রাখা হয়
+      // 💰 জনপ্রতি হিসাব: এই জনের বিল-জমা ব্যক্তির সাথে যায় না, পুরনো কার্ডেই "আলাদা হিসাব" হয়ে থাকে
+      let keptSub = null;
+      if (sMode === 'PERSON') {
+        const kb = nz(appToMove.bill), kp = (appToMove.pays || []).filter(p => nz(p.amt) > 0);
+        if (kb > 0 || kp.length) { keptSub = newSubAcct('', fromMain, [movedName], kb, kp, 'PERSON', now, whoAmI()); keptSub.out = true; keptSub.toId = ''; keptSub.toSerial = ''; keptSub.toMain = ''; }
+      }
+      delete appToMove.bill; delete appToMove.pays; delete appToMove.billM;
+      if (sFile.serial) { appToMove.prevSerials = (appToMove.prevSerials || []).filter(s => String(s) !== String(sFile.serial)).concat(String(sFile.serial)); }   // আগের ফাইলের নম্বর মনে রাখা
+      if (!appToMove.homeId) appToMove.homeId = sFile.id;   // আসল কার্ড: ভিসা ফি/খরচ ওখানেই থাকে
       let dest;
       if (isNew) {
-        const newF = JSON.parse(JSON.stringify(sFile)); newF.id = 'SET_' + Date.now(); newF.driveFolderId = ''; newF.driveFolderName = ''; newF.driveStatus = ''; newF.applicants = [appToMove]; newF.appointmentDate = ''; newF.isAppointed = false; newF.invoiceFileId = ''; newF.invoiceFileName = ''; newF.invoiceName = ''; newF.invoiceBy = ''; newF.invoiceAt = ''; newF.invitationFileId = ''; newF.invitationFileName = ''; newF.invitationName = ''; newF.invitationBy = ''; newF.invitationAt = ''; newF.invitationReceived = false; newF.apptLetterFileId = ''; newF.apptLetterFileName = ''; newF.apptLetterName = ''; newF.apptLetterBy = ''; newF.apptLetterAt = ''; newF.apptLetterReceived = false; ['undertaking', 'consult'].forEach(function (k) { newF[k + 'FileId'] = ''; newF[k + 'FileName'] = ''; newF[k + 'Name'] = ''; newF[k + 'By'] = ''; newF[k + 'At'] = ''; newF[k + 'Received'] = false; }); newF.medFolderId = ''; newF.medFolderName = ''; LETTER_KEYS.forEach(function (k) { newF[k + 'Med'] = false; }); newF.feeStatus = 'UNPAID'; newF.billTotal = 0; newF.billAdvance = 0; newF.billDue = 0; newF.pays = []; newF.acctMode = sMode; newF.baseVisaFee = VISA_FEE_PER_PERSON; newF.softwareCharge = 0; newF.updatedAt = now; newF.updatedBy = whoAmI(); newF.serial = ''; visaFiles.unshift(newF); dest = newF;
-        newF.subAccts = carry; newF.groupMovedOut = [];
+        const newF = JSON.parse(JSON.stringify(sFile)); newF.id = 'SET_' + Date.now(); newF.driveFolderId = ''; newF.driveFolderName = ''; newF.driveStatus = ''; newF.applicants = [appToMove]; newF.appointmentDate = ''; newF.isAppointed = false; newF.invoiceFileId = ''; newF.invoiceFileName = ''; newF.invoiceName = ''; newF.invoiceBy = ''; newF.invoiceAt = ''; newF.invitationFileId = ''; newF.invitationFileName = ''; newF.invitationName = ''; newF.invitationBy = ''; newF.invitationAt = ''; newF.invitationReceived = false; newF.apptLetterFileId = ''; newF.apptLetterFileName = ''; newF.apptLetterName = ''; newF.apptLetterBy = ''; newF.apptLetterAt = ''; newF.apptLetterReceived = false; ['undertaking', 'consult'].forEach(function (k) { newF[k + 'FileId'] = ''; newF[k + 'FileName'] = ''; newF[k + 'Name'] = ''; newF[k + 'By'] = ''; newF[k + 'At'] = ''; newF[k + 'Received'] = false; }); newF.medFolderId = ''; newF.medFolderName = ''; LETTER_KEYS.forEach(function (k) { newF[k + 'Med'] = false; }); newF.feeStatus = 'UNPAID'; newF.billTotal = 0; newF.billAdvance = 0; newF.billDue = 0; newF.pays = []; newF.acctMode = sMode; newF.baseVisaFee = 0; newF.softwareCharge = 0; newF.keptCharge = 0; newF.refundAmount = 0; newF.returnReason = ''; newF.updatedAt = now; newF.updatedBy = whoAmI(); newF.serial = '';
+        newF.subAccts = []; newF.groupMovedOut = []; newF.ghostMain = ''; newF.transferLog = [];
+        visaFiles.unshift(newF); dest = newF;
         nextSerial().then(n => { const t = visaFiles.find(x => x.id === newF.id); if (t) { t.serial = n; renderFiles(); syncToCloud(); showSerialModal(n, appToMove.name || ''); } }).catch(() => showToast('⚠️ নতুন ফাইলের সিরিয়াল নম্বর আনা যায়নি'));
       } else {
-        const tFile = visaFiles.find(x => x.id === tId); const tOld = tFile.applicants.length;
-        if (!isPerPerson(tFile)) ensureGroupPays(tFile);
-        tFile.applicants.push(appToMove); tFile.updatedAt = now; tFile.updatedBy = whoAmI();
-        if (tFile.baseVisaFee === VISA_FEE_PER_PERSON * tOld) tFile.baseVisaFee = VISA_FEE_PER_PERSON * tFile.applicants.length; dest = tFile;
+        dest = visaFiles.find(x => x.id === tId);
+        if (!isPerPerson(dest)) ensureGroupPays(dest);
+        dest.applicants.push(appToMove); dest.updatedAt = now; dest.updatedBy = whoAmI();
       }
-      if (dest && dest.serial) appToMove.prevSerials = (appToMove.prevSerials || []).filter(s => String(s) !== String(dest.serial));
-      const sRemoved = sFile.applicants.length === 0;
-      if (sRemoved && nz(sFile.softwareCharge) > 0 && dest) dest.softwareCharge = r2(nz(dest.softwareCharge) + nz(sFile.softwareCharge));   // সোর্স ফাইল মুছে গেলে তার সফটওয়্যার চার্জ (খরচ) হারাবে না, নতুন ফাইলে চলে যাবে
-      // 💰 হিসাব নতুন জায়গায় বসানো
-      if (kind === 'SUB') {   // পুরনো সিরিয়াল সহ আলাদা হিসাব হয়ে গন্তব্যে বসে (গন্তব্যের নিজের হিসাবের সাথে মেশে না)
-        const subNames = [].concat.apply([], subsOf(sFile).map(s => s.names || []));   // যাদের হিসাব অন্য সিরিয়ালের আলাদা হিসাবে আছে, তাদের নাম এই হিসাবের নামে ঢোকে না
-        const names = (sMode === 'GROUP' ? earlier.concat([movedName]) : [movedName]).filter(n => n && subNames.indexOf(n) < 0);
-        addSubAcct(dest, newSubAcct(fromSerial, fromMain, names, mBill, mPays, sMode, now, whoAmI()));
-        if (sMode === 'PERSON') { delete appToMove.bill; delete appToMove.pays; delete appToMove.billM; }   // ব্যক্তির হিসাব এখন আলাদা হিসাবে আছে, দুই জায়গায় থাকবে না
-      } else if (kind === 'OWN' && isNew && sMode === 'GROUP') {   // ১ জনের গ্রুপ ফাইল -> নতুন ফাইল: পুরো হিসাব নতুন ফাইলের নিজের হিসাব
-        dest.billTotal = r2(mBill + subsBill(dest)); dest.pays = sortPays(mPays);
-      }   // OWN + জনপ্রতি: ব্যক্তির নিজের হিসাব ব্যক্তির সাথেই আছে
-      if (dest && isPerPerson(dest) && kind !== 'OWN') { appToMove.bill = ''; appToMove.pays = []; delete appToMove.billM; }   // জনপ্রতি ফাইলে গ্রুপের হিসাব ভাগ করে চাপানো হয় না
-      if (!isNew) carry.forEach(s => addSubAcct(dest, s));
-      if (kind === 'NONE') sFile.groupMovedOut = (sFile.groupMovedOut || []).concat([{ n: movedName, at: now }]);
-      recalcFileTotals(sFile); recalcFileTotals(dest);   // দুই ফাইলের মোট ঠিক
-      const trEntry = { at: now, by: whoAmI(), name: movedName, fromId: sId, fromSerial: fromSerial, fromMain: fromMain, toId: dest.id, toSerial: dest.serial || '', toMain: mainNameOf(dest), bill: kind === 'NONE' ? 0 : mBill, paid: kind === 'NONE' ? 0 : mPaid, kind: kind, ts: Date.now(),
-        sBefore: sB0, sAfter: { b: parseFloat(sFile.billTotal) || 0, p: parseFloat(sFile.billAdvance) || 0 }, dBefore: dB0, dAfter: { b: parseFloat(dest.billTotal) || 0, p: parseFloat(dest.billAdvance) || 0 }, sGone: sRemoved };
-      const moneyTxt = kind === 'NONE' ? ' · টাকা সরেনি (গ্রুপ হিসাব পুরনো ফাইলেই)' : (kind === 'SUB' ? ' · বিল ' + mBill + ', জমা ' + mPaid + ' আলাদা হিসাব (' + (fromSerial ? '#' + fromSerial : 'পুরনো') + ') হয়ে গেছে' : ((mBill || mPaid) ? ' · বিল ' + mBill + ', জমা ' + mPaid + ' সাথে গেছে' : ' · টাকা সরানো হয়নি'));
-      try { pushLog({ type: 'transfer', setId: dest.id, name: movedName, detail: (fromSerial ? '#' + fromSerial + ' ' : '') + fromMain + ' ফাইল থেকে ' + mainNameOf(dest) + ' ফাইলে' + moneyTxt }); } catch (e) { }
-      dest.transferLog = (isNew ? [] : (dest.transferLog || [])).concat([trEntry]);
-      if (!sRemoved) sFile.transferLog = (sFile.transferLog || []).concat([trEntry]);
-      if (sRemoved) { visaFiles = visaFiles.filter(x => x.id !== sId); logHint = 'ট্রান্সফারের পর সেটটি ফাঁকা হয়ে সরে গেছে'; }
-      else { sFile.updatedAt = now; sFile.updatedBy = whoAmI(); if (sFile.baseVisaFee === VISA_FEE_PER_PERSON * sOldCount) sFile.baseVisaFee = VISA_FEE_PER_PERSON * sFile.applicants.length; }
-      closeMoveConfirm(); closeMoveModal(); renderFiles(); syncToCloud(); showToast('🔄 ট্রান্সফার সম্পন্ন!');
-      driveAfterMove(sFile, sRemoved, dest, appToMove);
+      if (dest.serial) appToMove.prevSerials = (appToMove.prevSerials || []).filter(s => String(s) !== String(dest.serial));
+      const returningHome = appToMove.homeId === dest.id; if (returningHome) delete appToMove.homeId;   // নিজের আসল কার্ডে ফিরে এলে আর অতিথি নয়
+      let restored = null;   // জনপ্রতি হিসাবের আসল কার্ডে ফিরলে আগের বিল-জমা আবার তার নামে ফিরে আসে
+      if (returningHome && isPerPerson(dest)) { const si = subsOf(dest).findIndex(sb => sb.out && sb.mode === 'PERSON' && (sb.names || []).indexOf(movedName) >= 0); if (si >= 0) { const sb = dest.subAccts.splice(si, 1)[0]; restored = { bill: nz(sb.bill), pays: (sb.pays || []).map(x => Object.assign({}, x)) }; } }
+      if (isPerPerson(dest)) { appToMove.bill = restored ? restored.bill : ''; appToMove.pays = restored ? restored.pays : []; }   // গন্তব্যে টাকা সাথে আসে না (আসল কার্ডে ফিরলে ছাড়া)
+      // এই জনের আগের হপে রাখা 'গেছে' হিসাব-লেবেল এখন নতুন জায়গা দেখাবে
+      visaFiles.forEach(f => subsOf(f).forEach(sb => { if (sb.out && f.id !== sFile.id && sb.toId === sFile.id && (sb.names || []).indexOf(movedName) >= 0) { if (f.id === dest.id) sb.out = false; else { sb.toId = dest.id; sb.toSerial = dest.serial || ''; sb.toMain = mainNameOf(dest); } } }));
+      if (sMode === 'GROUP') sFile.groupMovedOut = (sFile.groupMovedOut || []).concat([{ n: movedName, at: now }]);
+      if (keptSub) { keptSub.toId = dest.id; keptSub.toSerial = dest.serial || ''; keptSub.toMain = mainNameOf(dest); addSubAcct(sFile, keptSub); }
+      recalcFileTotals(sFile); recalcFileTotals(dest);
+      const trEntry = { at: now, by: whoAmI(), name: movedName, fromId: sFile.id, fromSerial: fromSerial, fromMain: fromMain, toId: dest.id, toSerial: dest.serial || '', toMain: mainNameOf(dest), bill: 0, paid: 0, kind: 'STAY', ts: Date.now(),
+        sBefore: sB0, sAfter: { b: parseFloat(sFile.billTotal) || 0, p: parseFloat(sFile.billAdvance) || 0 }, dBefore: dB0, dAfter: { b: parseFloat(dest.billTotal) || 0, p: parseFloat(dest.billAdvance) || 0 }, sGone: false,
+        sMainFrom: fromMain, sMainTo: sEmpty ? '' : mainNameOf(sFile), sEmpty: sEmpty };
+      try { pushLog({ type: 'transfer', setId: dest.id, name: movedName, detail: (fromSerial ? '#' + fromSerial + ' ' : '') + fromMain + ' ফাইল থেকে ' + mainNameOf(dest) + ' ফাইলে · টাকা সরেনি (হিসাব ' + (fromSerial ? '#' + fromSerial : 'পুরনো') + ' কার্ডেই)' + (pl.sMainChanges ? ' · ' + (fromSerial ? '#' + fromSerial + ' ' : '') + 'নতুন মেইন: ' + pl.sMainNew : '') }); } catch (e) { }
+      dest.transferLog = (dest.transferLog || []).concat([trEntry]);
+      sFile.transferLog = (sFile.transferLog || []).concat([trEntry]);
+      sFile.updatedAt = now; sFile.updatedBy = whoAmI();   // ভিসা ফি/খরচ পুরনো কার্ডেই থাকে, তাই বদলানো হয় না
+      closeMoveConfirm(); closeMoveModal(); renderFiles(); syncToCloud(); showToast('🔄 ট্রান্সফার সম্পন্ন! হিসাব ' + (fromSerial ? '#' + fromSerial : 'পুরনো') + ' কার্ডেই আছে');
+      driveAfterMove(sFile, false, dest, appToMove);
     }
 
     function reApplyApplicant(fileId, appIdx) {
@@ -1134,7 +1110,7 @@
           if (!dest.driveFolderId) dest.driveStatus = driveLocOf(dest);
           dest.driveFolderId = r.folderId; dest.driveFolderName = r.folderName;
         } else if (sRemoved && sFile.driveFolderId) { await driveCall({ action: 'deleteFiles', fileIds: [], folderIdIfEmpty: sFile.driveFolderId }); }
-      } catch (e) { console.warn('drive move failed', e); }
+      } catch (e) { console.warn('drive move failed', e); try { alert('⚠️ কার্ড ট্রান্সফার হয়েছে, কিন্তু PDF Drive এ নতুন ফোল্ডারে সরেনি!\n\nকারণ: ' + ((e && e.message) || e) + '\n\nইন্টারনেট ঠিক করে নিজে Drive এ ' + safeName(moved.name) + ' এর PDF টা নতুন ফোল্ডারে সরান, অথবা আবার ট্রান্সফার করুন।'); } catch (x) { } }
       cloudBusy--;
       await driveSyncSet(dest); if (!sRemoved) await driveSyncSet(sFile);
       syncToCloud();
@@ -1193,6 +1169,7 @@
     let statusSyncBusy = false; const statusSyncTried = {};
     const nameSyncTried = {};
     function driveNamesDrift(f) {
+      if (!f.applicants || !f.applicants.length) return false;
       if (f.driveFolderName !== driveFolderNameFor(f)) return true;
       if (f.applicants.some((a, i) => a.driveFileId && a.driveFileName !== driveExpectedName(a, i, f))) return true;
       if (f.applicants.some(a => (a.photoFileId && a.photoFileName !== photoFileNameFor(a)) || (a.passportFileId && a.passportFileName !== passportFileNameFor(a)))) return true;
@@ -1222,7 +1199,7 @@
         if (Array.isArray(o)) { o.forEach(walk); return; }
         Object.keys(o).forEach(k => { const v = o[k]; if (typeof v === 'string' && v) { if (k === 'driveFolderId') folders.add(v); else if (/FileId$/.test(k)) files.add(v); } else if (v && typeof v === 'object') walk(v); });
       })(visaFiles);
-      return { folders: Array.from(folders), files: Array.from(files), names: visaFiles.map(f => safeName(f.applicants && f.applicants[0] && f.applicants[0].name)) };   // names: প্রতিটি কার্ডের মেইন নাম (রিসাইকেল বিনসহ), একই নামে ২টা কার্ড থাকলে সার্ভার কিছু মোছে না
+      return { folders: Array.from(folders), files: Array.from(files), names: visaFiles.map(f => safeName(mainNameOf(f))) };   // names: প্রতিটি কার্ডের মেইন নাম (রিসাইকেল বিনসহ), একই নামে ২টা কার্ড থাকলে সার্ভার কিছু মোছে না
     }
     async function cleanDriveDuplicates() {
       if (!isAdmin) return;
@@ -1308,7 +1285,7 @@
       f.updatedAt = new Date().toLocaleString('en-GB', BD_TIME_OPTS); f.updatedBy = whoAmI();
       renderFiles(); syncToCloud(); showToast('📂 রানিং বোর্ডে রিস্টোর হয়েছে');
     }
-        function invoiceFileNameFor(f) { return 'INVOICE - ' + safeName(f.applicants[0] && f.applicants[0].name) + '.pdf'; }
+        function invoiceFileNameFor(f) { return 'INVOICE - ' + safeName(mainNameOf(f)) + '.pdf'; }
         // ================= 📱 SMS অ্যাপ =================
     let smsFilter = '';
     // 📲 ফোন নম্বর → WhatsApp লিংক (wa.me/88 + নম্বর), নম্বরে চাপলেই WhatsApp খোলে
@@ -1410,14 +1387,14 @@
       if (file.size > 5 * 1024 * 1024) { alert('PDF ৫ মেগাবাইটের নিচে হতে হবে!'); event.target.value = ''; return; }
       const f = visaFiles.find(x => x.id === fileId); if (!f) return;
       if (!driveEnabled()) { alert('Drive সেট করা নেই!'); event.target.value = ''; return; }
-      if (!((f.applicants[0].name || '').trim())) { alert('আগে মেইন আবেদনকারীর নাম লিখে সেভ করুন, তারপর Invoice দিন।'); event.target.value = ''; return; }
+      if (!(((f.applicants[0] && f.applicants[0].name) || f.ghostMain || '').trim())) { alert('আগে মেইন আবেদনকারীর নাম লিখে সেভ করুন, তারপর Invoice দিন।'); event.target.value = ''; return; }
       if (!ensureVisaType(f)) { event.target.value = ''; return; }
       if (f.invoiceFileId && !confirm('এই Invoice দিয়ে আগেরটা বদলাবেন?\nআগের Invoice Drive থেকে মুছে যাবে।')) { event.target.value = ''; return; }
       cloudBusy++; showToast('⏳ Invoice আপলোড হচ্ছে...');
       try {
         const invDate = await extractInvoiceApptDate(file);   // Invoice-এর Appointment Date
         const hadFolder = !!f.driveFolderId;
-        const res = await driveUploadApplicant({ setKey: f.id, folderId: f.driveFolderId || '', folderName: f.applicants[0].name, fileName: invoiceFileNameFor(f), file: file, replaceFileId: f.invoiceFileId || '', status: driveStatusOf(f), sms: smsOf(f), visaType: visaTypeOf(f) });
+        const res = await driveUploadApplicant({ setKey: f.id, folderId: f.driveFolderId || '', folderName: mainNameOf(f), fileName: invoiceFileNameFor(f), file: file, replaceFileId: f.invoiceFileId || '', status: driveStatusOf(f), sms: smsOf(f), visaType: visaTypeOf(f) });
         if (!hadFolder) f.driveStatus = driveLocOf(f);
         f.driveFolderId = res.folderId; f.driveFolderName = res.folderName;
         f.invoiceFileId = res.fileId; f.invoiceFileName = res.fileName; f.invoiceName = file.name; f.invoiceBy = whoAmI(); f.invoiceAt = stampNow(); f.isAppointed = true; if (invDate) f.appointmentDate = invDate; else if (!f.appointmentDate) f.appointmentDate = getTodayStr();
@@ -1523,6 +1500,7 @@
         if (search.startsWith('#')) { const q = search.slice(1).trim(); return String(f.serial || '') === q || hasPrevSerial(f, q); }
         if (f.serial && String(f.serial) === search) return true;
         if (hasPrevSerial(f, search)) return true;
+        if ((f.ghostMain || '').toLowerCase().includes(search) || movedOutNames(f).some(n => n.toLowerCase().includes(search))) return true;
         return smsOf(f).toLowerCase().includes(search) || (f.note || '').toLowerCase().includes(search) || (f.hospitalName || '').toLowerCase().includes(search) || (f.border || '').toLowerCase().includes(search) || (f.accountPhone || '').toLowerCase().includes(search) || (f.accountGmail || '').toLowerCase().includes(search) || (f.worker || '').toLowerCase().includes(search) || f.applicants.some(a => (a.name || '').toLowerCase().includes(search) || (a.tempId || '').toLowerCase().includes(search) || (a.bgdNo || '').toLowerCase().includes(search) || (a.passport || '').toLowerCase().includes(search));
       };
       const baseList = visaFiles.filter(_passBase); renderSmsChips(baseList);
@@ -1561,7 +1539,7 @@
             ${files.map(f => {
               const exPpl = expiredPeople(f);
               return `<tr class="hover:bg-[#f4f7fa] transition ${exPpl.length ? 'bg-red-50/40' : ''}">
-                <td class="p-3.5">${noteBlock(f)}${f.serial ? '<div class="mb-1">' + serialBadge(f) + '</div>' : ''}<div class="font-extrabold text-[#0b132b] text-sm">${escHtml(f.applicants[0]?.name || 'Unnamed')}</div><div class="text-[10px] text-slate-500 font-bold uppercase mt-0.5">মোট ${f.applicants.length} জন</div>${f.updatedBy ? `<div class="text-[10px] text-slate-400 font-bold mt-0.5">শেষ আপডেট: ${escHtml(f.updatedBy)}${f.updatedAt ? ' · ' + escHtml(f.updatedAt) : ''}</div>` : ''}${exPpl.length ? `<div class="text-[10px] text-red-600 font-extrabold mt-0.5">⚠ Expired: ${exPpl.map(a => escHtml(a.name)).join(', ')}</div>` : ''}</td>
+                <td class="p-3.5">${noteBlock(f)}${transferBlock(f)}${f.serial ? '<div class="mb-1">' + serialBadge(f) + '</div>' : ''}<div class="font-extrabold text-[#0b132b] text-sm">${escHtml(f.applicants[0]?.name || 'Unnamed')}</div><div class="text-[10px] text-slate-500 font-bold uppercase mt-0.5">মোট ${f.applicants.length} জন</div>${f.updatedBy ? `<div class="text-[10px] text-slate-400 font-bold mt-0.5">শেষ আপডেট: ${escHtml(f.updatedBy)}${f.updatedAt ? ' · ' + escHtml(f.updatedAt) : ''}</div>` : ''}${exPpl.length ? `<div class="text-[10px] text-red-600 font-extrabold mt-0.5">⚠ Expired: ${exPpl.map(a => escHtml(a.name)).join(', ')}</div>` : ''}</td>
                 <td class="p-3.5 space-y-1.5"><span class="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-slate-100 text-slate-600">${escHtml(f.visaType)}</span>${bgdSetBadge(f)}${dateChips(f)}${f.visaType === 'Medical' ? medicalChips(f) : ''}<div class="flex flex-wrap gap-1 mt-1">${getDocChecklistBadges(f)}</div></td>
                 <td class="p-3.5"><div class="mono-type font-extrabold text-[#0b132b]">${waPhone(f.accountPhone)}</div>${f.border ? `<div class="text-[10px] text-indigo-600 font-bold mt-0.5">${escHtml(f.border)}</div>` : ''}<div class="text-[10px] text-slate-500 font-bold mt-0.5">📱 ${escHtml(smsOf(f))}</div><div class="text-[10px] font-extrabold mt-0.5 ${f.appGiven ? 'text-emerald-600' : 'text-amber-600'}">${f.appGiven ? '✅ অ্যাপ দেওয়া হয়েছে' : '⚠️ অ্যাপ দেওয়া হয়নি'}</div></td>
                 <td class="p-3.5 space-y-1.5">${f.applicants.map((a, i) => {
@@ -1583,7 +1561,7 @@
         const isDiffPass = f.accountPassword && f.accountPassword !== defaultPass;
         return `
         <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-lg transition visa-border-${f.visaType.replace(/\s+/g, '')}">
-          ${noteBanner(f)}
+          ${noteBanner(f)}${transferBanner(f)}
           <div class="bg-white px-5 py-4 flex flex-wrap justify-between items-center gap-3 border-b border-slate-100">
             <div class="flex flex-wrap items-center gap-3">
               ${serialBadge(f)}
@@ -1622,7 +1600,7 @@
           ${getDocChecklistBadges(f) ? `<div class="px-5 py-3 bg-slate-50 border-b border-slate-100 flex flex-wrap items-center gap-2"><span class="text-[10px] font-extrabold text-slate-400 uppercase mr-1">চেকলিস্ট:</span>${getDocChecklistBadges(f)}</div>` : ''}
           ${groupCardLedgerHtml(f)}${subAcctsCardHtml(f)}
 
-          <div class="p-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-${Math.min(f.applicants.length, 4)} gap-4">
+          <div class="p-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-${Math.max(1, Math.min(f.applicants.length, 4))} gap-4">
             ${f.applicants.map((a, idx) => {
               const exp = getBgdExpiryInfo(a, f);
               return `
@@ -1683,7 +1661,7 @@
     function letterSlots(f) { return (letterMode(f) === 'SEPARATE' ? ['invitation', 'apptLetter'] : ['invitation']).concat(MED_EXTRA_KEYS); }
     function letterLabel(f, k) { if (k === 'undertaking') return 'Undertaking'; if (k === 'consult') return 'Consult PDF'; return k === 'apptLetter' ? 'Appointment Letter' : (letterMode(f) === 'SEPARATE' ? 'Invitation Letter' : 'Invitation + Appointment Letter'); }
     function letterFileNameFor(f, k) {
-      const n = safeName(f.applicants[0] && f.applicants[0].name);
+      const n = safeName(mainNameOf(f));
       if (k === 'undertaking') return 'UNDERTAKING - ' + n + '.pdf';
       if (k === 'consult') return 'CONSULT - ' + n + '.pdf';
       if (k === 'apptLetter') return 'APPOINTMENT LETTER - ' + n + '.pdf';
@@ -1693,6 +1671,38 @@
     function allLetterIds(f) { return LETTER_KEYS.map(k => f[k + 'FileId']).filter(Boolean); }
 
     function noteBanner(f) { const n = (f.note || '').trim(); return n ? `<div class="px-5 py-2.5 bg-amber-100 border-b border-amber-300 text-sm font-extrabold text-amber-900 flex items-start gap-2"><span>📝</span><span class="whitespace-pre-wrap break-words min-w-0">${escHtml(n)}</span></div>` : ''; }
+
+    // 📝 কোন কার্ড/সিরিয়াল থেকে এসেছে বা কোথায় গেছে — কার্ডের ওপরে সবসময় দেখায় (ট্রান্সফার লগ থেকে)
+    function transferLines(f) {
+      const log = f.transferLog || [], names = (f.applicants || []).map(a => a.name || ''); const seen = {}, out = [];
+      const ser = (id, fb) => { const t = visaFiles.find(x => x.id === id); return (t && t.serial) ? t.serial : fb; };
+      log.slice().reverse().forEach(e => {
+        const inc = e.toId === f.id, outg = e.fromId === f.id; if (inc === outg) return;
+        const stillHere = names.indexOf(e.name || '') >= 0;
+        if (inc && !stillHere) return; if (outg && stillHere) return;
+        const k = (inc ? 'in|' : 'out|') + (e.name || ''); if (seen[k]) return; seen[k] = 1;
+        let tgt = e; if (outg) { let g = 0; while (g++ < 12) { const cf = visaFiles.find(x => x.id === tgt.toId); if (!cf) break; const nx = (cf.transferLog || []).find(y => y.fromId === tgt.toId && y.name === tgt.name && (y.ts || 0) > (tgt.ts || 0)); if (!nx) break; tgt = nx; } }   // চেইন মুভে এখন কোন কার্ডে আছে সেটা দেখায়
+        const oid = inc ? e.fromId : tgt.toId, of = visaFiles.find(x => x.id === oid);
+        const sn = inc ? ser(e.fromId, e.fromSerial) : ser(tgt.toId, tgt.toSerial), nm = of ? mainNameOf(of) : (inc ? e.fromMain : tgt.toMain); const other = (sn ? '#' + escHtml(String(sn)) + ' ' : '') + escHtml(nm || '');
+        out.push(inc ? '📥 <b>' + escHtml(e.name || 'Unnamed') + '</b> এসেছে ' + other + ' ফাইল থেকে' + (e.at ? ' · ' + escHtml(e.at) : '') + ' <span class="text-sky-600">(হিসাব ওই ফাইলেই)</span>'
+                     : '📤 <b>' + escHtml(e.name || 'Unnamed') + '</b> চলে গেছে ' + other + ' ফাইলে' + (e.at ? ' · ' + escHtml(e.at) : '') + ' <span class="text-emerald-700">(হিসাব এই কার্ডেই আছে)</span>');
+      });
+      return out.slice(0, 6);
+    }
+    function transferBanner(f) {
+      const ln = transferLines(f), empty = !(f.applicants && f.applicants.length);
+      if (!ln.length && !empty) return '';
+      return '<div class="px-5 py-2.5 bg-sky-50 border-b border-sky-200 text-[12px] font-extrabold text-sky-900 space-y-0.5">' + (empty ? '<div class="text-amber-800">👤 এই কার্ডে এখন কোনো আবেদনকারী নেই — শুধু হিসাব আছে (নাম: ' + escHtml(mainNameOf(f)) + ')</div>' : '') + ln.map(x => '<div>' + x + '</div>').join('') + '</div>';
+    }
+    function transferBlock(f) {
+      const ln = transferLines(f), empty = !(f.applicants && f.applicants.length);
+      if (!ln.length && !empty) return '';
+      return '<div class="mb-1.5 bg-sky-50 border border-sky-200 text-sky-900 rounded-lg px-2 py-1 text-[10px] font-extrabold max-w-[260px] space-y-0.5">' + (empty ? '<div class="text-amber-800">👤 আবেদনকারী নেই, শুধু হিসাব</div>' : '') + ln.map(x => '<div>' + x + '</div>').join('') + '</div>';
+    }
+    function subLabel(s) {
+      if (s.out) { const t = visaFiles.find(x => x.id === s.toId); const sn = (t && t.serial) || s.toSerial || ''; return '📤 ' + (sn ? '#' + sn + ' ফাইলে গেছে' : 'অন্য ফাইলে গেছে'); }
+      return '🧾 ' + (s.serial ? '#' + s.serial : 'পুরনো ফাইল');
+    }
     function noteBlock(f) { const n = (f.note || '').trim(); return n ? `<div class="mb-1.5 bg-amber-100 border border-amber-300 text-amber-900 rounded-lg px-2 py-1 text-[11px] font-extrabold whitespace-pre-wrap break-words max-w-[260px]">📝 ${escHtml(n)}</div>` : ''; }
 
     function medicalChips(f) {
@@ -1719,11 +1729,11 @@
       if (file.size > 5 * 1024 * 1024) { alert('PDF ৫ মেগাবাইটের নিচে হতে হবে!'); event.target.value = ''; return; }
       const f = visaFiles.find(x => x.id === fileId); if (!f) return;
       if (!driveEnabled()) { alert('Drive সেট করা নেই!'); event.target.value = ''; return; }
-      if (!((f.applicants[0].name || '').trim())) { alert('আগে মেইন আবেদনকারীর নাম লিখে সেভ করুন।'); event.target.value = ''; return; }
+      if (!(((f.applicants[0] && f.applicants[0].name) || f.ghostMain || '').trim())) { alert('আগে মেইন আবেদনকারীর নাম লিখে সেভ করুন।'); event.target.value = ''; return; }
       if (f[k + 'FileId'] && !confirm('এই Letter দিয়ে আগেরটা বদলাবেন?\nআগেরটা Drive থেকে মুছে যাবে।')) { event.target.value = ''; return; }
       cloudBusy++; showToast('⏳ Letter আপলোড হচ্ছে...');
       try {
-        const res = await driveUploadApplicant({ setKey: f.id, medFolder: f.applicants[0].name, medFolderId: f.medFolderId || '', folderName: f.applicants[0].name, fileName: letterFileNameFor(f, k), file: file, replaceFileId: f[k + 'FileId'] || '' });
+        const res = await driveUploadApplicant({ setKey: f.id, medFolder: mainNameOf(f), medFolderId: f.medFolderId || '', folderName: mainNameOf(f), fileName: letterFileNameFor(f, k), file: file, replaceFileId: f[k + 'FileId'] || '' });
         f.medFolderId = res.folderId; f.medFolderName = res.folderName;
         f[k + 'FileId'] = res.fileId; f[k + 'FileName'] = res.fileName; f[k + 'Med'] = true; f[k + 'Name'] = file.name; f[k + 'By'] = whoAmI(); f[k + 'At'] = stampNow(); f[k + 'Received'] = true;
         f.updatedAt = stampNow(); f.updatedBy = whoAmI();
@@ -1815,7 +1825,7 @@
         
         // Load fee values
         document.getElementById('baseVisaFee').value = f.baseVisaFee !== undefined ? f.baseVisaFee : 1500;
-        baseFeeManual = (f.baseVisaFee !== undefined && f.baseVisaFee !== VISA_FEE_PER_PERSON && f.baseVisaFee !== VISA_FEE_PER_PERSON * f.applicants.length);
+        baseFeeManual = (f.baseVisaFee !== undefined && f.baseVisaFee !== VISA_FEE_PER_PERSON && f.baseVisaFee !== VISA_FEE_PER_PERSON * feeCount(f.applicants, f.id)) || f.applicants.length === 0;
         document.getElementById('softwareCharge').value = f.softwareCharge || '';
         document.getElementById('billTotal').value = f.billTotal || '';
         
@@ -2178,8 +2188,8 @@
         const who = (s.names && s.names.length) ? s.names.join(', ') : (s.main || '');
         return `<div class="bg-sky-50/60 border border-sky-200 rounded-2xl p-4">
           <div class="flex flex-wrap items-end justify-between gap-3 mb-3">
-            <div><span class="text-[11px] font-extrabold text-sky-800 uppercase">🧾 আলাদা হিসাব · <span class="bg-sky-100 border border-sky-300 px-1.5 py-0.5 rounded mono-type">${s.serial ? '#' + escHtml(String(s.serial)) : 'পুরনো ফাইল'}</span></span>
-              <div class="text-[10px] font-bold text-slate-500">${escHtml(who)} · ${s.mode === 'PERSON' ? 'জনপ্রতি হিসাব ছিল' : 'গ্রুপ হিসাব ছিল'}${s.at ? ' · এসেছে ' + escHtml(s.at) : ''}</div></div>
+            <div><span class="text-[11px] font-extrabold text-sky-800 uppercase">🧾 আলাদা হিসাব · <span class="bg-sky-100 border border-sky-300 px-1.5 py-0.5 rounded mono-type">${escHtml(subLabel(s))}</span></span>
+              <div class="text-[10px] font-bold text-slate-500">${escHtml(who)} · ${s.mode === 'PERSON' ? 'জনপ্রতি হিসাব ছিল' : 'গ্রুপ হিসাব ছিল'}${s.at ? (s.out ? ' · গেছে ' : ' · এসেছে ') + escHtml(s.at) : ''}</div></div>
             <div class="flex items-end gap-3 text-[11px] font-bold">
               <div><label class="block text-[10px] font-extrabold text-blue-700 mb-0.5">বিল</label><input type="number" min="0" value="${nz(s.bill) ? s.bill : ''}" oninput="saBill(${i},this.value)" placeholder="0" class="w-24 px-2 py-1.5 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 text-xs font-extrabold focus:outline-none"></div>
               <div class="text-right"><span class="block text-[10px] font-extrabold text-slate-500">জমা</span><span id="sa_paid_${i}" class="mono-type font-extrabold text-emerald-700">0</span></div>
@@ -2225,6 +2235,7 @@
     }
     function setFormAcctMode(m) {
       syncTempInputs(); if (m === tempAcctMode) return;
+      if (!tempApplicants.length) { alert('এই কার্ডে কোনো আবেদনকারী নেই, তাই হিসাবের ধরন বদলানো যাবে না।'); return; }
       const T = formTotals(true), multi = tempApplicants.length > 1;
       if (multi && (T.b > 0 || T.p > 0)) {
         const msg = m === 'PERSON' ? '👤 জনপ্রতি হিসাবে নিলে গ্রুপের মোট বিল ও প্রতিটি জমা সবার মধ্যে সমান ভাগ হয়ে যাবে (মোট একই থাকবে)। পরে প্রত্যেকের টা আলাদা বদলাতে পারবেন।\n\nনিশ্চিত?'
@@ -2266,12 +2277,12 @@
       const sb = nz(s.bill), sp = sumPays(s.pays), d = sb - sp;
       const pays = (s.pays || []).filter(p => nz(p.amt) > 0).map(p => '<div class="flex justify-between gap-3"><span class="text-emerald-700">+ ৳' + fmtTk(p.amt) + '</span><span class="text-slate-400">' + escHtml(fmtPayDT(p)) + (p.by ? ' · ' + escHtml(p.by) : '') + '</span></div>').join('');
       const who = (s.names && s.names.length) ? s.names.join(', ') : (s.main || '');
-      return '<div class="mt-1.5 pl-2 border-l-2 border-sky-300"><div class="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] font-extrabold"><span class="bg-sky-100 text-sky-800 border border-sky-300 px-1.5 py-0.5 rounded mono-type text-[10px]">🧾 ' + (s.serial ? '#' + escHtml(String(s.serial)) : 'পুরনো ফাইল') + '</span><span class="text-slate-700">' + escHtml(who) + '</span><span class="text-blue-700">বিল ৳' + fmtTk(sb) + '</span><span class="text-emerald-700">জমা ৳' + fmtTk(sp) + '</span><span class="' + (d > 0 ? 'text-rose-600' : (d < 0 ? 'text-amber-600' : 'text-emerald-600')) + '">' + (d < 0 ? 'বেশি জমা ৳' + fmtTk(-d) : 'বাকি ৳' + fmtTk(d)) + '</span></div>'
-        + (pays ? '<div class="mt-0.5 text-[10px] font-bold space-y-0.5 max-w-xs">' + pays + '</div>' : '') + (s.at ? '<div class="text-[9px] text-slate-400 font-bold">এসেছে ' + escHtml(s.at) + (s.by ? ' · ' + escHtml(s.by) : '') + '</div>' : '') + '</div>';
+      return '<div class="mt-1.5 pl-2 border-l-2 border-sky-300"><div class="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] font-extrabold"><span class="bg-sky-100 text-sky-800 border border-sky-300 px-1.5 py-0.5 rounded mono-type text-[10px]">' + escHtml(subLabel(s)) + '</span><span class="text-slate-700">' + escHtml(who) + '</span><span class="text-blue-700">বিল ৳' + fmtTk(sb) + '</span><span class="text-emerald-700">জমা ৳' + fmtTk(sp) + '</span><span class="' + (d > 0 ? 'text-rose-600' : (d < 0 ? 'text-amber-600' : 'text-emerald-600')) + '">' + (d < 0 ? 'বেশি জমা ৳' + fmtTk(-d) : 'বাকি ৳' + fmtTk(d)) + '</span></div>'
+        + (pays ? '<div class="mt-0.5 text-[10px] font-bold space-y-0.5 max-w-xs">' + pays + '</div>' : '') + (s.at ? '<div class="text-[9px] text-slate-400 font-bold">' + (s.out ? 'গেছে ' : 'এসেছে ') + escHtml(s.at) + (s.by ? ' · ' + escHtml(s.by) : '') + '</div>' : '') + '</div>';
     }
     function subAcctsCardHtml(f) {
       if (!isAdmin || !subsOf(f).length) return '';
-      return '<div class="px-5 py-3 bg-sky-50/60 border-b border-sky-100"><div class="text-[11px] font-extrabold text-sky-800">🧾 আলাদা হিসাব — অন্য ফাইল থেকে এসেছে (' + subsOf(f).length + 'টি, প্রতিটার নিজের সিরিয়াল)</div>' + subsOf(f).map(subAcctOneHtml).join('') + '</div>';
+      return '<div class="px-5 py-3 bg-sky-50/60 border-b border-sky-100"><div class="text-[11px] font-extrabold text-sky-800">🧾 আলাদা হিসাব (' + subsOf(f).length + 'টি, সিরিয়াল সহ)</div>' + subsOf(f).map(subAcctOneHtml).join('') + '</div>';
     }
     function subsLedgerHtml(f) {
       const subs = subsOf(f); if (!subs.length) return '';
@@ -2316,12 +2327,12 @@
 
     function renderApplicantForms() {
       if (tempAcctMode === 'PERSON') tempApplicants.forEach(ledInit);   // জনপ্রতি হলেই প্রত্যেকের হিসাবের ঘর লাগে
-      if (!baseFeeManual) { const bf = document.getElementById('baseVisaFee'); if (bf) { bf.value = VISA_FEE_PER_PERSON * tempApplicants.length; calcDue(); } }
+      if (!baseFeeManual) { const bf = document.getElementById('baseVisaFee'); if (bf) { bf.value = VISA_FEE_PER_PERSON * feeCount(tempApplicants, modalKey()); calcDue(); } }
       document.getElementById('btnAddCoApplicant').style.display = tempApplicants.length >= 4 ? 'none' : 'inline-flex';
       document.getElementById('applicantsContainer').innerHTML = tempApplicants.map((a, i) => `
         <div class="p-5 rounded-2xl border border-slate-200 bg-white shadow-sm">
           <div class="flex flex-wrap justify-between items-center mb-3 gap-2 pb-3 border-b border-slate-100">
-            <span class="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded bg-slate-100 text-slate-600 tracking-wide">${i === 0 ? '⭐ মেইন ফাইল (Main)' : `👥 কো-অ্যাপ্লিক্যান্ট #${i}`}</span>
+            <span class="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded bg-slate-100 text-slate-600 tracking-wide">${i === 0 ? '⭐ মেইন ফাইল (Main)' : `👥 কো-অ্যাপ্লিক্যান্ট #${i}`}</span>${isGuest(a, modalKey()) ? (() => { const hf = visaFiles.find(x => x.id === a.homeId); return '<span title="ভিসা ফি/খরচ আসল কার্ডে আছে" class="text-[10px] font-extrabold px-2 py-1 rounded bg-amber-100 text-amber-800 border border-amber-300">🏠 আসল কার্ড: ' + (hf && hf.serial ? '#' + escHtml(String(hf.serial)) + ' ' : '') + (hf ? escHtml(mainNameOf(hf)) : 'পুরনো') + ' (হিসাব ওখানেই)</span>'; })() : ''}
             <div class="flex flex-wrap items-center gap-3">
               <label class="inline-flex items-center cursor-pointer bg-slate-50 px-2.5 py-1 rounded-lg text-[11px] font-bold text-slate-700 border border-slate-200"><input type="checkbox" id="app_sub_${i}" ${a.isSubmitted ? 'checked' : ''} onchange="if(this.checked && !document.getElementById('app_subdate_${i}').value) document.getElementById('app_subdate_${i}').value = getTodayStr();" class="w-3.5 h-3.5 mr-1.5">সাবমিট সম্পন্ন</label>
               <div class="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded-lg border border-slate-200 text-[11px]"><span class="font-bold text-slate-500">তারিখ:</span><input type="date" id="app_subdate_${i}" value="${a.subDate || ''}" class="bg-transparent font-bold focus:outline-none"></div>
@@ -2357,6 +2368,13 @@
       ]);
       if (!res.committed) throw new Error('NOT_COMMITTED');
       return Number(res.snapshot.val());
+    }
+    // যারা এই কার্ড থেকে অন্য কার্ডে চলে গেছে (হিসাব এই কার্ডে থাকে, তাই নাম দিয়ে খুঁজলে এই কার্ডও আসবে)
+    function movedOutNames(f) {
+      const o = []; (f.transferLog || []).forEach(e => { if (e.fromId === f.id && e.name) o.push(String(e.name)); });
+      (f.groupMovedOut || []).forEach(x => { if (x && x.n) o.push(String(x.n)); });
+      subsOf(f).forEach(sb => (sb.names || []).forEach(n => { if (n) o.push(String(n)); }));
+      return o;
     }
     function hasPrevSerial(f, q) { return (f.applicants || []).some(a => (a.prevSerials || []).some(s => String(s) === String(q))) || subsOf(f).some(s => String(s.serial) === String(q)); }
     function prevSerialBadge(a) { return (a && a.prevSerials && a.prevSerials.length) ? a.prevSerials.map(s => '<span title="আগে এই নম্বরের ফাইলে ছিল (ফিজিক্যাল ফাইলের নম্বর)" class="bg-amber-100 text-amber-800 border border-amber-300 px-1.5 py-0.5 rounded text-[10px] font-extrabold mono-type">↩ আগে #' + escHtml(String(s)) + '</span>').join(' ') : ''; }
@@ -2397,7 +2415,7 @@
         appointmentDate: document.getElementById('isAppointed').checked ? (document.getElementById('appointmentDate').value || '') : '',
         deliveredDate: (document.getElementById('isDelivered').checked && !document.getElementById('isReturned').checked) ? (document.getElementById('deliveredDate').value || '') : '',
         
-        baseVisaFee: parseFloat(document.getElementById('baseVisaFee').value) || 1500,
+        baseVisaFee: (v => isFinite(v) ? v : 1500)(parseFloat(document.getElementById('baseVisaFee').value)),
         softwareCharge: parseFloat(document.getElementById('softwareCharge').value) || 0,
         
         billTotal: parseFloat(document.getElementById('billTotal').value) || 0, billAdvance: parseFloat(document.getElementById('billAdvance').value) || 0, billDue: parseFloat(document.getElementById('billDue').value) || 0,
@@ -2408,7 +2426,8 @@
             const prevSet = editId ? visaFiles.find(x => x.id === editId) : null;
       fileObj.acctMode = tempAcctMode;   // গ্রুপ: ফাইলের একটাই বিল/জমা | জনপ্রতি: প্রত্যেকের নিজের
       fileObj.subAccts = tempSubs.map(s => ({ id: s.id, serial: String(s.serial || ''), main: s.main || '', names: s.names || [], mode: s.mode || 'GROUP', bill: nz(s.bill),
-        pays: (s.pays || []).filter(p => nz(p.amt) > 0).map(p => ({ amt: nz(p.amt), d: p.d || '', t: p.t || '', by: p.by || '' })), at: s.at || '', by: s.by || '' }));
+        pays: (s.pays || []).filter(p => nz(p.amt) > 0).map(p => ({ amt: nz(p.amt), d: p.d || '', t: p.t || '', by: p.by || '' })), at: s.at || '', by: s.by || '', out: !!s.out, toId: s.toId || '', toSerial: s.toSerial || '', toMain: s.toMain || '' }));
+      fileObj.ghostMain = prevSet ? (prevSet.ghostMain || '') : '';
       fileObj.groupMovedOut = prevSet ? (prevSet.groupMovedOut || []) : [];
       if (tempAcctMode === 'GROUP') {
         fileObj.billTotal = nz(tempGroup.bill) + subsBill(fileObj);
@@ -2486,7 +2505,7 @@
     let logQueue = []; try { logQueue = JSON.parse(localStorage.getItem('rtc_log_queue') || '[]'); } catch (e) { logQueue = []; }
     let logFlushing = false; let logDenied = false; let logHint = ''; let logOverride = null;
     function saveLogQueue() { if (logQueue.length > 500) logQueue = logQueue.slice(-500); try { localStorage.setItem('rtc_log_queue', JSON.stringify(logQueue)); } catch (e) { } }
-    function mainNameOf(f) { return (f && f.applicants && f.applicants[0] && f.applicants[0].name) || 'Unnamed'; }
+    function mainNameOf(f) { return (f && f.applicants && f.applicants[0] && f.applicants[0].name) || (f && f.ghostMain) || 'Unnamed'; }
     function logVal(v, kind) { if (kind === 'bool') return v ? 'হ্যাঁ' : 'না'; if (kind === 'num') return String(v || 0); const s = String(v == null ? '' : v); return s ? (s.length > 28 ? s.slice(0, 28) + '…' : s) : '(খালি)'; }
     function diffEntry(old, f) {
       if (!old) return { type: 'create', setId: f.id, name: mainNameOf(f), detail: 'নতুন সেট (' + (f.applicants ? f.applicants.length : 0) + ' জন)' };
@@ -2638,7 +2657,7 @@
         const inc = e.toId === f.id;
         const sn = inc ? ser(e.fromId, e.fromSerial) : ser(e.toId, e.toSerial); const nm = inc ? e.fromMain : e.toMain;
         const other = (sn ? '#' + sn + ' ' : '') + (nm || '');
-        const moved = !!(e.bill || e.paid); const none = e.kind === 'NONE';
+        const moved = !!(e.bill || e.paid); const none = (e.kind === 'NONE' || e.kind === 'STAY');
         const money = none ? ('ℹ️ টাকা সরেনি — গ্রুপ হিসাব ' + (inc ? (sn ? '#' + sn + ' ' : 'পুরনো ') : 'এই ') + 'ফাইলেই আছে') : (moved ? ('বিল ' + fmtTk(e.bill) + ' · জমা ' + fmtTk(e.paid) + (e.kind === 'SUB' ? (inc ? ' আলাদা হিসাব হয়ে এসেছে' : ' আলাদা হিসাব হয়ে গেছে') : (inc ? ' সাথে এসেছে' : ' সাথে গেছে'))) : '⚠️ টাকা সরানো হয়নি, মিলিয়ে নিন');
         return '<div class="text-[10px] font-bold mt-0.5 ' + ((moved || none) ? 'text-sky-600' : 'text-amber-600') + '">' + (inc ? '↘ ' : '↗ ') + escHtml(e.name || 'Unnamed') + (inc ? ' এসেছে ' + escHtml(other) + ' ফাইল থেকে' : ' গেছে ' + escHtml(other) + ' ফাইলে') + ' · ' + money + '</div>';
       }).join('');
@@ -2661,7 +2680,7 @@
         const moved = !!(e.bill || e.paid);
         h += '<div class="px-4 py-2.5 text-[11px] font-bold text-slate-600 leading-relaxed">'
           + '<div><span class="mono-type text-slate-400">' + escHtml(e.at || '') + '</span> · ' + escHtml(e.by || '') + ' · <span class="font-extrabold text-[#0b132b]">' + escHtml(e.name || 'Unnamed') + '</span> : ' + fl(e.fromId, e.fromSerial, e.fromMain) + ' → ' + fl(e.toId, e.toSerial, e.toMain) + '</div>'
-          + (e.kind === 'NONE' ? '<div class="text-slate-500">ℹ️ টাকা সরেনি — গ্রুপ হিসাব পুরনো ফাইলেই আছে, শুধু রেকর্ড (কোন ফাইল থেকে এসেছে)</div>' : (moved ? '<div class="text-sky-700">' + (e.kind === 'SUB' ? 'আলাদা হিসাব হয়ে গেছে (পুরনো সিরিয়াল সহ): ' : 'সাথে গেছে: ') + 'বিল ' + fmtTk(e.bill) + ' · জমা ' + fmtTk(e.paid) + '</div>' : '<div class="text-amber-600">⚠️ টাকা সরানো হয়নি, মিলিয়ে নিন</div>'))
+          + ((e.kind === 'NONE' || e.kind === 'STAY') ? '<div class="text-slate-500">ℹ️ টাকা সরেনি — হিসাব পুরনো ফাইলেই আছে, শুধু রেকর্ড (কোন ফাইল থেকে এসেছে)' + (e.sMainFrom && e.sMainTo && e.sMainFrom !== e.sMainTo ? ' · পুরনো ফাইলের নতুন মেইন: ' + escHtml(e.sMainTo) : '') + (e.sEmpty ? ' · পুরনো কার্ড এখন আবেদনকারী ছাড়া, শুধু হিসাব' : '') + '</div>' : (moved ? '<div class="text-sky-700">' + (e.kind === 'SUB' ? 'আলাদা হিসাব হয়ে গেছে (পুরনো সিরিয়াল সহ): ' : 'সাথে গেছে: ') + 'বিল ' + fmtTk(e.bill) + ' · জমা ' + fmtTk(e.paid) + '</div>' : '<div class="text-amber-600">⚠️ টাকা সরানো হয়নি, মিলিয়ে নিন</div>'))
           + (e.sBefore ? '<div class="text-slate-500">আগের ফাইল ' + (e.sGone ? '(এখন নেই)' : '') + ': ' + ba(e.sBefore) + ' → ' + ba(e.sAfter) + ' &nbsp;|&nbsp; নতুন ফাইল: ' + ba(e.dBefore) + ' → ' + ba(e.dAfter) + '</div>' : '')
           + '</div>';
       });
