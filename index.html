@@ -406,6 +406,7 @@
   <div id="deliveryDateModal" class="fixed inset-0 modal-bg hidden z-50 flex items-center justify-center p-3"><div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-sm overflow-hidden border border-slate-200"><div class="bg-emerald-600 text-white px-6 py-4 flex justify-between items-center"><h3 class="font-extrabold text-sm flex items-center gap-2"><i class="fa-solid fa-box-archive"></i> ডেলিভারি তারিখ</h3><button onclick="closeDeliveryDateModal()" class="text-white text-xl">&times;</button></div><div class="p-6 space-y-3 text-xs"><input type="hidden" id="deliveryTargetId"><input type="hidden" id="deliveryFresh"><div id="deliveryWho" class="bg-slate-50 p-3 rounded-xl border font-bold text-slate-700"></div><div><label class="block font-bold text-slate-500 mb-1">📦 কবে ডেলিভারি হয়েছে?</label><input type="date" id="deliveryDateInput" class="w-full px-3 py-2.5 rounded-xl border-2 border-emerald-400 font-extrabold bg-emerald-50 focus:outline-none"></div><p class="text-[10px] font-bold text-slate-400 leading-relaxed">আজকের তারিখ অটো বসানো আছে। আগের দিনে ডেলিভারি হয়ে থাকলে তারিখ বদলে নিন।</p></div><div class="bg-slate-50 px-6 py-3.5 flex justify-end gap-2 border-t border-slate-200"><button onclick="closeDeliveryDateModal()" class="px-4 py-2 rounded-xl border bg-white font-bold">বাতিল</button><button onclick="confirmDeliveryDate()" class="bg-emerald-600 text-white px-5 py-2 rounded-xl font-extrabold shadow"><i class="fa-solid fa-check mr-1"></i> কনফার্ম</button></div></div></div>
 
   <div id="moveApplicantModal" class="fixed inset-0 modal-bg hidden z-50 flex items-center justify-center p-3"><div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-md overflow-hidden border border-slate-200"><div class="bg-[#0077b6] text-white px-6 py-4 flex justify-between items-center"><h3 class="font-extrabold text-sm flex items-center gap-2"><i class="fa-solid fa-arrow-right-arrow-left"></i> ট্রান্সফার</h3><button onclick="closeMoveModal()" class="text-white text-xl">&times;</button></div><div class="p-6 space-y-4 text-xs"><input type="hidden" id="moveSourceFileId"><input type="hidden" id="moveAppIdx"><div class="bg-slate-50 p-4 rounded-xl border border-slate-200"><p class="font-bold text-slate-500 mb-1">যাকে সরাতে চান:</p><p class="text-base font-extrabold text-slate-900" id="moveApplicantName"></p></div><div><label class="block font-bold text-slate-500 mb-2">কোথায় পাঠাতে চান?</label><select id="moveTargetSet" class="w-full px-3 py-2.5 rounded-xl border-2 border-[#00b4d8] font-bold bg-white focus:outline-none"></select></div><div id="moveMoneyBox" style="display:none" class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 space-y-2"><p class="font-extrabold text-emerald-800">💰 টাকার হিসাব (সাথে যাবে)</p><div class="grid grid-cols-2 gap-2"><div><label class="block font-bold text-slate-500 mb-1">বিল সাথে নেবে (৳)</label><input type="number" min="0" id="moveBillAmt" placeholder="0" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold"></div><div><label class="block font-bold text-slate-500 mb-1">জমা সাথে নেবে (৳)</label><input type="number" min="0" id="movePaidAmt" placeholder="0" class="w-full px-3 py-2 rounded-xl border border-slate-300 font-bold"></div></div><p id="moveMoneyHint" class="text-[10px] font-bold text-slate-500 leading-relaxed"></p></div></div><div class="bg-slate-50 px-6 py-3.5 flex justify-end gap-2 border-t border-slate-200"><button onclick="closeMoveModal()" class="px-4 py-2 rounded-xl border bg-white font-bold">বাতিল</button><button onclick="confirmMoveApplicant()" class="btn-primary-rtc text-white px-5 py-2 rounded-xl font-extrabold shadow"><i class="fa-solid fa-check mr-1"></i> কনফার্ম</button></div></div></div>
+  <div id="moveConfirmModal" class="fixed inset-0 modal-bg hidden z-[60] flex items-center justify-center p-3"><div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-md overflow-hidden border border-slate-200"><div class="bg-amber-500 text-white px-6 py-4 flex justify-between items-center"><h3 class="font-extrabold text-sm flex items-center gap-2"><i class="fa-solid fa-clipboard-check"></i> ট্রান্সফার নিশ্চিত করুন</h3><button onclick="closeMoveConfirm()" class="text-white text-xl">&times;</button></div><div id="moveConfirmBody" class="p-5 text-xs max-h-[65vh] overflow-y-auto space-y-3"></div><div class="px-5 pb-5 pt-1 flex gap-2"><button onclick="closeMoveConfirm()" class="flex-1 py-3 rounded-xl bg-slate-100 text-slate-700 font-extrabold text-xs">← ফিরে যান</button><button onclick="doMoveApplicant()" class="flex-[2] py-3 rounded-xl bg-emerald-600 text-white font-extrabold text-xs shadow">✅ হ্যাঁ, ট্রান্সফার করুন</button></div></div></div>
 
   <div id="settingsModal" class="fixed inset-0 modal-bg hidden z-50 flex items-center justify-center p-3"><div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-lg overflow-hidden border border-slate-200"><div class="bg-[#0b132b] text-white px-6 py-4 flex justify-between items-center"><h3 class="font-extrabold text-sm flex items-center gap-2"><i class="fa-solid fa-sliders text-[#00b4d8]"></i> সেটিংস</h3><button onclick="closeSettingsModal()" class="text-white text-xl">&times;</button></div><div class="p-6 space-y-4 text-xs max-h-[68vh] overflow-y-auto">
     
@@ -571,14 +572,76 @@
       document.getElementById('moveApplicantModal').classList.remove('hidden');
     }
     function closeMoveModal() { document.getElementById('moveApplicantModal').classList.add('hidden'); }
-    function confirmMoveApplicant() {
+
+    // ===== 🔄 ট্রান্সফারের আগে নিশ্চিতকরণ স্ক্রিন: কোন ফাইল থেকে কোথায়, কত টাকা সাথে যাচ্ছে, আর দুই ফাইলে বাকি বিল/জমা কত থাকছে (কিছু বদলানোর আগেই হিসাব করে দেখায়) =====
+    function calcMovePlan() {
+      const sId = document.getElementById('moveSourceFileId').value, aIdx = parseInt(document.getElementById('moveAppIdx').value), tId = document.getElementById('moveTargetSet').value;
+      const sFile = visaFiles.find(x => x.id === sId); if (!sFile) return { err: 'সোর্স ফাইল পাওয়া যায়নি।' };
+      const person = sFile.applicants[aIdx]; if (!person) return { err: 'ব্যক্তিকে পাওয়া যায়নি।' };
+      const dest = tId !== 'NEW' ? visaFiles.find(x => x.id === tId) : null;
+      if (tId !== 'NEW' && !dest) return { err: 'গন্তব্য ফাইল পাওয়া যায়নি।' };
+      if (dest && dest.applicants.length >= 4) return { err: 'ফাইলে ৪ জন পূর্ণ!' };
+      const sMode = acctModeOf(sFile), dMode = dest ? acctModeOf(dest) : sMode, sSingle = sFile.applicants.length === 1;
+      const warns = []; let mBill = 0, mPays = [], sAfter;
+      if (sMode === 'PERSON') {
+        mBill = nz(person.bill); mPays = (person.pays || []).filter(p => nz(p.amt) > 0).map(p => ({ amt: nz(p.amt), d: p.d || '', t: p.t || '' }));
+        const rest = sFile.applicants.filter((x, i) => i !== aIdx); let b = 0, pd = 0, due = 0;
+        rest.forEach(x => { b += nz(x.bill); pd += ledPaid(x); due += Math.max(0, nz(x.bill) - ledPaid(x)); });
+        sAfter = { b: r2(b), p: r2(pd), due: r2(due) };
+      } else {
+        const gl = groupLedgerOf(sFile), totB = nz(gl.bill), totP = sumPays(gl.pays); let wantB = 0, wantP = 0;
+        if (sSingle) { wantB = totB; wantP = totP; }
+        else if (isAdmin) { wantB = r2(document.getElementById('moveBillAmt').value); wantP = r2(document.getElementById('movePaidAmt').value); }
+        else if (totB > 0 || totP > 0) warns.push('এই ফাইলের হিসাব গ্রুপ আকারে, তাই এই জনের সাথে কোনো টাকা যাবে না (শুধু অ্যাডমিন টাকা সরাতে পারে)। টাকা পুরনো ফাইলেই থাকবে।');
+        if (wantB < 0 || wantP < 0) return { err: 'বিল/জমা ঋণাত্মক হতে পারে না।' };
+        if (wantB > totB + 0.001 || wantP > totP + 0.001) return { err: 'সাথে নেওয়ার বিল/জমা ফাইলের মোটের বেশি হতে পারে না।\n\nএই ফাইলের মোট বিল ৳' + fmtTk(totB) + ', জমা ৳' + fmtTk(totP) };
+        mBill = wantB; mPays = takePays(gl.pays.map(p => Object.assign({}, p)), wantP);
+        if (!sSingle && wantP > wantB + 0.001) warns.push('সাথে যাওয়া জমা (৳' + fmtTk(wantP) + ') সাথে যাওয়া বিলের (৳' + fmtTk(wantB) + ') চেয়ে বেশি — ঠিক আছে কিনা দেখে নিন।');
+        const rb = r2(totB - wantB), rp = r2(totP - wantP);
+        if (!sSingle && totP <= totB + 0.001 && rp > rb + 0.001) warns.push('ট্রান্সফারের পর পুরনো ফাইলে জমা (৳' + fmtTk(rp) + ') বিলের (৳' + fmtTk(rb) + ') চেয়ে বেশি হয়ে যাবে।');
+        sAfter = { b: rb, p: rp, due: r2(Math.max(0, rb - rp)) };
+      }
+      const mPaid = r2(sumPays(mPays));
+      const dbefore = dest ? (dMode === 'PERSON' ? (function () { let b = 0, pd = 0; dest.applicants.forEach(x => { b += nz(x.bill); pd += ledPaid(x); }); return { b: r2(b), p: r2(pd), due: r2(personDueSum(dest)) }; })() : (function () { const g = groupLedgerOf(dest), b = nz(g.bill), pd = sumPays(g.pays); return { b: r2(b), p: r2(pd), due: r2(Math.max(0, b - pd)) }; })()) : { b: 0, p: 0, due: 0 };
+      const db = r2(dbefore.b + mBill), dp = r2(dbefore.p + mPaid);
+      const dAfter = { b: db, p: dp, due: dMode === 'PERSON' ? r2(dbefore.due + Math.max(0, mBill - mPaid)) : r2(Math.max(0, db - dp)) };
+      const sBefore = sMode === 'PERSON' ? (function () { let b = 0, pd = 0; sFile.applicants.forEach(x => { b += nz(x.bill); pd += ledPaid(x); }); return { b: r2(b), p: r2(pd), due: r2(personDueSum(sFile)) }; })() : (function () { const g = groupLedgerOf(sFile), b = nz(g.bill), pd = sumPays(g.pays); return { b: r2(b), p: r2(pd), due: r2(Math.max(0, b - pd)) }; })();
+      const feeManual = (sFile.baseVisaFee !== undefined && sFile.baseVisaFee !== VISA_FEE_PER_PERSON * sFile.applicants.length) || (!!dest && dest.baseVisaFee !== undefined && dest.baseVisaFee !== VISA_FEE_PER_PERSON * dest.applicants.length);
+      if (feeManual) warns.push('ভিসা ফি হাতে লেখা আছে, তাই অটো বদলাবে না। ট্রান্সফারের পর দুই ফাইলের "ভিসা ফি" একবার মিলিয়ে নিন।');
+      if (sSingle && nz(sFile.softwareCharge) > 0) warns.push('পুরনো ফাইলের সফটওয়্যার চার্জ ৳' + fmtTk(sFile.softwareCharge) + ' গন্তব্য ফাইলে যোগ হয়ে যাবে।');
+      return { sFile: sFile, dest: dest, person: person, sMode: sMode, dMode: dMode, sSingle: sSingle, mBill: mBill, mPaid: mPaid, mPays: mPays, sBefore: sBefore, sAfter: sAfter, dBefore: dbefore, dAfter: dAfter, warns: warns };
+    }
+    function openMoveConfirm() {
+      const pl = calcMovePlan(); if (pl.err) { alert(pl.err); return; }
+      const fl = (f) => f ? ((f.serial ? '#' + escHtml(String(f.serial)) + ' ' : '') + escHtml(mainNameOf(f))) : '✨ নতুন ফাইল (নতুন সিরিয়াল পাবে)';
+      const modeLb = (m) => m === 'PERSON' ? 'জনপ্রতি হিসাব' : 'গ্রুপ হিসাব';
+      const row = (lb, a, b, cls) => '<tr><td class="py-1 text-slate-500">' + lb + '</td><td class="py-1 text-right mono-type">' + (a === null ? '-' : '৳' + fmtTk(a)) + '</td><td class="py-1 text-right mono-type font-extrabold ' + (cls || '') + '">' + (b === null ? '—' : '৳' + fmtTk(b)) + '</td></tr>';
+      const block = (icon, title, f, mode, bf, af, gone) => '<div class="rounded-xl border border-slate-200 p-3"><p class="font-extrabold text-[#0b132b]">' + icon + ' ' + title + ': ' + fl(f) + '</p><p class="text-[10px] text-slate-400 font-bold mb-1">' + modeLb(mode) + (gone ? ' · <span class="text-rose-600">ফাইলটি ফাঁকা হয়ে সরে যাবে</span>' : '') + '</p>'
+        + '<table class="w-full text-[11px] font-bold"><tr class="text-[10px] text-slate-400"><td></td><td class="text-right">আগে</td><td class="text-right">পরে</td></tr>'
+        + row('বিল', bf.b, gone ? null : af.b) + row('জমা', bf.p, gone ? null : af.p, 'text-emerald-700') + row('বাকি', bf.due, gone ? null : af.due, (af.due > 0 ? 'text-rose-600' : 'text-emerald-700')) + '</table></div>';
+      const moving = pl.mBill > 0 || pl.mPaid > 0;
+      let h = '<div class="bg-slate-50 rounded-xl border p-3 font-extrabold text-sm text-[#0b132b]">👤 ' + escHtml(pl.person.name || 'Unnamed') + '</div>';
+      h += '<div class="rounded-xl p-3 border ' + (moving ? 'bg-sky-50 border-sky-200 text-sky-800' : 'bg-amber-50 border-amber-300 text-amber-800') + ' font-bold">'
+        + (moving ? '💰 সাথে যাচ্ছে: বিল <b>৳' + fmtTk(pl.mBill) + '</b> · জমা <b>৳' + fmtTk(pl.mPaid) + '</b>' : '⚠️ কোনো টাকা সাথে যাচ্ছে না (বিল ৳০, জমা ৳০)');
+      if (pl.mPays.length) { h += '<div class="mt-1 text-[10px] text-sky-700">জমার এন্ট্রি: ' + pl.mPays.slice(0, 6).map(p => escHtml(fmtPayDT(p)) + ' — ৳' + fmtTk(p.amt)).join(' &nbsp;|&nbsp; ') + (pl.mPays.length > 6 ? ' …' : '') + '</div>'; }
+      h += '</div>';
+      h += block('📤', 'যে ফাইল থেকে', pl.sFile, pl.sMode, pl.sBefore, pl.sAfter, pl.sSingle);
+      h += block('📥', 'যে ফাইলে', pl.dest, pl.dMode, pl.dBefore, pl.dAfter, false);
+      if (pl.warns.length) h += '<div class="rounded-xl bg-amber-50 border border-amber-300 p-3 text-amber-800 font-bold space-y-1">' + pl.warns.map(w => '<div>⚠️ ' + escHtml(w) + '</div>').join('') + '</div>';
+      h += '<p class="text-[10px] text-slate-400 font-bold text-center">📝 এই ট্রান্সফার, টাকা ও দুই ফাইলের আগে-পরের হিসাবসহ, হিসাব ট্যাবের "ট্রান্সফার ইতিহাসে" লেখা থাকবে।</p>';
+      document.getElementById('moveConfirmBody').innerHTML = h;
+      document.getElementById('moveConfirmModal').classList.remove('hidden');
+    }
+    function closeMoveConfirm() { const m = document.getElementById('moveConfirmModal'); if (m) m.classList.add('hidden'); }
+    function confirmMoveApplicant() { openMoveConfirm(); }   // 'ট্রান্সফার' বাটন: আগে নিশ্চিতকরণ স্ক্রিন; সেখানে ✅ চাপলে তবেই doMoveApplicant() চলে
+
+    function doMoveApplicant() {
       const sId = document.getElementById('moveSourceFileId').value; const aIdx = parseInt(document.getElementById('moveAppIdx').value); const tId = document.getElementById('moveTargetSet').value;
       const sFile = visaFiles.find(x => x.id === sId); if (!sFile) return;
       if (tId !== 'NEW') { const tChk = visaFiles.find(x => x.id === tId); if (!tChk) return; if (tChk.applicants.length >= 4) { alert('ফাইলে ৪ জন পূর্ণ!'); return; } }
       const sOldCount = sFile.applicants.length; const fromMain = mainNameOf(sFile); const fromSerial = sFile.serial || '';
       // 💰 আগের অবস্থা (ট্রান্সফার ইতিহাসের জন্য) — কিছু বদলানোর আগেই নেওয়া
       const tChk2 = tId !== 'NEW' ? visaFiles.find(x => x.id === tId) : null;
-      const feeManual = (sFile.baseVisaFee !== undefined && sFile.baseVisaFee !== VISA_FEE_PER_PERSON * sOldCount) || (!!tChk2 && tChk2.baseVisaFee !== undefined && tChk2.baseVisaFee !== VISA_FEE_PER_PERSON * tChk2.applicants.length);   // ভিসা ফি হাতে লেখা থাকলে অটো মেলে না
       const sB0 = { b: parseFloat(sFile.billTotal) || 0, p: parseFloat(sFile.billAdvance) || 0 }, dB0 = tChk2 ? { b: parseFloat(tChk2.billTotal) || 0, p: parseFloat(tChk2.billAdvance) || 0 } : { b: 0, p: 0 };
       // 💰 কত বিল/জমা সাথে যাবে: জনপ্রতি হলে ওই জনের নিজেরটা; গ্রুপ হলে ১ জনের ফাইলে সবটা, নইলে ফর্মে যা লেখা হয়েছে (ফাইলের মোটের বেশি হলে আটকায়)
       const sMode = acctModeOf(sFile); const sSingle = sFile.applicants.length === 1; const mPerson = sFile.applicants[aIdx];
@@ -589,9 +652,6 @@
         if (sSingle) { wantB = totB; wantP = totP; }
         else if (isAdmin) { wantB = r2(document.getElementById('moveBillAmt').value); wantP = r2(document.getElementById('movePaidAmt').value); }
         if (wantB < 0 || wantP < 0) { alert('বিল/জমা ঋণাত্মক হতে পারে না।'); return; }
-        if (!sSingle && !isAdmin && (totB > 0 || totP > 0) && !confirm('এই ফাইলের হিসাব গ্রুপ আকারে, তাই এই জনের সাথে কোনো টাকা যাবে না (শুধু অ্যাডমিন টাকা সরাতে পারে)।\n\nশুধু ব্যক্তিকে সরাবেন? টাকা পুরনো ফাইলেই থাকবে।')) return;
-        if (!sSingle && wantP > wantB + 0.001 && !confirm('⚠️ সাথে যাওয়া জমা (৳' + fmtTk(wantP) + ') সাথে যাওয়া বিলের (৳' + fmtTk(wantB) + ') চেয়ে বেশি। ঠিক আছে?')) return;
-        if (!sSingle && totP <= totB + 0.001 && r2(totP - wantP) > r2(totB - wantB) + 0.001 && !confirm('⚠️ ট্রান্সফারের পর এই ফাইলে জমা (৳' + fmtTk(r2(totP - wantP)) + ') বিলের (৳' + fmtTk(r2(totB - wantB)) + ') চেয়ে বেশি হয়ে যাবে। ঠিক আছে?')) return;
         if (wantB > totB + 0.001 || wantP > totP + 0.001) { alert('সাথে নেওয়ার বিল/জমা ফাইলের মোটের বেশি হতে পারে না।\n\nএই ফাইলের মোট বিল ৳' + fmtTk(totB) + ', জমা ৳' + fmtTk(totP)); return; }
         mBill = wantB; mPays = takePays(sFile.pays, wantP); sFile.billTotal = r2(totB - wantB);
       }
@@ -626,8 +686,7 @@
       if (!sRemoved) sFile.transferLog = (sFile.transferLog || []).concat([trEntry]);
       if (sRemoved) { visaFiles = visaFiles.filter(x => x.id !== sId); logHint = 'ট্রান্সফারের পর সেটটি ফাঁকা হয়ে সরে গেছে'; }
       else { sFile.updatedAt = now; sFile.updatedBy = whoAmI(); if (sFile.baseVisaFee === VISA_FEE_PER_PERSON * sOldCount) sFile.baseVisaFee = VISA_FEE_PER_PERSON * sFile.applicants.length; }
-      closeMoveModal(); renderFiles(); syncToCloud(); showToast('🔄 ট্রান্সফার সম্পন্ন!');
-      if (feeManual) setTimeout(function () { alert('⚠️ ভিসা ফি হাতে লেখা ছিল, তাই অটো বদলায়নি।\n\nদুই ফাইলের "ভিসা ফি" একবার দেখে মিলিয়ে নিন, নইলে লাভ/খরচ ভুল আসবে।'); }, 100);
+      closeMoveConfirm(); closeMoveModal(); renderFiles(); syncToCloud(); showToast('🔄 ট্রান্সফার সম্পন্ন!');
       driveAfterMove(sFile, sRemoved, dest, appToMove);
     }
 
