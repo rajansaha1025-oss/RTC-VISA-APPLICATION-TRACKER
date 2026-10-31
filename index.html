@@ -592,14 +592,18 @@
       const sMode = acctModeOf(sFile), sSingle = sFile.applicants.length === 1;
       const sBefore = fileTotals(sFile), dBefore = dest ? fileTotals(dest) : { b: 0, p: 0, due: 0 };
       const rest = sFile.applicants.filter((x, i) => i !== aIdx);
-      const sMainOld = mainNameOf(sFile), sMainNew = rest.length ? (rest[0].name || 'Unnamed') : '';
+      const sSel = rest.length ? Math.min(Math.max(0, moveSel.s || 0), rest.length - 1) : 0;   // পুরনো কার্ডের নতুন মেইন (মেইন সরলে ইউজার বাছে)
+      const sMainOld = mainNameOf(sFile), sMainNew = rest.length ? (rest[sSel].name || 'Unnamed') : '';
       const sMainChanges = rest.length > 0 && aIdx === 0;
       const dMainOld = (dest && dest.applicants.length) ? mainNameOf(dest) : '';
-      const dMainNew = dMainOld || (person.name || 'Unnamed');
+      const dMainMoved = !!dMainOld && moveSel.d === 'MOVED';   // গন্তব্যে আগের মেইন থাকবে, নাকি যে জন যাচ্ছে সে মেইন হবে
+      const dMainNew = dMainMoved ? (person.name || 'Unnamed') : (dMainOld || (person.name || 'Unnamed'));
       const kept = sMode === 'PERSON' ? { bill: r2(nz(person.bill)), paid: r2(ledPaid(person)) } : null;
       let restore = null; if (dest && person.homeId === dest.id && isPerPerson(dest)) { const rs = subsOf(dest).find(sb => sb.out && sb.mode === 'PERSON' && (sb.names || []).indexOf(person.name || '') >= 0); if (rs) restore = { bill: r2(nz(rs.bill)), paid: r2(sumPays(rs.pays)) }; }
-      return { sFile: sFile, dest: dest, person: person, aIdx: aIdx, sMode: sMode, sSingle: sSingle, sBefore: sBefore, dBefore: dBefore, sMainOld: sMainOld, sMainNew: sMainNew, sMainChanges: sMainChanges, dMainOld: dMainOld, dMainNew: dMainNew, dMainChanges: !dMainOld, kept: kept, restore: restore, home: !!(dest && person.homeId === dest.id) };
+      return { sFile: sFile, dest: dest, person: person, aIdx: aIdx, sMode: sMode, sSingle: sSingle, sBefore: sBefore, dBefore: dBefore, sMainOld: sMainOld, sMainNew: sMainNew, sMainChanges: sMainChanges, dMainOld: dMainOld, dMainNew: dMainNew, dMainChanges: !dMainOld, sSel: sSel, restNames: rest.map(x => x.name || 'Unnamed'), dMainMoved: dMainMoved, kept: kept, restore: restore, home: !!(dest && person.homeId === dest.id) };
     }
+    let moveSel = { s: 0, d: 'KEEP' };   // ট্রান্সফারে মেইন বাছাই: s = পুরনো কার্ডের নতুন মেইনের সিরিয়াল (বাকিদের মধ্যে), d = KEEP/MOVED
+    function setMoveSel(k, v) { moveSel[k] = v; openMoveConfirm(); }
     function openMoveConfirm() {
       const pl = calcMovePlan(); if (pl.err) { alert(pl.err); return; }
       const ref = pl.sFile.serial ? '#' + escHtml(String(pl.sFile.serial)) : 'পুরনো';
@@ -613,20 +617,23 @@
         + (pl.home ? '<div class="mt-1 text-[10px] text-sky-700">↩ ' + nm + ' নিজের আসল কার্ডে ফিরছে।' + (pl.restore ? ' জনপ্রতি হিসাব (বিল ' + tk(pl.restore.bill) + ', জমা ' + tk(pl.restore.paid) + ') আবার তার নামে ফিরে আসবে।' : '') + '</div>' : '')
         + '<div class="mt-1 text-[10px] text-emerald-700">ভিসা ফি ও সফটওয়্যার খরচও ' + ref + ' কার্ডেই থাকবে। গন্তব্য কার্ডের হিসাব (' + tk(pl.dBefore.b) + ' / ' + tk(pl.dBefore.p) + ') একই থাকবে।</div></div>';
       // 👑 মেইন
+      const radio = (grp, val, on, txt) => '<label class="flex items-start gap-2 p-1.5 rounded-lg cursor-pointer ' + (on ? 'bg-white border border-sky-400' : 'border border-transparent hover:bg-white/60') + '"><input type="radio" name="' + grp + '" ' + (on ? 'checked' : '') + ' onchange="setMoveSel(\'' + (grp === 'mvS' ? 's' : 'd') + '\', ' + (typeof val === 'number' ? val : "'" + val + "'") + ')" class="mt-0.5 accent-sky-600"><span>' + txt + '</span></label>';
       let src, dst;
-      if (pl.sMainChanges) src = '<div class="rounded-lg p-2 bg-amber-100 border border-amber-400 text-amber-900">📤 ' + ref + ' কার্ডে মেইন <b>বদলাবে</b>: <s>' + escHtml(pl.sMainOld) + '</s> → <b>' + escHtml(pl.sMainNew) + '</b> নতুন মেইন হবে (পরের জন)। Drive ফোল্ডার/Invoice/Letter এর নামও নতুন মেইন অনুযায়ী বদলাবে।</div>';
-      else if (pl.sSingle) src = '<div class="rounded-lg p-2 bg-amber-50 border border-amber-300 text-amber-800">📤 ' + ref + ' কার্ডে আর কোনো আবেদনকারী থাকবে না। কার্ডটা হিসাব নিয়ে থেকে যাবে (নাম: <b>' + escHtml(pl.sMainOld) + '</b>)।</div>';
+      if (pl.sMainChanges) src = '<div class="rounded-lg p-2 bg-amber-100 border border-amber-400 text-amber-900"><p>📤 ' + ref + ' কার্ডের মেইন <b>' + escHtml(pl.sMainOld) + '</b> চলে যাচ্ছে। <b>নতুন মেইন কে হবে?</b></p>' + pl.restNames.map((n, i) => radio('mvS', i, i === pl.sSel, escHtml(n))).join('') + '<p class="text-[10px] mt-1">Drive ফোল্ডার/Invoice/Letter/PDF এর নামও নতুন মেইন অনুযায়ী বদলাবে।</p></div>';
+      else if (pl.sSingle) src = '<div class="rounded-lg p-2 bg-amber-50 border border-amber-300 text-amber-800">📤 ' + ref + ' কার্ডে আর কোনো আবেদনকারী থাকবে না। কার্ডটা হিসাব নিয়ে থেকে যাবে (নাম: <b>' + escHtml(pl.sMainOld) + '</b>)। পরে কেউ এই কার্ডে ফিরলে তখন মেইন বাছাই করা যাবে।</div>';
       else src = '<div class="rounded-lg p-2 bg-white border border-slate-200">📤 ' + ref + ' কার্ডে মেইন <b>আগেরটাই থাকবে</b>: ' + escHtml(pl.sMainOld) + '</div>';
-      if (!pl.dest) dst = '<div class="rounded-lg p-2 bg-amber-100 border border-amber-400 text-amber-900">📥 নতুন ফাইল: <b>' + nm + '</b>-ই মেইন হবে।</div>';
-      else if (pl.dMainChanges) dst = '<div class="rounded-lg p-2 bg-amber-100 border border-amber-400 text-amber-900">📥 ' + fl(pl.dest) + ' কার্ডে এখন কোনো আবেদনকারী নেই, তাই <b>' + nm + '</b> মেইন হবে।</div>';
-      else dst = '<div class="rounded-lg p-2 bg-white border border-slate-200">📥 ' + fl(pl.dest) + ' কার্ডে মেইন <b>আগেরটাই থাকবে</b>: ' + escHtml(pl.dMainOld) + '। <b>' + nm + '</b> কো-অ্যাপ্লিক্যান্ট হিসেবে যোগ হবে।</div>';
+      if (!pl.dest) dst = '<div class="rounded-lg p-2 bg-amber-100 border border-amber-400 text-amber-900">📥 নতুন ফাইল: <b>' + nm + '</b>-ই মেইন হবে (নতুন সিরিয়াল পাবে)।</div>';
+      else if (pl.dMainChanges) dst = '<div class="rounded-lg p-2 bg-amber-100 border border-amber-400 text-amber-900">📥 ' + fl(pl.dest) + ' কার্ডে এখন কোনো আবেদনকারী নেই, তাই <b>' + nm + '</b> মেইন হবে। পরে আরও কেউ এলে তখন মেইন বাছাই করা যাবে।</div>';
+      else dst = '<div class="rounded-lg p-2 bg-amber-50 border border-amber-300 text-amber-900"><p>📥 ' + fl(pl.dest) + ' কার্ডে <b>মেইন কে থাকবে?</b></p>'
+        + radio('mvD', 'KEEP', !pl.dMainMoved, 'আগের মেইনই থাকবে: <b>' + escHtml(pl.dMainOld) + '</b> (' + nm + ' কো-অ্যাপ্লিক্যান্ট হবে)')
+        + radio('mvD', 'MOVED', pl.dMainMoved, '<b>' + nm + '</b> মেইন হবে (' + escHtml(pl.dMainOld) + ' কো-অ্যাপ্লিক্যান্ট হবে)' + (pl.dMainMoved ? ' — ওই কার্ডের Drive ফোল্ডার/Invoice/Letter এর নামও বদলাবে' : '')) + '</div>';
       h += '<div class="rounded-xl border border-slate-200 p-3 space-y-1.5 font-bold text-slate-700"><p class="font-extrabold text-[#0b132b]">👑 মেইন ফাইল কে থাকবে?</p>' + src + dst + '</div>';
       h += '<p class="text-[10px] text-slate-500 font-bold text-center leading-relaxed">📝 দুই কার্ডের ওপরেই লেখা থাকবে ' + nm + ' কোন সিরিয়াল/ফাইল থেকে এসেছে বা কোথায় গেছে। শুধু BGD ফাইল (PDF) নতুন জায়গায় যাবে, ছবি/পাসপোর্ট আগের মতোই থাকবে। হিসাব ট্যাবের "ট্রান্সফার ইতিহাসেও" লেখা থাকবে।</p>';
       document.getElementById('moveConfirmBody').innerHTML = h;
       document.getElementById('moveConfirmModal').classList.remove('hidden');
     }
     function closeMoveConfirm() { const m = document.getElementById('moveConfirmModal'); if (m) m.classList.add('hidden'); }
-    function confirmMoveApplicant() { openMoveConfirm(); }   // 'ট্রান্সফার' বাটন: আগে নিশ্চিতকরণ স্ক্রিন; সেখানে ✅ চাপলে তবেই doMoveApplicant() চলে
+    function confirmMoveApplicant() { moveSel = { s: 0, d: 'KEEP' }; openMoveConfirm(); }   // 'ট্রান্সফার' বাটন: আগে নিশ্চিতকরণ স্ক্রিন; সেখানে ✅ চাপলে তবেই doMoveApplicant() চলে
 
     function doMoveApplicant() {
       const sId = document.getElementById('moveSourceFileId').value; const tId = document.getElementById('moveTargetSet').value;
@@ -637,6 +644,7 @@
       const sB0 = { b: pl.sBefore.b, p: pl.sBefore.p }, dB0 = { b: pl.dBefore.b, p: pl.dBefore.p };
       const now = new Date().toLocaleString('en-GB', BD_TIME_OPTS);
       const appToMove = sFile.applicants.splice(aIdx, 1)[0]; const movedName = appToMove.name || '';
+      if (pl.sMainChanges && pl.sSel > 0) { const nm0 = sFile.applicants.splice(pl.sSel, 1)[0]; sFile.applicants.unshift(nm0); }   // ইউজারের বাছা নতুন মেইন সামনে আসে
       const sEmpty = sFile.applicants.length === 0; if (sEmpty) sFile.ghostMain = fromMain;   // শেষ জন সরলে কার্ড হিসাব নিয়ে থেকে যায়, নাম মনে রাখা হয়
       // 💰 জনপ্রতি হিসাব: এই জনের বিল-জমা ব্যক্তির সাথে যায় না, পুরনো কার্ডেই "আলাদা হিসাব" হয়ে থাকে
       let keptSub = null;
@@ -656,7 +664,7 @@
       } else {
         dest = visaFiles.find(x => x.id === tId);
         if (!isPerPerson(dest)) ensureGroupPays(dest);
-        dest.applicants.push(appToMove); dest.updatedAt = now; dest.updatedBy = whoAmI();
+        if (pl.dMainMoved) dest.applicants.unshift(appToMove); else dest.applicants.push(appToMove); dest.updatedAt = now; dest.updatedBy = whoAmI();
       }
       if (dest.serial) appToMove.prevSerials = (appToMove.prevSerials || []).filter(s => String(s) !== String(dest.serial));
       const returningHome = appToMove.homeId === dest.id; if (returningHome) delete appToMove.homeId;   // নিজের আসল কার্ডে ফিরে এলে আর অতিথি নয়
