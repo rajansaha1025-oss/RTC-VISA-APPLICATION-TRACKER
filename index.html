@@ -578,6 +578,7 @@
       const sOldCount = sFile.applicants.length; const fromMain = mainNameOf(sFile); const fromSerial = sFile.serial || '';
       // 💰 আগের অবস্থা (ট্রান্সফার ইতিহাসের জন্য) — কিছু বদলানোর আগেই নেওয়া
       const tChk2 = tId !== 'NEW' ? visaFiles.find(x => x.id === tId) : null;
+      const feeManual = (sFile.baseVisaFee !== undefined && sFile.baseVisaFee !== VISA_FEE_PER_PERSON * sOldCount) || (!!tChk2 && tChk2.baseVisaFee !== undefined && tChk2.baseVisaFee !== VISA_FEE_PER_PERSON * tChk2.applicants.length);   // ভিসা ফি হাতে লেখা থাকলে অটো মেলে না
       const sB0 = { b: parseFloat(sFile.billTotal) || 0, p: parseFloat(sFile.billAdvance) || 0 }, dB0 = tChk2 ? { b: parseFloat(tChk2.billTotal) || 0, p: parseFloat(tChk2.billAdvance) || 0 } : { b: 0, p: 0 };
       // 💰 কত বিল/জমা সাথে যাবে: জনপ্রতি হলে ওই জনের নিজেরটা; গ্রুপ হলে ১ জনের ফাইলে সবটা, নইলে ফর্মে যা লেখা হয়েছে (ফাইলের মোটের বেশি হলে আটকায়)
       const sMode = acctModeOf(sFile); const sSingle = sFile.applicants.length === 1; const mPerson = sFile.applicants[aIdx];
@@ -588,6 +589,9 @@
         if (sSingle) { wantB = totB; wantP = totP; }
         else if (isAdmin) { wantB = r2(document.getElementById('moveBillAmt').value); wantP = r2(document.getElementById('movePaidAmt').value); }
         if (wantB < 0 || wantP < 0) { alert('বিল/জমা ঋণাত্মক হতে পারে না।'); return; }
+        if (!sSingle && !isAdmin && (totB > 0 || totP > 0) && !confirm('এই ফাইলের হিসাব গ্রুপ আকারে, তাই এই জনের সাথে কোনো টাকা যাবে না (শুধু অ্যাডমিন টাকা সরাতে পারে)।\n\nশুধু ব্যক্তিকে সরাবেন? টাকা পুরনো ফাইলেই থাকবে।')) return;
+        if (!sSingle && wantP > wantB + 0.001 && !confirm('⚠️ সাথে যাওয়া জমা (৳' + fmtTk(wantP) + ') সাথে যাওয়া বিলের (৳' + fmtTk(wantB) + ') চেয়ে বেশি। ঠিক আছে?')) return;
+        if (!sSingle && totP <= totB + 0.001 && r2(totP - wantP) > r2(totB - wantB) + 0.001 && !confirm('⚠️ ট্রান্সফারের পর এই ফাইলে জমা (৳' + fmtTk(r2(totP - wantP)) + ') বিলের (৳' + fmtTk(r2(totB - wantB)) + ') চেয়ে বেশি হয়ে যাবে। ঠিক আছে?')) return;
         if (wantB > totB + 0.001 || wantP > totP + 0.001) { alert('সাথে নেওয়ার বিল/জমা ফাইলের মোটের বেশি হতে পারে না।\n\nএই ফাইলের মোট বিল ৳' + fmtTk(totB) + ', জমা ৳' + fmtTk(totP)); return; }
         mBill = wantB; mPays = takePays(sFile.pays, wantP); sFile.billTotal = r2(totB - wantB);
       }
@@ -607,6 +611,7 @@
       }
       if (dest && dest.serial) appToMove.prevSerials = (appToMove.prevSerials || []).filter(s => String(s) !== String(dest.serial));
       const sRemoved = sFile.applicants.length === 0;
+      if (sRemoved && nz(sFile.softwareCharge) > 0 && dest) dest.softwareCharge = r2(nz(dest.softwareCharge) + nz(sFile.softwareCharge));   // সোর্স ফাইল মুছে গেলে তার সফটওয়্যার চার্জ (খরচ) হারাবে না, নতুন ফাইলে চলে যাবে
       // 💰 টাকা নতুন জায়গায় বসানো
       if (!isPerPerson(dest)) {   // গ্রুপ গন্তব্য: বিল যোগ, জমার এন্ট্রি (তারিখসহ) যোগ
         dest.billTotal = r2(nz(dest.billTotal) + mBill); dest.pays = sortPays((dest.pays || []).concat(mPays));
@@ -622,6 +627,7 @@
       if (sRemoved) { visaFiles = visaFiles.filter(x => x.id !== sId); logHint = 'ট্রান্সফারের পর সেটটি ফাঁকা হয়ে সরে গেছে'; }
       else { sFile.updatedAt = now; sFile.updatedBy = whoAmI(); if (sFile.baseVisaFee === VISA_FEE_PER_PERSON * sOldCount) sFile.baseVisaFee = VISA_FEE_PER_PERSON * sFile.applicants.length; }
       closeMoveModal(); renderFiles(); syncToCloud(); showToast('🔄 ট্রান্সফার সম্পন্ন!');
+      if (feeManual) setTimeout(function () { alert('⚠️ ভিসা ফি হাতে লেখা ছিল, তাই অটো বদলায়নি।\n\nদুই ফাইলের "ভিসা ফি" একবার দেখে মিলিয়ে নিন, নইলে লাভ/খরচ ভুল আসবে।'); }, 100);
       driveAfterMove(sFile, sRemoved, dest, appToMove);
     }
 
