@@ -447,7 +447,7 @@
     const BD_TIME_OPTS = { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Dhaka' };
     // ==========================================
 
-    let visaFiles = JSON.parse(localStorage.getItem('rtc_visa_files') || '[]');
+    let visaFiles = JSON.parse(localStorage.getItem('rtc_visa_files') || '[]').filter(x => x && typeof x === 'object').map(x => { if (!Array.isArray(x.applicants)) x.applicants = x.applicants && typeof x.applicants === 'object' ? Object.values(x.applicants) : []; return x; });
     let defaultPass = localStorage.getItem('rtc_default_pass') || '';
     let cloudUrl = localStorage.getItem('rtc_cloud_url') || (AUTO_FIREBASE_URL.includes('firebaseio.com') ? AUTO_FIREBASE_URL : '');
     let customLogo = localStorage.getItem('rtc_custom_logo') || AUTO_LOGO_NAME;
@@ -842,7 +842,15 @@
     }
     function hasPendingChanges() { const c = localChanges(); return c.changed.length > 0 || c.deleted.length > 0; }
     function replaceInPlace(target, src) { Object.keys(target).forEach(k => delete target[k]); Object.assign(target, src); }
-    function cloudListOf(raw) { if (!raw || typeof raw !== 'object') return []; return (Array.isArray(raw) ? raw : Object.values(raw)).filter(x => x && typeof x === 'object' && x.id); }
+    // Firebase খালি অ্যারে ([]) সেভ রাখে না — পড়ার সময় ফিল্ডটা undefined হয়ে যায় এবং .filter/.map এ অ্যাপ ক্র্যাশ করে। তাই লোডের সময়ই অ্যারে ঠিক করা হয়
+    function asArr(v) { return Array.isArray(v) ? v : (v && typeof v === 'object' ? Object.values(v) : []); }
+    function normFile(f) {
+      f.applicants = asArr(f.applicants).filter(a => a && typeof a === 'object');
+      f.applicants.forEach(a => { if (a.pays !== undefined && !Array.isArray(a.pays)) a.pays = asArr(a.pays); });
+      if (f.transferLog !== undefined && !Array.isArray(f.transferLog)) f.transferLog = asArr(f.transferLog);
+      return f;
+    }
+    function cloudListOf(raw) { if (!raw || typeof raw !== 'object') return []; return (Array.isArray(raw) ? raw : Object.values(raw)).filter(x => x && typeof x === 'object' && x.id).map(normFile); }
 
     let syncChain = Promise.resolve(); let syncQueued = 0; let syncGen = 0;
     function syncToCloud() {
@@ -2988,7 +2996,7 @@
     }
     function applyRestore(list, label) {
       logOverride = { type: 'restore_backup', detail: label + ' (' + list.length + 'টি সেট)' };
-      visaFiles = list; safeLocalSave(); renderFiles(); syncToCloud();
+      visaFiles = list.filter(x => x && typeof x === 'object' && x.id).map(normFile); safeLocalSave(); renderFiles(); syncToCloud();
     }
   </script>
   <script>
