@@ -94,6 +94,7 @@
           <button onclick="switchTab('RUNNING')" id="tab_RUNNING" class="w-full flex items-center justify-between px-4 py-3 rounded-2xl btn-primary-rtc text-white shadow-md transition"><span class="flex items-center gap-3"><i class="fa-solid fa-folder-open text-white/90 text-sm"></i> রানিং ফাইল</span><span class="bg-white/25 px-2 py-0.5 rounded-full text-[11px]" id="badgeRunning">0</span></button>
           <button onclick="switchTab('EXPIRED')" id="tab_EXPIRED" class="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-white/10 text-slate-300 transition"><span class="flex items-center gap-3"><i class="fa-solid fa-ban text-red-400 text-sm"></i> মেয়াদ শেষ (Expired)</span><span class="bg-red-500 text-white px-2 py-0.5 rounded-full text-[11px]" id="badgeExpired">0</span></button>
           <button onclick="switchTab('BGD_UP')" id="tab_BGD_UP" class="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-white/10 text-slate-300 transition"><span class="flex items-center gap-3"><i class="fa-solid fa-file-circle-check text-emerald-400 text-sm"></i> BGD আপলোড হয়েছে</span><span class="bg-emerald-500 text-white px-2 py-0.5 rounded-full text-[11px]" id="badgeBgdUp">0</span></button>
+          <button onclick="switchTab('BGD_PENDING')" id="tab_BGD_PENDING" class="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-white/10 text-slate-300 transition"><span class="flex items-center gap-3"><i class="fa-solid fa-file-circle-xmark text-amber-400 text-sm"></i> BGD আপলোড বাকি</span><span class="bg-amber-500 text-white px-2 py-0.5 rounded-full text-[11px]" id="badgeBgdPending">0</span></button>
           <button onclick="switchTab('EXPIRING')" id="tab_EXPIRING" class="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-white/10 text-slate-300 transition"><span class="flex items-center gap-3"><i class="fa-solid fa-triangle-exclamation text-rose-400 text-sm"></i> মেয়াদ সতর্কতা</span><span class="bg-rose-50 text-rose-600 px-2 py-0.5 rounded-full text-[11px]" id="badgeExpiring">0</span></button>
           <button onclick="switchTab('SIGNED_UP')" id="tab_SIGNED_UP" class="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-white/10 text-slate-300 transition"><span class="flex items-center gap-3"><i class="fa-solid fa-user-check text-purple-400 text-sm"></i> সাইন-আপ সম্পন্ন</span><span class="bg-white/10 px-2 py-0.5 rounded-full text-[11px]" id="badgeSignedUp">0</span></button>
           <button onclick="switchTab('APPOINTMENT')" id="tab_APPOINTMENT" class="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-white/10 text-slate-300 transition"><span class="flex items-center gap-3"><i class="fa-solid fa-calendar-check text-emerald-400 text-sm"></i> অ্যাপয়েন্টমেন্ট</span><span class="bg-white/10 px-2 py-0.5 rounded-full text-[11px]" id="badgeAppointment">0</span></button>
@@ -148,7 +149,7 @@
         </div>
       </div>
 
-      <main class="flex-1 p-6 overflow-y-auto" id="mainScrollArea"><div id="smsChips" class="flex flex-wrap items-center gap-2 mb-4"></div><div id="fileListContainer" class="space-y-5"></div></main>
+      <main class="flex-1 p-6 overflow-y-auto" id="mainScrollArea"><div id="pendChips" class="flex flex-wrap items-center gap-2 mb-3"></div><div id="smsChips" class="flex flex-wrap items-center gap-2 mb-4"></div><div id="fileListContainer" class="space-y-5"></div></main>
     </div>
   </div>
 
@@ -734,8 +735,9 @@
 
     function switchTab(tabName) {
       if (tabName === 'ACCOUNTS' && !isAdmin) tabName = 'RUNNING';   // হিসাব ট্যাব শুধু অ্যাডমিন
+      if (tabName !== activeTab) pendFilter = 'ALL';
       activeTab = tabName;
-      ['RUNNING', 'EXPIRING', 'EXPIRED', 'BGD_UP', 'SIGNED_UP', 'APPOINTMENT', 'DELIVERED', 'RETURNED', 'ALL', 'ACCOUNTS', 'RECYCLE', 'ACTIVITY'].forEach(t => {
+      ['RUNNING', 'EXPIRING', 'EXPIRED', 'BGD_UP', 'BGD_PENDING', 'SIGNED_UP', 'APPOINTMENT', 'DELIVERED', 'RETURNED', 'ALL', 'ACCOUNTS', 'RECYCLE', 'ACTIVITY'].forEach(t => {
         const btn = document.getElementById(`tab_${t}`);
         if (t === tabName) btn.className = 'w-full flex items-center justify-between px-4 py-3 rounded-2xl btn-primary-rtc text-white shadow-md transition';
         else btn.className = 'w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-white/10 text-slate-300 transition';
@@ -1349,7 +1351,7 @@
     function smsOf(f) { return ((f && f.smsApp) || 'Rtcsms').trim() || 'Rtcsms'; }
     function normSmsName(v) { const t = String(v || '').replace(/\s+/g, ' ').trim(); if (!t) return 'Rtcsms'; const k = t.toLowerCase(); if (k === 'rtcsms') return 'Rtcsms'; const hit = visaFiles.find(f => !f.isDeleted && f.smsApp && f.smsApp.trim().toLowerCase() === k); return hit ? hit.smsApp.trim() : t; }
     function setSmsFilter(v) { smsFilter = (smsFilter === v) ? '' : v; if (activeTab === 'RECYCLE' || activeTab === 'ACTIVITY') { switchTab('RUNNING'); return; } renderFiles(); }
-    const TAB_TITLES = { 'RUNNING': '📂 রানিং ফাইল', 'EXPIRING': '⏳ মেয়াদ সতর্কতা', 'EXPIRED': '⛔ Expired (মেয়াদ শেষ)', 'BGD_UP': '📄 BGD আপলোড হয়েছে', 'SIGNED_UP': '🟣 সাইন-আপ সম্পন্ন', 'APPOINTMENT': '📅 অ্যাপয়েন্টমেন্ট', 'DELIVERED': '📦 ডেলিভারি', 'RETURNED': '🔙 ফেরত ফাইল', 'ALL': '📋 সব ফাইল', 'ACCOUNTS': '💰 হিসাব (Accounts)', 'RECYCLE': '🗑️ রিসাইকেল বিন', 'ACTIVITY': '🕘 অ্যাক্টিভিটি লগ' };
+    const TAB_TITLES = { 'RUNNING': '📂 রানিং ফাইল', 'EXPIRING': '⏳ মেয়াদ সতর্কতা', 'EXPIRED': '⛔ Expired (মেয়াদ শেষ)', 'BGD_UP': '📄 BGD আপলোড হয়েছে', 'BGD_PENDING': '⏳ BGD আপলোড বাকি', 'SIGNED_UP': '🟣 সাইন-আপ সম্পন্ন', 'APPOINTMENT': '📅 অ্যাপয়েন্টমেন্ট', 'DELIVERED': '📦 ডেলিভারি', 'RETURNED': '🔙 ফেরত ফাইল', 'ALL': '📋 সব ফাইল', 'ACCOUNTS': '💰 হিসাব (Accounts)', 'RECYCLE': '🗑️ রিসাইকেল বিন', 'ACTIVITY': '🕘 অ্যাক্টিভিটি লগ' };
     function updateViewTitle() { const el = document.getElementById('currentViewTitle'); if (!el) return; el.innerText = (TAB_TITLES[activeTab] || '') + ((smsFilter && activeTab !== 'RECYCLE' && activeTab !== 'ACTIVITY') ? '  ·  📱 ' + smsFilter : ''); }
     let smsMenuOpen = localStorage.getItem('rtc_sms_menu_open') !== '0';
     function toggleSmsMenu() { smsMenuOpen = !smsMenuOpen; localStorage.setItem('rtc_sms_menu_open', smsMenuOpen ? '1' : '0'); renderSmsMenu(); }
@@ -1520,8 +1522,20 @@
 
     // 📄 একটা সেটে (১-৪ জন) কতজনের BGD PDF আপলোড হয়েছে। অন্তত ১ জনের হলেই সেটটা 'BGD আপলোড হয়েছে' ট্যাবে আসে; n/মোট দেখে বোঝা যায় সম্পূর্ণ না আংশিক
     function bgdUpCount(f) { return (f.applicants || []).filter(a => a.driveFileId).length; }
+    // ⏳ BGD বাকি = যার PDF আপলোড হয়নি। ফাইলে কতজনের বাকি সেটা দিয়ে ১/২/৩/৪/সব-বাকি ফিল্টার
+    let pendFilter = 'ALL';
+    function bgdPendCount(f) { return (f.applicants || []).filter(a => !a.driveFileId).length; }
+    function pendMatch(f, key) { const n = bgdPendCount(f); if (key === 'ALL') return n > 0; if (key === 'EVERY') return n > 0 && n === (f.applicants || []).length; return n === Number(key); }
+    function setPendFilter(k) { pendFilter = k; renderFiles(); }
+    function renderPendChips(list) {
+      const box = document.getElementById('pendChips'); if (!box) return;
+      if (activeTab !== 'BGD_PENDING') { box.innerHTML = ''; return; }
+      const base = 'px-3 py-1.5 rounded-xl text-xs font-extrabold border transition';
+      const chip = (k, label) => { const n = list.filter(f => pendMatch(f, k)).length; const on = pendFilter === k; return `<button type="button" onclick="setPendFilter('${k}')" class="${base} ${on ? 'bg-amber-500 text-white border-amber-500' : 'bg-white text-amber-700 border-amber-200 hover:bg-amber-50'}">${label} (${n})</button>`; };
+      box.innerHTML = '<span class="text-[11px] font-extrabold text-slate-500 uppercase mr-1"><i class="fa-solid fa-file-circle-xmark mr-1"></i>BGD বাকি:</span>' + chip('ALL', 'সব') + chip('1', '১টা বাকি') + chip('2', '২টা বাকি') + chip('3', '৩টা বাকি') + chip('4', '৪টা বাকি') + chip('EVERY', 'সবগুলো বাকি (কোনোটাই হয়নি)');
+    }
     function bgdSetBadge(f) {
-      const n = bgdUpCount(f), t = (f.applicants || []).length; if (!n) return '';
+      const n = bgdUpCount(f), t = (f.applicants || []).length; if (!n) return (activeTab === 'BGD_PENDING' && t) ? `<span class="bg-rose-100 text-rose-700 border border-rose-300 px-2 py-0.5 rounded text-[10px] font-extrabold">📄 BGD 0/${t} (সব বাকি)</span>` : '';
       return n === t ? `<span class="bg-emerald-100 text-emerald-700 border border-emerald-300 px-2 py-0.5 rounded text-[10px] font-extrabold">📄 BGD ${n}/${t} ✓</span>` : `<span class="bg-amber-100 text-amber-800 border border-amber-300 px-2 py-0.5 rounded text-[10px] font-extrabold">📄 BGD ${n}/${t} (বাকি ${t - n})</span>`;
     }
     // ⛔ Expired = মেয়াদ শেষ বা নতুন BGD লাগবে | ⏳ Warning = আর ১০ দিন বা কম বাকি
@@ -1536,19 +1550,20 @@
       const search = document.getElementById('searchInput').value.toLowerCase().trim();
       const vType = document.getElementById('filterVisaType').value; const workerVal = document.getElementById('filterWorker').value;
 
-      let cntB = 0, cntBC = 0, cntBP = 0, cntR = 0, cntE = 0, cntX = 0, cntS = 0, cntA = 0, cntD = 0, cntRet = 0, cntDel = 0;
+      let cntBPend = 0, cntB = 0, cntBC = 0, cntBP = 0, cntR = 0, cntE = 0, cntX = 0, cntS = 0, cntA = 0, cntD = 0, cntRet = 0, cntDel = 0;
       visaFiles.forEach(f => {
         if (f.isDeleted) { cntDel++; return; }
         const isClosed = f.isDelivered || f.isReturned;
-        if (!isClosed) cntR++; if (hasWarning(f)) cntE++; if (hasExpired(f)) cntX++; if (!isClosed && bgdUpCount(f) > 0) { cntB++; if (bgdUpCount(f) === f.applicants.length) cntBC++; else cntBP++; } if (f.isSignedUp && !isClosed) cntS++; if (isAppt(f) && !isClosed) cntA++; if (f.isDelivered) cntD++; if (f.isReturned) cntRet++;
+        if (!isClosed) cntR++; if (hasWarning(f)) cntE++; if (hasExpired(f)) cntX++; if (!isClosed && bgdPendCount(f) > 0) cntBPend++; if (!isClosed && bgdUpCount(f) > 0) { cntB++; if (bgdUpCount(f) === f.applicants.length) cntBC++; else cntBP++; } if (f.isSignedUp && !isClosed) cntS++; if (isAppt(f) && !isClosed) cntA++; if (f.isDelivered) cntD++; if (f.isReturned) cntRet++;
       });
-      document.getElementById('badgeRunning').innerText = cntR; document.getElementById('badgeExpiring').innerText = cntE; document.getElementById('badgeExpired').innerText = cntX; document.getElementById('badgeBgdUp').innerText = cntB; if (activeTab === 'BGD_UP') { const vt = document.getElementById('currentViewTitle'); if (vt) vt.innerText += '  ·  সম্পূর্ণ ' + cntBC + '  ·  আংশিক ' + cntBP; } document.getElementById('badgeSignedUp').innerText = cntS; document.getElementById('badgeAppointment').innerText = cntA; document.getElementById('badgeDelivered').innerText = cntD; document.getElementById('badgeReturned').innerText = cntRet; document.getElementById('badgeAll').innerText = visaFiles.length - cntDel; document.getElementById('badgeRecycle').innerText = cntDel;
+      document.getElementById('badgeRunning').innerText = cntR; document.getElementById('badgeExpiring').innerText = cntE; document.getElementById('badgeExpired').innerText = cntX; document.getElementById('badgeBgdUp').innerText = cntB; document.getElementById('badgeBgdPending').innerText = cntBPend; if (activeTab === 'BGD_UP') { const vt = document.getElementById('currentViewTitle'); if (vt) vt.innerText += '  ·  সম্পূর্ণ ' + cntBC + '  ·  আংশিক ' + cntBP; } document.getElementById('badgeSignedUp').innerText = cntS; document.getElementById('badgeAppointment').innerText = cntA; document.getElementById('badgeDelivered').innerText = cntD; document.getElementById('badgeReturned').innerText = cntRet; document.getElementById('badgeAll').innerText = visaFiles.length - cntDel; document.getElementById('badgeRecycle').innerText = cntDel;
 
       if (activeTab === 'ACTIVITY') { renderActivityView(container); return; }
+      let _skipPend = false;
       const _passBase = (f) => {
         if (activeTab === 'RECYCLE') { if (!f.isDeleted || !isAdmin) return false; } else if (f.isDeleted) return false;
         const isClosed = f.isDelivered || f.isReturned;
-        if (activeTab === 'RUNNING' && isClosed) return false; if (activeTab === 'EXPIRING' && !hasWarning(f)) return false; if (activeTab === 'EXPIRED' && !hasExpired(f)) return false; if (activeTab === 'BGD_UP' && (isClosed || bgdUpCount(f) === 0)) return false; if (activeTab === 'SIGNED_UP' && (!f.isSignedUp || isClosed)) return false; if (activeTab === 'APPOINTMENT' && (!isAppt(f) || isClosed)) return false; if (activeTab === 'DELIVERED' && !f.isDelivered) return false; if (activeTab === 'RETURNED' && !f.isReturned) return false;
+        if (activeTab === 'RUNNING' && isClosed) return false; if (activeTab === 'EXPIRING' && !hasWarning(f)) return false; if (activeTab === 'EXPIRED' && !hasExpired(f)) return false; if (activeTab === 'BGD_UP' && (isClosed || bgdUpCount(f) === 0)) return false; if (activeTab === 'BGD_PENDING' && (isClosed || bgdPendCount(f) === 0 || (!_skipPend && !pendMatch(f, pendFilter)))) return false; if (activeTab === 'SIGNED_UP' && (!f.isSignedUp || isClosed)) return false; if (activeTab === 'APPOINTMENT' && (!isAppt(f) || isClosed)) return false; if (activeTab === 'DELIVERED' && !f.isDelivered) return false; if (activeTab === 'RETURNED' && !f.isReturned) return false;
         if (vType !== 'ALL' && visaTypeOf(f) !== vType) return false; if (workerVal !== 'ALL' && (f.worker || '').trim() !== workerVal) return false;
         if (!search) return true;
         if (search.startsWith('#')) { const q = search.slice(1).trim(); return String(f.serial || '') === q || hasPrevSerial(f, q); }
@@ -1557,6 +1572,7 @@
         if ((f.ghostMain || '').toLowerCase().includes(search) || movedOutNames(f).some(n => n.toLowerCase().includes(search))) return true;
         return smsOf(f).toLowerCase().includes(search) || (f.note || '').toLowerCase().includes(search) || (f.hospitalName || '').toLowerCase().includes(search) || (f.border || '').toLowerCase().includes(search) || (f.accountPhone || '').toLowerCase().includes(search) || (f.accountGmail || '').toLowerCase().includes(search) || (f.worker || '').toLowerCase().includes(search) || f.applicants.some(a => (a.name || '').toLowerCase().includes(search) || (a.tempId || '').toLowerCase().includes(search) || (a.bgdNo || '').toLowerCase().includes(search) || (a.passport || '').toLowerCase().includes(search));
       };
+      if (activeTab === 'BGD_PENDING') { _skipPend = true; const allPend = visaFiles.filter(f => _passBase(f)); _skipPend = false; renderPendChips(allPend.filter(f => !smsFilter || smsOf(f) === smsFilter)); } else renderPendChips([]);
       const baseList = visaFiles.filter(_passBase); renderSmsChips(baseList);
       const filtered = baseList.filter(f => activeTab === 'RECYCLE' || !smsFilter || smsOf(f) === smsFilter);
       if (activeTab === 'ACCOUNTS') { if (!isAdmin) { container.innerHTML = ''; return; } renderAccountsView(container, filtered); return; }
