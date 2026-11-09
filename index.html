@@ -659,7 +659,7 @@
       if (!appToMove.homeId) appToMove.homeId = sFile.id;   // আসল কার্ড: ভিসা ফি/খরচ ওখানেই থাকে
       let dest;
       if (isNew) {
-        const newF = JSON.parse(JSON.stringify(sFile)); newF.id = 'SET_' + Date.now(); newF.driveFolderId = ''; newF.driveFolderName = ''; newF.driveStatus = ''; newF.applicants = [appToMove]; newF.appointmentDate = ''; newF.isAppointed = false; newF.invoiceFileId = ''; newF.invoiceFileName = ''; newF.invoiceName = ''; newF.invoiceBy = ''; newF.invoiceAt = ''; newF.invitationFileId = ''; newF.invitationFileName = ''; newF.invitationName = ''; newF.invitationBy = ''; newF.invitationAt = ''; newF.invitationReceived = false; newF.apptLetterFileId = ''; newF.apptLetterFileName = ''; newF.apptLetterName = ''; newF.apptLetterBy = ''; newF.apptLetterAt = ''; newF.apptLetterReceived = false; ['undertaking', 'consult'].forEach(function (k) { newF[k + 'FileId'] = ''; newF[k + 'FileName'] = ''; newF[k + 'Name'] = ''; newF[k + 'By'] = ''; newF[k + 'At'] = ''; newF[k + 'Received'] = false; }); newF.medFolderId = ''; newF.medFolderName = ''; LETTER_KEYS.forEach(function (k) { newF[k + 'Med'] = false; }); newF.feeStatus = 'UNPAID'; newF.billTotal = 0; newF.billAdvance = 0; newF.billDue = 0; newF.pays = []; newF.acctMode = sMode; newF.baseVisaFee = 0; newF.softwareCharge = 0; newF.keptCharge = 0; newF.refundAmount = 0; newF.returnReason = ''; newF.updatedAt = now; newF.updatedBy = whoAmI(); newF.serial = '';
+        const newF = JSON.parse(JSON.stringify(sFile)); newF.id = 'SET_' + Date.now(); newF.driveFolderId = ''; newF.driveFolderName = ''; newF.driveStatus = ''; newF.applicants = [appToMove]; newF.appointmentDate = ''; newF.isAppointed = false; newF.invoiceFileId = ''; newF.invoiceFileName = ''; newF.invoiceName = ''; newF.invoiceBy = ''; newF.invoiceAt = ''; newF.invitationFileId = ''; newF.invitationFileName = ''; newF.invitationName = ''; newF.invitationBy = ''; newF.invitationAt = ''; newF.invitationReceived = false; newF.apptLetterFileId = ''; newF.apptLetterFileName = ''; newF.apptLetterName = ''; newF.apptLetterBy = ''; newF.apptLetterAt = ''; newF.apptLetterReceived = false; ['undertaking', 'consult'].forEach(function (k) { newF[k + 'FileId'] = ''; newF[k + 'FileName'] = ''; newF[k + 'Name'] = ''; newF[k + 'By'] = ''; newF[k + 'At'] = ''; newF[k + 'Received'] = false; }); newF.medFolderId = ''; newF.medFolderName = ''; newF.docFolders = []; LETTER_KEYS.forEach(function (k) { newF[k + 'Med'] = false; }); newF.feeStatus = 'UNPAID'; newF.billTotal = 0; newF.billAdvance = 0; newF.billDue = 0; newF.pays = []; newF.acctMode = sMode; newF.baseVisaFee = 0; newF.softwareCharge = 0; newF.keptCharge = 0; newF.refundAmount = 0; newF.returnReason = ''; newF.updatedAt = now; newF.updatedBy = whoAmI(); newF.serial = '';
         newF.subAccts = []; newF.groupMovedOut = []; newF.ghostMain = ''; newF.transferLog = [];
         visaFiles.unshift(newF); dest = newF;
         nextSerial().then(n => { const t = visaFiles.find(x => x.id === newF.id); if (t) { t.serial = n; renderFiles(); syncToCloud(); showSerialModal(n, appToMove.name || ''); } }).catch(() => showToast('⚠️ নতুন ফাইলের সিরিয়াল নম্বর আনা যায়নি'));
@@ -1125,6 +1125,136 @@
       if (a[kind + 'FileId']) return `<button onclick="openPersonDoc('${fid}', ${idx}, '${kind}')" class="flex-1 bg-emerald-50 text-emerald-700 border border-emerald-200 ${sz} font-extrabold hover:bg-emerald-100 transition">${ico} ${nm} খুলুন</button><label title="নতুন ${nm} দিয়ে বদলান" class="cursor-pointer bg-amber-50 text-amber-700 border border-amber-200 ${sz} font-bold flex items-center justify-center hover:bg-amber-100 transition"><i class="fa-solid fa-arrows-rotate"></i>${up}</label>`;
       return `<label class="flex-1 cursor-pointer bg-slate-50 text-slate-600 border border-slate-200 ${sz} font-bold flex items-center justify-center gap-1 hover:bg-slate-100 transition">${ico} ${nm}${up}</label>`;
     }
+    // ================= 📝 Undertaking ও অন্য ডকুমেন্ট (যেকোনো ভিসা টাইপ, প্রতি ব্যক্তির) =================
+    // Drive: RTC VISA Files / <ডকুমেন্টের নাম, যেমন Undertaking> / <মেইন আবেদনকারীর নাম> / <ব্যক্তির নাম>.pdf
+    // ডাটা: ব্যক্তির a.docs = [{label, docFileId, docFileName, by, at, kb}] ; কার্ডের f.docFolders = [{label, id, name}]
+    const UNDERTAKING_LABEL = 'Undertaking';
+    const DOC_RESERVED = ['running', 'expired', 'delivered', 'returned', 'passport pic', 'medical files', '_backups'];
+    const DOC_MAX_MB = 10;
+    function docKey(l) { return String(l || '').replace(/\s+/g, ' ').trim().toLowerCase(); }
+    function knownDocLabels() {
+      const m = {}; visaFiles.forEach(f => (f.applicants || []).forEach(a => (a.docs || []).forEach(d => { if (d.label && !m[docKey(d.label)]) m[docKey(d.label)] = d.label; })));
+      delete m[docKey(UNDERTAKING_LABEL)]; return Object.keys(m).map(k => m[k]).sort();
+    }
+    // একই নাম আগে অন্য বানানে/কেসে থাকলে সেটাই ব্যবহার হয়, যাতে Drive এ আলাদা ফোল্ডার না হয়ে যায়
+    function canonDocLabel(raw) {
+      if (docKey(raw) === docKey(UNDERTAKING_LABEL)) return UNDERTAKING_LABEL;
+      const t = String(raw || '').replace(/[\\\/:*?"<>|]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 40);
+      return knownDocLabels().find(x => docKey(x) === docKey(t)) || t;
+    }
+    function getDoc(a, label) { return (a.docs || []).find(d => docKey(d.label) === docKey(label)); }
+    function docFolderRef(f, label) { return (f.docFolders || []).find(x => docKey(x.label) === docKey(label)); }
+    function docFileNameFor(f, a, label) {
+      const base = safeName(a.name), idx = f.applicants.indexOf(a);
+      const dup = idx > 0 && f.applicants.slice(0, idx).some(x => safeName(x.name).toLowerCase() === base.toLowerCase());   // একই কার্ডে একই নাম হলে ওভাররাইট ঠেকাতে সিরিয়াল
+      return base + (dup ? ' ' + (idx + 1) : '') + '.pdf';
+    }
+    function docsDrift(f) {
+      const want = safeName(mainNameOf(f));
+      if ((f.docFolders || []).some(x => x.id && x.name !== want)) return true;
+      return (f.applicants || []).some(a => (a.docs || []).some(d => d.docFileId && d.docFileName !== docFileNameFor(f, a, d.label)));
+    }
+    // ছবি হলে PDF বানিয়ে নেয়, PDF হলে যেমন আছে তেমন
+    async function processDocFile(file) {
+      if (file.type === 'application/pdf' || /\.pdf$/i.test(file.name || '')) return file;
+      const im = await loadImageFile(file); const sc = Math.min(1, 1800 / Math.max(im.naturalWidth, im.naturalHeight));
+      const w = Math.round(im.naturalWidth * sc), h = Math.round(im.naturalHeight * sc);
+      const b = await canvasBlob(drawFit(im, w, h, im.naturalWidth, im.naturalHeight), 0.82);
+      return new Blob([buildPdfFromJpegs([{ bytes: new Uint8Array(await b.arrayBuffer()), w: w, h: h }])], { type: 'application/pdf' });
+    }
+    async function uploadPersonExtraDoc(fileId, appIdx, labelRaw, file) {
+      const label = canonDocLabel(labelRaw);
+      if (!label) { alert('ডকুমেন্টের নাম লিখুন!'); return false; }
+      if (DOC_RESERVED.indexOf(docKey(label)) >= 0) { alert('"' + label + '" নামটা সিস্টেমের ফোল্ডারের নাম, অন্য নাম দিন।'); return false; }
+      if (cloudBusy > 0) { alert('⏳ একটি আপলোড চলছে, শেষ হওয়া পর্যন্ত অপেক্ষা করুন!'); return false; }
+      if (!file) return false;
+      if (file.size > DOC_MAX_MB * 1024 * 1024) { alert('ফাইল ' + DOC_MAX_MB + ' মেগাবাইটের নিচে হতে হবে!'); return false; }
+      const f = visaFiles.find(x => x.id === fileId); const a = f && f.applicants[appIdx]; if (!a) return false;
+      if (!driveEnabled()) { alert('Drive সেট করা নেই!'); return false; }
+      if (!((a.name || '').trim())) { alert('আগে এই আবেদনকারীর নাম লিখে সেভ করুন, তারপর ডকুমেন্ট দিন।'); return false; }
+      const old = getDoc(a, label);
+      if (old && old.docFileId && !confirm('এই ' + label + ' দিয়ে আগেরটা বদলাবেন?\nআগেরটা Drive থেকে মুছে যাবে।')) return false;
+      cloudBusy++; showToast('⏳ ' + label + ' আপলোড হচ্ছে...');
+      try {
+        const blob = await processDocFile(file); const ref = docFolderRef(f, label);
+        const res = await driveUploadApplicant({ setKey: f.id, docFolder: label, docFolderId: ref ? ref.id : '', folderName: safeName(mainNameOf(f)), fileName: docFileNameFor(f, a, label), file: blob, mime: 'application/pdf', replaceFileId: (old && old.docFileId) || '' });
+        if (!res.docOk) {   // পুরনো Apps Script: ফাইল ভুল জায়গায় গেছে, তাই সরিয়ে ফেলে স্পষ্ট এরর
+          try { await driveCall({ action: 'deleteFiles', fileIds: [res.fileId], folderIdIfEmpty: res.folderId || '' }); } catch (x) { }
+          throw new Error('Drive স্ক্রিপ্ট পুরনো ভার্শনের! Apps Script এ নতুন Code.gs বসিয়ে Deploy > Manage deployments > Edit > New version দিয়ে আবার Deploy করুন।');
+        }
+        const rec = { label: label, docFileId: res.fileId, docFileName: res.fileName, by: whoAmI(), at: stampNow(), kb: Math.round(blob.size / 1024) };
+        if (!a.docs) a.docs = []; if (old) Object.assign(old, rec); else a.docs.push(rec);
+        f.docFolders = (f.docFolders || []).filter(x => docKey(x.label) !== docKey(label)).concat([{ label: label, id: res.folderId, name: res.folderName }]);
+        f.updatedAt = stampNow(); f.updatedBy = whoAmI();
+        renderFiles(); await syncToCloud(); showToast('📝 ' + label + ' সেভ হয়েছে (' + fmtKB(blob.size) + ')'); return true;
+      } catch (e) { console.error(e); alert(label + ' আপলোড হয়নি!\n\nকারণ: ' + ((e && e.message) || e)); return false; }
+      finally { cloudBusy = Math.max(0, cloudBusy - 1); }
+    }
+    async function quickUploadExtraDoc(fid, idx, event) {
+      const input = event.target; const file = input.files[0]; const label = input.dataset.label;
+      try { if (file) await uploadPersonExtraDoc(fid, idx, label, file); } finally { input.value = ''; }
+    }
+    function openPersonExtraDoc(fid, idx, label) {
+      const f = visaFiles.find(x => x.id === fid); const a = f && f.applicants[idx]; const d = a && getDoc(a, label);
+      if (!d || !d.docFileId) { alert(label + ' Drive এ পাওয়া যায়নি! আবার আপলোড করুন।'); return; }
+      window.open('https://drive.google.com/file/d/' + d.docFileId + '/view', '_blank');
+    }
+    async function deletePersonExtraDoc(fid, idx, label) {
+      const f = visaFiles.find(x => x.id === fid); const a = f && f.applicants[idx]; const d = a && getDoc(a, label); if (!d) return;
+      if (cloudBusy > 0) { alert('⏳ একটি আপলোড চলছে, শেষ হওয়া পর্যন্ত অপেক্ষা করুন!'); return; }
+      if (!confirm('"' + (a.name || 'Unnamed') + '"-এর ' + d.label + ' মুছে ফেলবেন?\n(Drive এর ট্র্যাশে ৩০ দিন থাকবে)')) return;
+      cloudBusy++;
+      try {
+        const ref = docFolderRef(f, d.label);
+        if (d.docFileId && driveEnabled()) await driveCall({ action: 'deleteFiles', fileIds: [d.docFileId], foldersIfEmpty: ref && ref.id ? [ref.id] : [] });
+        a.docs = (a.docs || []).filter(x => x !== d);
+        if (!f.applicants.some(x => getDoc(x, d.label))) f.docFolders = (f.docFolders || []).filter(x => docKey(x.label) !== docKey(d.label));
+        f.updatedAt = stampNow(); f.updatedBy = whoAmI(); renderFiles(); await syncToCloud(); showToast('🗑️ ' + d.label + ' মুছে গেছে');
+      } catch (e) { console.error(e); alert('মোছা যায়নি!\n\nকারণ: ' + ((e && e.message) || e)); }
+      finally { cloudBusy = Math.max(0, cloudBusy - 1); }
+    }
+    // কার্ডে প্রতি ব্যক্তির নিচে: [📝 Undertaking] [➕ অন্য ডকুমেন্ট] + যোগ করা ডকুমেন্টগুলোর চিপ
+    function extraDocButtons(fid, idx, d, label, big) {
+      const sz = big ? 'py-1.5 px-2 rounded-xl text-xs' : 'py-1 px-2 rounded-lg text-[11px]'; const lb = escHtml(label);
+      const up = `<input type="file" accept="application/pdf,image/*" data-label="${lb}" onchange="quickUploadExtraDoc('${fid}', ${idx}, event)" class="hidden">`;
+      if (d && d.docFileId) return `<button type="button" data-label="${lb}" onclick="openPersonExtraDoc('${fid}', ${idx}, this.dataset.label)" class="flex-1 truncate bg-emerald-50 text-emerald-700 border border-emerald-200 ${sz} font-extrabold hover:bg-emerald-100 transition">📝 ${lb} খুলুন</button><label title="নতুন ফাইল দিয়ে বদলান" class="cursor-pointer bg-amber-50 text-amber-700 border border-amber-200 ${sz} font-bold flex items-center justify-center hover:bg-amber-100 transition"><i class="fa-solid fa-arrows-rotate"></i>${up}</label><button type="button" title="মুছুন" data-label="${lb}" onclick="deletePersonExtraDoc('${fid}', ${idx}, this.dataset.label)" class="bg-rose-50 text-rose-600 border border-rose-200 ${sz} font-bold hover:bg-rose-100 transition"><i class="fa-solid fa-trash-can"></i></button>`;
+      return `<label class="flex-1 cursor-pointer bg-slate-50 text-slate-600 border border-slate-200 ${sz} font-bold flex items-center justify-center gap-1 hover:bg-slate-100 transition">📝 ${lb}${up}</label>`;
+    }
+    function personExtraDocsHtml(f, idx, a) {
+      const others = (a.docs || []).filter(d => d.docFileId && docKey(d.label) !== docKey(UNDERTAKING_LABEL));
+      return `<div class="mt-1.5 flex gap-1.5">${extraDocButtons(f.id, idx, getDoc(a, UNDERTAKING_LABEL), UNDERTAKING_LABEL, true)}<button type="button" onclick="openAddDocModal('${f.id}', ${idx})" class="flex-1 bg-indigo-50 text-indigo-700 border border-indigo-200 py-1.5 px-2 rounded-xl text-xs font-extrabold hover:bg-indigo-100 transition">➕ অন্য ডকুমেন্ট</button></div>` +
+        others.map(d => `<div class="mt-1.5 flex gap-1.5">${extraDocButtons(f.id, idx, d, d.label, true)}</div>`).join('');
+    }
+    // টেবিল ভিউ: শুধু খোলার ছোট বাটন
+    function personExtraChips(f, idx, a) {
+      return (a.docs || []).filter(d => d.docFileId).map(d => `<button type="button" data-label="${escHtml(d.label)}" onclick="openPersonExtraDoc('${f.id}', ${idx}, this.dataset.label)" class="bg-teal-100 text-teal-700 border border-teal-200 px-1.5 py-0.5 rounded text-[10px] font-extrabold hover:bg-teal-200">📝 ${escHtml(d.label)}</button>`).join('');
+    }
+    function closeAddDocModal() { const el = document.getElementById('addDocModal'); if (el) el.remove(); }
+    function openAddDocModal(fid, idx) {
+      const f = visaFiles.find(x => x.id === fid); const a = f && f.applicants[idx]; if (!a) return;
+      if (!((a.name || '').trim())) { alert('আগে এই আবেদনকারীর নাম লিখে সেভ করুন, তারপর ডকুমেন্ট দিন।'); return; }
+      closeAddDocModal(); const known = knownDocLabels();
+      const el = document.createElement('div'); el.id = 'addDocModal'; el.className = 'fixed inset-0 z-[200] bg-black/50 flex items-center justify-center p-4';
+      el.innerHTML = `<div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6">
+        <h3 class="font-extrabold text-[#0b132b] text-base mb-0.5">➕ অন্য ডকুমেন্ট যোগ করুন</h3>
+        <p class="text-[11px] font-bold text-slate-500 mb-4">${escHtml(a.name)}</p>
+        <label class="block text-[11px] font-extrabold text-slate-500 mb-1">ডকুমেন্টের নাম (Drive এ এই নামে ফোল্ডার হবে)</label>
+        <input type="text" id="addDocLabel" list="addDocList" maxlength="40" autocomplete="off" placeholder="যেমন: Affidavit, NOC, Vaccination..." class="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm font-bold focus:border-indigo-400 focus:outline-none mb-2">
+        <datalist id="addDocList">${known.map(x => `<option value="${escHtml(x)}">`).join('')}</datalist>
+        ${known.length ? `<div class="flex flex-wrap gap-1.5 mb-3">${known.map(x => `<button type="button" data-label="${escHtml(x)}" onclick="document.getElementById('addDocLabel').value=this.dataset.label" class="px-2 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 text-[11px] font-bold hover:bg-indigo-100">${escHtml(x)}</button>`).join('')}</div>` : '<div class="mb-3"></div>'}
+        <label class="block text-[11px] font-extrabold text-slate-500 mb-1">ফাইল (PDF বা ছবি, সর্বোচ্চ ${DOC_MAX_MB} MB)</label>
+        <input type="file" id="addDocFile" accept="application/pdf,image/*" class="w-full text-xs font-bold text-slate-600 mb-3">
+        <p class="text-[10px] font-bold text-slate-400 leading-relaxed">📁 Drive: RTC VISA Files / <b>নাম</b> / ${escHtml(safeName(mainNameOf(f)))} / ${escHtml(safeName(a.name))}.pdf</p>
+        <div class="flex gap-2 mt-4"><button type="button" onclick="closeAddDocModal()" class="flex-1 py-2 rounded-xl bg-slate-100 text-slate-600 text-xs font-extrabold hover:bg-slate-200">বাতিল</button><button type="button" onclick="submitAddDoc('${fid}', ${idx})" class="flex-1 py-2 rounded-xl bg-indigo-600 text-white text-xs font-extrabold hover:bg-indigo-700"><i class="fa-solid fa-upload mr-1"></i> আপলোড</button></div>
+      </div>`;
+      el.addEventListener('click', ev => { if (ev.target === el) closeAddDocModal(); });
+      document.body.appendChild(el); setTimeout(() => { const i = document.getElementById('addDocLabel'); if (i) i.focus(); }, 50);
+    }
+    async function submitAddDoc(fid, idx) {
+      const label = (document.getElementById('addDocLabel').value || '').trim(); const file = document.getElementById('addDocFile').files[0];
+      if (!label) { alert('ডকুমেন্টের নাম লিখুন!'); return; } if (!file) { alert('ফাইল বাছুন!'); return; }
+      closeAddDocModal(); await uploadPersonExtraDoc(fid, idx, label, file);
+    }
     // Expired / মেয়াদ সতর্কতার কার্ডের একদম ওপরে: যাদের নতুন BGD লাগবে তাদের ছবি ও পাসপোর্ট এক ক্লিকে
     function quickDocsStrip(f) {
       if (!expiryRelevant(f)) return '';
@@ -1136,7 +1266,7 @@
       const dataUrl = o.dataUrl || await readFileAsDataURL(o.file); const nm = safeName(o.name);
       const fileName = o.fileName || driveExpectedName({ name: o.name }, o.idx);
       const reqId = 'u' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
-      const d = await driveCall({ action: 'upload', reqId: reqId, setKey: o.setKey || '', folderId: o.folderId || '', folderName: safeName(o.folderName), fileName: fileName, data: dataUrl.split(',')[1], replaceFileId: o.replaceFileId || '', status: o.status || 'Running', sms: o.sms || '', visaType: o.visaType || '', mime: o.mime || (o.file && o.file.type) || '', subFolder: o.subFolder || '', personFolder: o.personFolder || '', medFolder: o.medFolder || '', medFolderId: o.medFolderId || '' }); return { folderId: d.folderId, folderName: d.folderName, fileId: d.fileId, fileName: fileName };
+      const d = await driveCall({ action: 'upload', reqId: reqId, setKey: o.setKey || '', folderId: o.folderId || '', folderName: safeName(o.folderName), fileName: fileName, data: dataUrl.split(',')[1], replaceFileId: o.replaceFileId || '', status: o.status || 'Running', sms: o.sms || '', visaType: o.visaType || '', mime: o.mime || (o.file && o.file.type) || '', subFolder: o.subFolder || '', personFolder: o.personFolder || '', medFolder: o.medFolder || '', medFolderId: o.medFolderId || '', docFolder: o.docFolder || '', docFolderId: o.docFolderId || '' }); return { folderId: d.folderId, folderName: d.folderName, fileId: d.fileId, fileName: fileName, docOk: !!d.docOk };
     }
     function driveExpectedName(a, idx, f) { const nm = safeName(a.name); const core = idx === 0 ? '1 - ' + nm + ' (MAIN BGD)' : nm + ' (BGD)'; const exp = !!(f && expiryRelevant(f) && needsRenewal(a, f)); return (exp ? 'EXPIRED - ' : '') + core + '.pdf'; }
     async function driveSyncSet(f) {
@@ -1144,15 +1274,17 @@
       const wantFolder = driveFolderNameFor(f); const files = [];
       f.applicants.forEach((a, i) => { if (a.driveFileId) { const want = driveExpectedName(a, i, f); if (a.driveFileName !== want) files.push({ fileId: a.driveFileId, name: want }); } });
       f.applicants.forEach(a => { if (a.photoFileId) { const w = photoFileNameFor(a); if (a.photoFileName !== w) files.push({ fileId: a.photoFileId, name: w }); } if (a.passportFileId) { const w = passportFileNameFor(a); if (a.passportFileName !== w) files.push({ fileId: a.passportFileId, name: w }); } });
+      f.applicants.forEach(a => (a.docs || []).forEach(d => { if (d.docFileId) { const w = docFileNameFor(f, a, d.label); if (d.docFileName !== w) files.push({ fileId: d.docFileId, name: w }); } }));
       if (f.invoiceFileId) { const wantInv = invoiceFileNameFor(f); if (f.invoiceFileName !== wantInv) files.push({ fileId: f.invoiceFileId, name: wantInv }); }
       LETTER_KEYS.forEach(k => { if (f[k + 'FileId']) { const wantL = letterFileNameFor(f, k); if (f[k + 'FileName'] !== wantL) files.push({ fileId: f[k + 'FileId'], name: wantL }); } });
       const folderChange = !!f.driveFolderId && f.driveFolderName !== wantFolder;
       const wantMed = safeName(f.applicants[0] && f.applicants[0].name); const medChange = !!f.medFolderId && f.medFolderName !== wantMed;
-      if (!files.length && !folderChange && !medChange) return;
+      const dfChange = (f.docFolders || []).filter(x => x.id && x.name !== wantMed);
+      if (!files.length && !folderChange && !medChange && !dfChange.length) return;
       try {
-        await driveCall({ action: 'syncSet', folderId: folderChange ? f.driveFolderId : '', folderName: wantFolder, files: files, extraFolders: medChange ? [{ folderId: f.medFolderId, name: wantMed }] : [] });
-        if (medChange) f.medFolderName = wantMed;
-        files.forEach(x => { f.applicants.forEach(y => { if (y.photoFileId === x.fileId) y.photoFileName = x.name; if (y.passportFileId === x.fileId) y.passportFileName = x.name; }); const a = f.applicants.find(y => y.driveFileId === x.fileId); if (a) a.driveFileName = x.name; if (f.invoiceFileId === x.fileId) f.invoiceFileName = x.name; LETTER_KEYS.forEach(k => { if (f[k + 'FileId'] === x.fileId) f[k + 'FileName'] = x.name; }); });
+        await driveCall({ action: 'syncSet', folderId: folderChange ? f.driveFolderId : '', folderName: wantFolder, files: files, extraFolders: (medChange ? [{ folderId: f.medFolderId, name: wantMed }] : []).concat(dfChange.map(x => ({ folderId: x.id, name: wantMed }))) });
+        if (medChange) f.medFolderName = wantMed; dfChange.forEach(x => { x.name = wantMed; });
+        files.forEach(x => { f.applicants.forEach(y => { if (y.photoFileId === x.fileId) y.photoFileName = x.name; if (y.passportFileId === x.fileId) y.passportFileName = x.name; (y.docs || []).forEach(dd => { if (dd.docFileId === x.fileId) dd.docFileName = x.name; }); }); const a = f.applicants.find(y => y.driveFileId === x.fileId); if (a) a.driveFileName = x.name; if (f.invoiceFileId === x.fileId) f.invoiceFileName = x.name; LETTER_KEYS.forEach(k => { if (f[k + 'FileId'] === x.fileId) f[k + 'FileName'] = x.name; }); });
         if (folderChange) f.driveFolderName = wantFolder; syncToCloud();
       } catch (e) { console.warn('driveSyncSet failed', e); }
     }
@@ -1167,6 +1299,16 @@
           dest.driveFolderId = r.folderId; dest.driveFolderName = r.folderName;
         } else if (sRemoved && sFile.driveFolderId) { await driveCall({ action: 'deleteFiles', fileIds: [], folderIdIfEmpty: sFile.driveFolderId }); }
       } catch (e) { console.warn('drive move failed', e); try { alert('⚠️ কার্ড ট্রান্সফার হয়েছে, কিন্তু PDF Drive এ নতুন ফোল্ডারে সরেনি!\n\nকারণ: ' + ((e && e.message) || e) + '\n\nইন্টারনেট ঠিক করে নিজে Drive এ ' + safeName(moved.name) + ' এর PDF টা নতুন ফোল্ডারে সরান, অথবা আবার ট্রান্সফার করুন।'); } catch (x) { } }
+      // 📝 Undertaking/অন্য ডকুমেন্ট: নতুন কার্ডের মেইন নামের ফোল্ডারে সরানো
+      for (const d of (moved.docs || [])) {
+        if (!d.docFileId) continue;
+        try {
+          const sref = docFolderRef(sFile, d.label), dref = docFolderRef(dest, d.label);
+          const r2 = await driveCall({ action: 'moveFile', setKey: dest.id, fileId: d.docFileId, docLabel: d.label, toFolderId: dref ? dref.id : '', toFolderName: safeName(mainNameOf(dest)), fromFolderId: sref ? sref.id : '', trashFromIfEmpty: true });
+          if (!r2.docOk) throw new Error('OLD_SCRIPT: Apps Script এর নতুন Code.gs ডিপ্লয় করুন');
+          dest.docFolders = (dest.docFolders || []).filter(x => docKey(x.label) !== docKey(d.label)).concat([{ label: d.label, id: r2.folderId, name: r2.folderName }]);
+        } catch (e) { console.warn('doc move failed', e); }
+      }
       cloudBusy--;
       await driveSyncSet(dest); if (!sRemoved) await driveSyncSet(sFile);
       syncToCloud();
@@ -1229,14 +1371,15 @@
       if (f.driveFolderName !== driveFolderNameFor(f)) return true;
       if (f.applicants.some((a, i) => a.driveFileId && a.driveFileName !== driveExpectedName(a, i, f))) return true;
       if (f.applicants.some(a => (a.photoFileId && a.photoFileName !== photoFileNameFor(a)) || (a.passportFileId && a.passportFileName !== passportFileNameFor(a)))) return true;
-      return !!(f.invoiceFileId && f.invoiceFileName !== invoiceFileNameFor(f)) || LETTER_KEYS.some(k => f[k + 'FileId'] && f[k + 'FileName'] !== letterFileNameFor(f, k)) || !!(f.medFolderId && f.medFolderName !== safeName(f.applicants[0] && f.applicants[0].name));
+      return !!(f.invoiceFileId && f.invoiceFileName !== invoiceFileNameFor(f)) || LETTER_KEYS.some(k => f[k + 'FileId'] && f[k + 'FileName'] !== letterFileNameFor(f, k)) || !!(f.medFolderId && f.medFolderName !== safeName(f.applicants[0] && f.applicants[0].name)) || docsDrift(f);
     }
     async function driveSyncStatuses() {
       if (!driveEnabled() || !auth.currentUser || statusSyncBusy) return; driveFixOtherOnce();
       const organized = visaFiles.filter(f => f.driveFolderId && f.driveStatus && !f.isDeleted);
       const todo = organized.filter(f => f.driveStatus !== driveLocOf(f) && (Date.now() - (statusSyncTried[f.id] || 0) > 60000));
       const drift = organized.filter(f => driveNamesDrift(f) && (Date.now() - (nameSyncTried[f.id] || 0) > 60000));
-      if (!todo.length && !drift.length) return;
+      const docOnly = visaFiles.filter(f => !f.isDeleted && !(f.driveFolderId && f.driveStatus) && docsDrift(f) && (Date.now() - (nameSyncTried[f.id] || 0) > 60000));
+      if (!todo.length && !drift.length && !docOnly.length) return;
       statusSyncBusy = true; let changed = false;
       try {
         for (const f of todo.slice(0, 30)) {
@@ -1244,6 +1387,7 @@
           try { const dd = await driveCall({ action: 'setStatus', folderId: f.driveFolderId, status: driveStatusOf(f), sms: smsOf(f), visaType: visaTypeOf(f) }); if (!dd || dd.layout !== 2) throw new Error('OLD_SCRIPT: Apps Script এর v11 ডিপ্লয় করুন'); f.driveStatus = want; changed = true; } catch (e) { console.warn('status folder move failed', e); }
         }
         for (const f of drift.slice(0, 12)) { nameSyncTried[f.id] = Date.now(); await driveSyncSet(f); }
+        for (const f of docOnly.slice(0, 12)) { nameSyncTried[f.id] = Date.now(); await driveSyncSet(f); }
       } finally { statusSyncBusy = false; }
       if (changed) syncToCloud();
     }
@@ -1316,8 +1460,9 @@
       cloudBusy++; showToast('⏳ মুছে ফেলা হচ্ছে...');
       try {
         let trashedOnly = 0;
-        const driveIds = f.applicants.map(a => a.driveFileId).filter(Boolean).concat(allLetterIds(f)).concat(f.applicants.flatMap(a => [a.photoFileId, a.passportFileId]).filter(Boolean));
-        if (driveIds.length || f.driveFolderId || f.medFolderId) { const d = await driveCall({ action: 'deleteSet', fileIds: driveIds, folderId: f.driveFolderId || '', extraFolderIds: f.medFolderId ? [f.medFolderId] : [] }); trashedOnly = d.trashedOnly || 0; }
+        const driveIds = f.applicants.map(a => a.driveFileId).filter(Boolean).concat(allLetterIds(f)).concat(f.applicants.flatMap(a => [a.photoFileId, a.passportFileId].concat((a.docs || []).map(d => d.docFileId))).filter(Boolean));
+        const extraIds = (f.medFolderId ? [f.medFolderId] : []).concat((f.docFolders || []).map(x => x.id).filter(Boolean));
+        if (driveIds.length || f.driveFolderId || extraIds.length) { const d = await driveCall({ action: 'deleteSet', fileIds: driveIds, folderId: f.driveFolderId || '', extraFolderIds: extraIds }); trashedOnly = d.trashedOnly || 0; }
         visaFiles = visaFiles.filter(x => x.id !== id); logHint = 'চিরতরে ডিলিট (Drive সহ)';
         cloudBusy--; renderFiles(); await syncToCloud();
         showToast(trashedOnly ? '🗑️ মুছে গেছে (Drive ট্র্যাশে ৩০ দিন থাকবে)' : '🗑️ সব জায়গা থেকে চিরতরে মুছে গেছে');
@@ -1617,7 +1762,7 @@
                   const box = st === 'EXPIRED' ? 'bg-red-50 border-red-200' : (st === 'UPLOADED' ? 'bg-emerald-50 border-emerald-200' : (st === 'SUBMITTED' ? 'bg-sky-50/60 border-sky-100' : 'bg-white border-slate-100'));
                   return `<div class="rounded-lg border ${box} px-2 py-1.5 space-y-1">
                     <div class="flex flex-wrap items-center gap-1.5 text-[11px]"><span class="font-extrabold ${st === 'EXPIRED' ? 'text-red-700' : 'text-slate-700'}">${i === 0 ? '⭐ ' : ''}${escHtml(a.name || 'Unnamed')}</span>${prevSerialBadge(a)}${personPill(a, f)}${exp.badgeHtml}</div>
-                    <div class="flex flex-wrap items-center gap-1.5 text-[11px]"><span class="mono-type font-bold text-[#00b4d8] bg-[#00b4d8]/10 px-1.5 rounded">${escHtml(a.tempId || 'No-Temp')}</span><span class="mono-type font-bold px-1.5 rounded ${a.bgdNo ? 'text-emerald-700 bg-emerald-100' : 'text-slate-400 bg-slate-100'}">BGD: ${escHtml(a.bgdNo || '—')}</span>${(a.isSubmitted && a.subDate) ? `<span class="text-[10px] font-bold text-slate-500">📅 ${escHtml(a.subDate)}</span>` : ''}${a.driveFileId ? `<button onclick="openPdf('${f.id}', ${i})" class="bg-emerald-100 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded text-[10px] font-extrabold hover:bg-emerald-200"><i class="fa-solid fa-file-pdf"></i> PDF</button>` : ''}${a.photoFileId ? `<button onclick="openPersonDoc('${f.id}', ${i}, 'photo')" class="bg-sky-100 text-sky-700 border border-sky-200 px-1.5 py-0.5 rounded text-[10px] font-extrabold hover:bg-sky-200">📷 ছবি</button>` : ''}${a.passportFileId ? `<button onclick="openPersonDoc('${f.id}', ${i}, 'passport')" class="bg-indigo-100 text-indigo-700 border border-indigo-200 px-1.5 py-0.5 rounded text-[10px] font-extrabold hover:bg-indigo-200">🛂 পাসপোর্ট</button>` : ''}</div>
+                    <div class="flex flex-wrap items-center gap-1.5 text-[11px]"><span class="mono-type font-bold text-[#00b4d8] bg-[#00b4d8]/10 px-1.5 rounded">${escHtml(a.tempId || 'No-Temp')}</span><span class="mono-type font-bold px-1.5 rounded ${a.bgdNo ? 'text-emerald-700 bg-emerald-100' : 'text-slate-400 bg-slate-100'}">BGD: ${escHtml(a.bgdNo || '—')}</span>${(a.isSubmitted && a.subDate) ? `<span class="text-[10px] font-bold text-slate-500">📅 ${escHtml(a.subDate)}</span>` : ''}${a.driveFileId ? `<button onclick="openPdf('${f.id}', ${i})" class="bg-emerald-100 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded text-[10px] font-extrabold hover:bg-emerald-200"><i class="fa-solid fa-file-pdf"></i> PDF</button>` : ''}${a.photoFileId ? `<button onclick="openPersonDoc('${f.id}', ${i}, 'photo')" class="bg-sky-100 text-sky-700 border border-sky-200 px-1.5 py-0.5 rounded text-[10px] font-extrabold hover:bg-sky-200">📷 ছবি</button>` : ''}${a.passportFileId ? `<button onclick="openPersonDoc('${f.id}', ${i}, 'passport')" class="bg-indigo-100 text-indigo-700 border border-indigo-200 px-1.5 py-0.5 rounded text-[10px] font-extrabold hover:bg-indigo-200">🛂 পাসপোর্ট</button>` : ''}${personExtraChips(f, i, a)}</div>
                   </div>`;
                 }).join('')}</td>
                 <td class="p-3.5 space-x-1"><button onclick="openFileModal('${f.id}')" class="bg-white text-[#0077b6] px-3 py-1 rounded-lg border border-slate-200 font-bold shadow-sm hover:bg-slate-50">এডিট</button><button onclick="moveToRecycle('${f.id}')" title="রিসাইকেল বিনে পাঠান" class="bg-white text-rose-600 px-2.5 py-1 rounded-lg border border-rose-200 font-bold shadow-sm hover:bg-rose-50"><i class="fa-solid fa-trash"></i></button></td>
@@ -1714,6 +1859,7 @@
                   ${(a.driveFileId) ? `<button onclick="openPdf('${f.id}', ${idx})" class="flex-1 bg-emerald-50 text-emerald-700 border border-emerald-200 py-1.5 px-2 rounded-xl text-xs font-bold hover:bg-emerald-100 transition"><i class="fa-solid fa-file-pdf"></i> PDF ওপেন</button><label title="নতুন PDF দিয়ে বদলান" class="cursor-pointer bg-amber-50 text-amber-700 border border-amber-200 py-1.5 px-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1 hover:bg-amber-100 transition"><i class="fa-solid fa-arrows-rotate"></i> রি-আপলোড / বদলান<input type="file" accept="application/pdf" onchange="quickUploadCardPdf('${f.id}', ${idx}, event)" class="hidden"></label>` : `<label class="w-full cursor-pointer bg-slate-50 text-slate-600 border border-slate-200 py-1.5 px-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1 hover:bg-slate-100 transition"><i class="fa-solid fa-upload"></i> PDF রাখুন<input type="file" accept="application/pdf" onchange="quickUploadCardPdf('${f.id}', ${idx}, event)" class="hidden"></label>`}
                 </div>
                 <div class="mt-1.5 flex gap-1.5">${personDocBtn(f.id, idx, a, 'photo', true)}${personDocBtn(f.id, idx, a, 'passport', true)}</div>
+                ${personExtraDocsHtml(f, idx, a)}
                 ${(a.bgdUploadedBy && a.driveFileId) ? `<div class="text-[9px] text-slate-400 font-bold mt-1.5"><i class="fa-solid fa-cloud-arrow-up mr-1"></i>আপলোড: ${escHtml(a.bgdUploadedBy)}${a.bgdUploadedAt ? ' · ' + escHtml(a.bgdUploadedAt) : ''}</div>` : ''}
               </div>`;
             }).join('')}
@@ -2500,6 +2646,7 @@
       fileObj.subAccts = tempSubs.map(s => ({ id: s.id, serial: String(s.serial || ''), main: s.main || '', names: s.names || [], mode: s.mode || 'GROUP', bill: nz(s.bill),
         pays: (s.pays || []).filter(p => nz(p.amt) > 0).map(p => ({ amt: nz(p.amt), d: p.d || '', t: p.t || '', by: p.by || '' })), at: s.at || '', by: s.by || '', out: !!s.out, toId: s.toId || '', toSerial: s.toSerial || '', toMain: s.toMain || '' }));
       fileObj.ghostMain = prevSet ? (prevSet.ghostMain || '') : '';
+      fileObj.docFolders = prevSet ? (prevSet.docFolders || []) : [];
       fileObj.groupMovedOut = prevSet ? (prevSet.groupMovedOut || []) : [];
       if (tempAcctMode === 'GROUP') {
         fileObj.billTotal = nz(tempGroup.bill) + subsBill(fileObj);
@@ -2573,7 +2720,8 @@
       ['baseVisaFee', 'ভিসা ফি', 'num'], ['softwareCharge', 'সফটওয়্যার চার্জ', 'num'], ['billTotal', 'মোট বিল', 'num'], ['billAdvance', 'অ্যাডভান্স', 'num'], ['billDue', 'বাকি', 'num'], ['keptCharge', 'রাখা চার্জ', 'num'], ['refundAmount', 'ফেরত টাকা', 'num'],
       ['returnReason', 'ফেরতের কারণ', 'label'], ['note', 'নোট', 'label'], ['hospitalName', 'হাসপাতাল'], ['letterMode', 'Letter ধরন'], ['invitationReceived', 'Invitation Received', 'bool'], ['apptLetterReceived', 'Appointment Letter Received', 'bool']
     ];
-    const LOG_PERSON_FIELDS = [['passport', 'পাসপোর্ট'], ['dob', 'জন্মতারিখ'], ['nid', 'NID'], ['tempId', 'Temp ID'], ['bgdNo', 'BGD নম্বর'], ['isSubmitted', 'সাবমিট'], ['subDate', 'সাবমিট তারিখ'], ['prevBgd', 'আগের BGD'], ['driveFileId', 'PDF'], ['photoFileId', 'ছবি'], ['passportFileId', 'পাসপোর্ট ফাইল']];
+    const LOG_PERSON_FIELDS = [['passport', 'পাসপোর্ট'], ['dob', 'জন্মতারিখ'], ['nid', 'NID'], ['tempId', 'Temp ID'], ['bgdNo', 'BGD নম্বর'], ['isSubmitted', 'সাবমিট'], ['subDate', 'সাবমিট তারিখ'], ['prevBgd', 'আগের BGD'], ['driveFileId', 'PDF'], ['photoFileId', 'ছবি'], ['passportFileId', 'পাসপোর্ট ফাইল'], ['docs', 'Undertaking/অন্য ডকুমেন্ট']];
+    function logPv(o, k) { return k === 'docs' ? (o.docs || []).map(x => x.label + ':' + x.docFileId).join('|') : (o[k] == null ? '' : o[k]); }
     let logQueue = []; try { logQueue = JSON.parse(localStorage.getItem('rtc_log_queue') || '[]'); } catch (e) { logQueue = []; }
     let logFlushing = false; let logDenied = false; let logHint = ''; let logOverride = null;
     function saveLogQueue() { if (logQueue.length > 500) logQueue = logQueue.slice(-500); try { localStorage.setItem('rtc_log_queue', JSON.stringify(logQueue)); } catch (e) { } }
@@ -2596,7 +2744,7 @@
       else { if (added.length) parts.push('যোগ: ' + added.join(', ')); if (removed.length) parts.push('বাদ: ' + removed.join(', ')); }
       na.forEach(function (p) {
         const q = oa.find(function (x) { return (x.name || '') === (p.name || ''); }); if (!q) return;
-        const ch = LOG_PERSON_FIELDS.filter(function (d) { return (q[d[0]] == null ? '' : q[d[0]]) !== (p[d[0]] == null ? '' : p[d[0]]); }).map(function (d) { return d[1]; });
+        const ch = LOG_PERSON_FIELDS.filter(function (d) { return logPv(q, d[0]) !== logPv(p, d[0]); }).map(function (d) { return d[1]; });
         if (ch.length) parts.push((p.name || 'নামহীন') + ': ' + ch.join(', '));
         if (isPerPerson(old) && isPerPerson(f)) { const ob = nz(q.bill), nb = nz(p.bill), op = ledPaid(q), np = ledPaid(p); if (ob !== nb) parts.push((p.name || 'নামহীন') + ': বিল ' + ob + ' → ' + nb); if (op !== np) parts.push((p.name || 'নামহীন') + ': জমা ' + op + ' → ' + np); }
       });
@@ -2940,7 +3088,7 @@
 
     // ================= 🔠 টাইপ করলেই অটো CAPITAL =================
     // ইমেইল, পাসওয়ার্ড, URL ও সার্চ বাদে সব টেক্সট ঘর (নাম, পাসপোর্ট, Temp ID, BGD, হাসপাতাল, নোট ইত্যাদি) অটো বড় হাতের হবে
-    const NO_CAPS_IDS = ['authEmail', 'authPassword', 'accountGmail', 'accountPassword', 'settingDefaultPass', 'settingCloudUrl', 'searchInput'];
+    const NO_CAPS_IDS = ['addDocLabel', 'authEmail', 'authPassword', 'accountGmail', 'accountPassword', 'settingDefaultPass', 'settingCloudUrl', 'searchInput'];
     document.addEventListener('input', function (e) {
       const el = e.target; if (!el || e.isComposing) return;
       const isText = (el.tagName === 'INPUT' && (el.type === 'text' || el.type === 'search')) || el.tagName === 'TEXTAREA';

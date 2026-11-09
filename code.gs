@@ -21,7 +21,7 @@ function authorize_() {
 }
 
 // ====== ৩) মূল ফাংশন ======
-const VERSION = 'v18-medical-migrate';
+const VERSION = 'v19-person-docs';
 // ব্রাউজারে Web App URL খুললে এটা দেখাবে: নতুন ভার্শন ডিপ্লয় হয়েছে কিনা বোঝার জন্য
 function doGet() { return out_({ ok: true, version: VERSION, msg: 'RTC VISA Drive script চালু আছে' }); }
 
@@ -141,6 +141,18 @@ function passportRoot_(root) { return subFolder_(root, PASSPORT_ROOT_NAME); }
 // মেডিকেল PDF (Appointment/Invitation Letter, Undertaking, Consult): RTC VISA Files / Medical Files / <রোগীর নাম> / ফাইল.pdf
 const MEDICAL_ROOT_NAME = 'Medical Files';
 function medicalRoot_(root) { return subFolder_(root, MEDICAL_ROOT_NAME); }
+// ব্যক্তি-ভিত্তিক ডকুমেন্ট (Undertaking ও ইউজারের যোগ করা অন্য নাম): RTC VISA Files / <ডকুমেন্টের নাম> / <মেইন আবেদনকারীর নাম> / <ব্যক্তির নাম>.pdf
+// ডকুমেন্টের নামের ফোল্ডারে description এ DOC_ROOT_TAG বসে, যাতে ডুপ্লিকেট-ক্লিনার এটাকে সেট ফোল্ডার ভেবে না ফেলে
+const DOC_ROOT_TAG = 'rtc:docroot';
+const RESERVED_ROOT_ = { 'running': 1, 'expired': 1, 'delivered': 1, 'returned': 1, 'passport pic': 1, 'medical files': 1, '_backups': 1 };
+function docRoot_(root, label) {
+  const name = cleanSub_(label); if (!name) throw new Error('DOC_NAME_EMPTY');
+  if (RESERVED_ROOT_[name.toLowerCase()]) throw new Error('এই নামে সিস্টেমের ফোল্ডার আছে, অন্য নাম দিন: ' + name);
+  const f = subFolder_(root, name); const d = f.getDescription() || '';
+  if (d === DOC_ROOT_TAG) return f;
+  if (d) throw new Error('এই নামে অন্য ফোল্ডার আছে, অন্য নাম দিন: ' + name);
+  f.setDescription(DOC_ROOT_TAG); return f;
+}
 function inFolder_(item, folder) {
   const ps = item.getParents();
   while (ps.hasNext()) { if (ps.next().getId() === folder.getId()) return true; }
@@ -196,19 +208,25 @@ function upload_(r) {
       step = 'root'; const root = getRoot_();
       const person = String(r.personFolder || '').trim();   // ছবি/পাসপোর্ট: মেইন সেট ফোল্ডার ছোঁয়া হয় না
       const med = String(r.medFolder || '').trim();         // মেডিকেল PDF: Medical Files / রোগীর নাম (মেইন সেট ফোল্ডার ছোঁয়া হয় না)
+      const docL = cleanSub_(r.docFolder);                  // ব্যক্তির Undertaking/অন্য ডকুমেন্ট: <নাম> / <মেইন আবেদনকারী> / ব্যক্তির PDF
       step = 'folder'; let folder = null;
-      if (med) {
+      if (docL) {
+        const dr = docRoot_(root, docL);
+        folder = r.docFolderId ? folderResolve_(r.docFolderId, root) : null;
+        if (folder && !inFolder_(folder, dr)) folder = null;
+        if (!folder) folder = findOrCreateSetFolder_(dr, cleanSub_(r.folderName) || 'Unnamed', r.setKey);
+      } else if (med) {
         folder = r.medFolderId ? folderResolve_(r.medFolderId, root) : null;
         if (!folder) folder = findOrCreateSetFolder_(medicalRoot_(root), cleanSub_(med) || 'Unnamed', r.setKey);
       } else {
         folder = person ? passportRoot_(root) : (r.folderId ? folderResolve_(r.folderId, root) : null);
         if (!folder) folder = findOrCreateSetFolder_(targetFolder_(root, r.status, r.sms, r.visaType), r.folderName || 'Unnamed', r.setKey);
       }
-      step = 'place'; if (!person && !med && r.status && (!SMS_STATUSES[STATUS_FOLDERS[r.status] ? r.status : 'Running'] || String(r.visaType || '').trim())) { const tgt = targetFolder_(root, r.status, r.sms, r.visaType); if (!inFolder_(folder, tgt)) folder.moveTo(tgt); }   // আপলোডের সময়ই ফোল্ডার সঠিক জায়গায় (Expired -> Running, Other -> সঠিক টাইপ)
+      step = 'place'; if (!person && !med && !docL && r.status && (!SMS_STATUSES[STATUS_FOLDERS[r.status] ? r.status : 'Running'] || String(r.visaType || '').trim())) { const tgt = targetFolder_(root, r.status, r.sms, r.visaType); if (!inFolder_(folder, tgt)) folder.moveTo(tgt); }   // আপলোডের সময়ই ফোল্ডার সঠিক জায়গায় (Expired -> Running, Other -> সঠিক টাইপ)
       step = 'decode'; if (!r.data) throw new Error('ফাইলের data খালি এসেছে');
       const bytes = Utilities.base64Decode(r.data);
       step = 'blob'; const blob = Utilities.newBlob(bytes, mimeOf_(r), r.fileName || 'BGD.pdf');
-      step = 'create'; const sub = (person || med) ? '' : cleanSub_(r.subFolder); const dest = sub ? subFolder_(folder, sub) : folder; const file = dest.createFile(blob);
+      step = 'create'; const sub = (person || med || docL) ? '' : cleanSub_(r.subFolder); const dest = sub ? subFolder_(folder, sub) : folder; const file = dest.createFile(blob);
       // নতুন ফাইল সফলভাবে তৈরি হওয়ার পরই পুরনোটা মোছা হয় (মাঝপথে ব্যর্থ হলে পুরনোটা হারায় না)
       step = 'replace'; if (r.replaceFileId) { const old = fileOk_(r.replaceFileId, root); if (old) old.setTrashed(true); }
       // আগের আপলোড সার্ভারে হয়ে গিয়েছিল কিন্তু অ্যাপ জানতে পারেনি (ট্যাব বন্ধ/রিফ্রেশ): একই নামের আগের কপি ট্র্যাশে (৩০ দিন ফেরত আনা যায়)
@@ -216,7 +234,7 @@ function upload_(r) {
         const nm = file.getName(), newId = file.getId(); const sib = dest.getFilesByName(nm);
         while (sib.hasNext()) { const x = sib.next(); if (x.getId() !== newId && !x.isTrashed()) x.setTrashed(true); }
       } catch (e2) { }
-      const res = { ok: true, folderId: folder.getId(), folderName: folder.getName(), fileId: file.getId() };
+      const res = { ok: true, folderId: folder.getId(), folderName: folder.getName(), fileId: file.getId(), docOk: !!docL };   // docOk: নতুন স্ক্রিপ্ট ডিপ্লয় হয়েছে তার প্রমাণ
       reqCachePut_(r.reqId, res);
       return res;
     } catch (e) {
@@ -256,10 +274,14 @@ function moveFile_(r) {
     const root = getRoot_();
     const file = fileOk_(r.fileId, root); if (!file) return { ok: false, error: 'FILE_NOT_FOUND' };
     let to = r.toFolderId ? folderResolve_(r.toFolderId, root) : null;
-    if (!to) to = findOrCreateSetFolder_(targetFolder_(root, r.status, r.sms, r.visaType), r.toFolderName || 'Unnamed', r.setKey);
+    const docLbl = cleanSub_(r.docLabel);   // ব্যক্তির ডকুমেন্ট ট্রান্সফার: নতুন কার্ডের মেইন নামের ফোল্ডারে
+    if (docLbl) {
+      const dr = docRoot_(root, docLbl); if (to && !inFolder_(to, dr)) to = null;
+      if (!to) to = findOrCreateSetFolder_(dr, cleanSub_(r.toFolderName) || 'Unnamed', r.setKey);
+    } else if (!to) to = findOrCreateSetFolder_(targetFolder_(root, r.status, r.sms, r.visaType), r.toFolderName || 'Unnamed', r.setKey);
     const subM = cleanSub_(r.subFolder); file.moveTo(subM ? subFolder_(to, subM) : to);
     if (r.trashFromIfEmpty && r.fromFolderId) { const from = folderOk_(r.fromFolderId, root); if (from && isEmpty_(from)) from.setTrashed(true); }
-    return { ok: true, folderId: to.getId(), folderName: to.getName() };
+    return { ok: true, folderId: to.getId(), folderName: to.getName(), docOk: !!docLbl };
   });
 }
 
@@ -506,7 +528,7 @@ function listSetFolders_(root, deadline) {
   outer:
   while (top.hasNext()) {
     const t = top.next(); const tn = t.getName();
-    if (tn === BACKUP_FOLDER_NAME || tn === PASSPORT_ROOT_NAME || tn === MEDICAL_ROOT_NAME) continue;
+    if (tn === BACKUP_FOLDER_NAME || tn === PASSPORT_ROOT_NAME || tn === MEDICAL_ROOT_NAME || t.getDescription() === DOC_ROOT_TAG) continue;
     if (STATUS_FOLDERS[tn] !== tn) { add(t, root.getId()); continue; }   // পুরনো স্টাইল
     const levels = SMS_STATUSES[tn] ? 3 : 1;
     let parents = [t];
