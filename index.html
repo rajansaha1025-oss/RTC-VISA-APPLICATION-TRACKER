@@ -957,21 +957,25 @@
     
     function readFileAsDataURL(file) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = (e) => res(e.target.result); r.onerror = () => rej(r.error); r.readAsDataURL(file); }); }
     
-    // 🛡️ বদলানো (reupload) এর সময় পুরনো ফাইল সাথে সাথে বিনে যায় না: নতুন fileId Firebase এ সেভ হয়ে গেলে তবেই যায়।
-    // তাই সেভ মাঝপথে আটকালেও (নেট/ট্যাব বন্ধ) অ্যাপের লিংক কখনো বিনের ফাইলে যায় না। তালিকা localStorage এ থাকে, রিফ্রেশ করলেও হারায় না।
+    // 🛡️ বদলানো (reupload): নতুন ফাইল আগে Drive এ যায়, পুরনোটা ততক্ষণ থাকে। নতুন fileId Firebase এ সেভ হয়ে গেলে তবেই সার্ভার পুরনো ফাইল ও একই নামের ডুপ্লিকেট ট্র্যাশে পাঠায়।
+    // তাই নেট/ট্যাব আটকালেও অ্যাপের লিংক কখনো বিনের ফাইলে যায় না, আর শেষে ফোল্ডারে একই নামের একটাই ফাইল থাকে। তালিকা localStorage এ থাকে (রিফ্রেশে হারায় না)।
     function trashQueue() { try { return JSON.parse(localStorage.getItem('rtc_pending_trash') || '[]'); } catch (e) { return []; } }
-    function saveTrashQueue(q) { try { localStorage.setItem('rtc_pending_trash', JSON.stringify(q.slice(-200))); } catch (e) { } }
-    function queueTrash(oldId, newId) { const q = trashQueue(); if (!q.some(x => x.o === oldId)) q.push({ o: oldId, n: newId }); saveTrashQueue(q); }
+    function saveTrashQueue(q) { try { localStorage.setItem('rtc_pending_trash', JSON.stringify(q.slice(-300))); } catch (e) { } }
+    function queueTrash(oldId, newId) { if (!newId) return; const q = trashQueue(); if (!q.some(x => x.n === newId)) q.push({ o: oldId || '', n: newId, t: Date.now() }); saveTrashQueue(q); }
     let trashFlushing = false;
     async function flushPendingTrash() {
       if (trashFlushing || !driveEnabled() || !auth.currentUser) return;
-      const q = trashQueue(); if (!q.length) return;
+      let q = trashQueue(); if (!q.length) return;
+      const WEEK = 7 * 86400000; q = q.filter(x => Date.now() - (x.t || 0) < WEEK); saveTrashQueue(q);   // ৭ দিনেও ক্লাউডে না গেলে বাদ
       const snap = Object.values(cloudSnap || {}).join('\n');
-      const ready = q.filter(x => snap.indexOf(x.n) >= 0 && snap.indexOf(x.o) < 0);   // ক্লাউডে নতুন ID আছে ও পুরনো ID নেই
+      const ready = q.filter(x => snap.indexOf(x.n) >= 0 && (!x.o || snap.indexOf(x.o) < 0));   // ক্লাউডে নতুন ID আছে, পুরনো ID নেই
       if (!ready.length) return;
       trashFlushing = true;
-      try { await driveCall({ action: 'deleteFiles', fileIds: ready.map(x => x.o) }); const done = new Set(ready.map(x => x.o)); saveTrashQueue(trashQueue().filter(x => !done.has(x.o))); }
-      catch (e) { console.warn('trash flush', e); }
+      try {
+        try { await driveCall({ action: 'commitReplace', items: ready.map(x => ({ o: x.o, n: x.n })) }); }
+        catch (e) { if (/UNKNOWN_ACTION/.test((e && e.message) || '')) { const olds = ready.map(x => x.o).filter(Boolean); if (olds.length) await driveCall({ action: 'deleteFiles', fileIds: olds }); } else throw e; }   // পুরনো স্ক্রিপ্ট হলে শুধু পুরনোটা মোছে
+        const done = new Set(ready.map(x => x.n)); saveTrashQueue(trashQueue().filter(x => !done.has(x.n)));
+      } catch (e) { console.warn('trash flush', e); }
       finally { trashFlushing = false; }
     }
     async function driveCall(payload) {
@@ -997,7 +1001,7 @@
     // 🕛 বাংলাদেশ সময়ে রাত ১২টা পার হলেই (অ্যাপ খোলা থাকলে) মেয়াদ নতুন করে হিসাব হয় ও Drive এর নাম ঠিক হয়
     let lastDayStr = getTodayStr();
     setInterval(() => { const d = getTodayStr(); if (d !== lastDayStr) { lastDayStr = d; if (auth.currentUser) { renderFiles(); setTimeout(driveSyncStatuses, 500); } } }, 30000);
-    setInterval(() => { if (!document.hidden) driveSyncStatuses(); }, 60000);
+    setInterval(() => { if (!document.hidden) { driveSyncStatuses(); flushPendingTrash(); } }, 60000);
 
     // ================= 📷 ছবি / 🛂 পাসপোর্ট (ভারতীয় ভিসা সাইটের সাইজ নিয়মে আপলোডের সময়ই ছোট হয়) =================
     // নিয়ম বদলালে শুধু নিচের সংখ্যা বদলান। রেগুলার ভিসা: ছবি JPEG 10–300 KB, বর্গাকার, 350–1000 px। পাসপোর্ট: PDF
@@ -2681,7 +2685,8 @@
         if (orphans.length) driveCall({ action: 'deleteFiles', fileIds: orphans }).catch(() => { });
       }
       if (editId) { const idx = visaFiles.findIndex(x => x.id === editId); if (idx > -1) visaFiles[idx] = fileObj; } else visaFiles.unshift(fileObj);
-            modalNewDriveIds = []; modalOrphanDriveIds = []; modalDriveFolderId = ''; modalDriveFolderName = ''; modalFolderNew = false; modalStatusAtCreate = ''; modalMedFolderNew = false;
+            { const js = JSON.stringify(fileObj); modalNewDriveIds.filter(id => id && js.indexOf(id) >= 0).forEach(id => queueTrash('', id)); }   // সেভ হলে একই নামের ডুপ্লিকেট ক্লাউড সেভের পর পরিষ্কার হবে
+      modalNewDriveIds = []; modalOrphanDriveIds = []; modalDriveFolderId = ''; modalDriveFolderName = ''; modalFolderNew = false; modalStatusAtCreate = ''; modalMedFolderNew = false;
       closeFileModal(true); renderFiles(); syncToCloud(); showToast('সেভ সম্পন্ন!'); driveSyncSet(fileObj);
       if (newSerial) showSerialModal(newSerial, (fileObj.applicants[0] && fileObj.applicants[0].name) || '');
     }
