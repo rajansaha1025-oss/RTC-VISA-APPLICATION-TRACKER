@@ -866,7 +866,7 @@
       const st = document.getElementById('syncStatusText');
       try {
         const ch = localChanges();
-        if (!ch.changed.length && !ch.deleted.length) { st.innerText = 'Live Sync Ready'; setTimeout(driveSyncStatuses, 800); return; }
+        if (!ch.changed.length && !ch.deleted.length) { st.innerText = 'Live Sync Ready'; setTimeout(driveSyncStatuses, 800); flushPendingTrash(); return; }
         st.innerText = 'Syncing...';
         const oldSnap = cloudSnap; const delSet = new Set(ch.deleted); const chMap = {}; ch.changed.forEach(f => { chMap[f.id] = f; });
         // ক্লাউডের লেটেস্ট তালিকার সাথে আমার পরিবর্তন মিলিয়ে চূড়ান্ত তালিকা বানায়
@@ -902,7 +902,7 @@
         });
         const madeMeanwhile = visaFiles.filter(l => !finalIds.has(l.id) && oldSnap[l.id] === undefined);   // সিঙ্ক চলার সময় বানানো নতুন ফাইল
         visaFiles.forEach(l => { if (!finalIds.has(l.id) && oldSnap[l.id] !== undefined) remoteApplied = true; });
-        visaFiles = madeMeanwhile.concat(next); cloudSnap = sent;
+        visaFiles = madeMeanwhile.concat(next); cloudSnap = sent; flushPendingTrash();
         safeLocalSave(); populateWorkerDropdown();
         st.innerText = 'Live Sync Ready';
         if (remoteApplied && !(document.activeElement && document.activeElement.tagName === 'INPUT')) renderFiles();
@@ -922,7 +922,7 @@
             lastCloudText = txt; const data = JSON.parse(txt);
             if (data && typeof data === 'object') {
               if (hasPendingChanges()) { await syncToCloud(); }   // সেভ না হওয়া লোকাল পরিবর্তন থাকলে মার্জ করে পাঠানো হয়, মুছে ফেলা হয় না
-              else { const list = cloudListOf(data); visaFiles = list; cloudSnap = snapFrom(list); safeLocalSave(); populateWorkerDropdown(); renderFiles(); setTimeout(driveSyncStatuses, 1500); }
+              else { const list = cloudListOf(data); visaFiles = list; cloudSnap = snapFrom(list); safeLocalSave(); populateWorkerDropdown(); renderFiles(); setTimeout(driveSyncStatuses, 1500); flushPendingTrash(); }
             }
           }
           document.getElementById('syncStatusText').innerText = 'Live Sync Ready'; if (!silent) showToast('ক্লাউড ডাটা লোড হয়েছে!');
@@ -957,6 +957,23 @@
     
     function readFileAsDataURL(file) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = (e) => res(e.target.result); r.onerror = () => rej(r.error); r.readAsDataURL(file); }); }
     
+    // 🛡️ বদলানো (reupload) এর সময় পুরনো ফাইল সাথে সাথে বিনে যায় না: নতুন fileId Firebase এ সেভ হয়ে গেলে তবেই যায়।
+    // তাই সেভ মাঝপথে আটকালেও (নেট/ট্যাব বন্ধ) অ্যাপের লিংক কখনো বিনের ফাইলে যায় না। তালিকা localStorage এ থাকে, রিফ্রেশ করলেও হারায় না।
+    function trashQueue() { try { return JSON.parse(localStorage.getItem('rtc_pending_trash') || '[]'); } catch (e) { return []; } }
+    function saveTrashQueue(q) { try { localStorage.setItem('rtc_pending_trash', JSON.stringify(q.slice(-200))); } catch (e) { } }
+    function queueTrash(oldId, newId) { const q = trashQueue(); if (!q.some(x => x.o === oldId)) q.push({ o: oldId, n: newId }); saveTrashQueue(q); }
+    let trashFlushing = false;
+    async function flushPendingTrash() {
+      if (trashFlushing || !driveEnabled() || !auth.currentUser) return;
+      const q = trashQueue(); if (!q.length) return;
+      const snap = Object.values(cloudSnap || {}).join('\n');
+      const ready = q.filter(x => snap.indexOf(x.n) >= 0 && snap.indexOf(x.o) < 0);   // ক্লাউডে নতুন ID আছে ও পুরনো ID নেই
+      if (!ready.length) return;
+      trashFlushing = true;
+      try { await driveCall({ action: 'deleteFiles', fileIds: ready.map(x => x.o) }); const done = new Set(ready.map(x => x.o)); saveTrashQueue(trashQueue().filter(x => !done.has(x.o))); }
+      catch (e) { console.warn('trash flush', e); }
+      finally { trashFlushing = false; }
+    }
     async function driveCall(payload) {
       if (!driveEnabled()) throw new Error('NO_DRIVE_URL');
       const user = auth.currentUser; if (!user) throw new Error('AUTH');
@@ -1266,7 +1283,7 @@
       const dataUrl = o.dataUrl || await readFileAsDataURL(o.file); const nm = safeName(o.name);
       const fileName = o.fileName || driveExpectedName({ name: o.name }, o.idx);
       const reqId = 'u' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
-      const d = await driveCall({ action: 'upload', reqId: reqId, setKey: o.setKey || '', folderId: o.folderId || '', folderName: safeName(o.folderName), fileName: fileName, data: dataUrl.split(',')[1], replaceFileId: o.replaceFileId || '', status: o.status || 'Running', sms: o.sms || '', visaType: o.visaType || '', mime: o.mime || (o.file && o.file.type) || '', subFolder: o.subFolder || '', personFolder: o.personFolder || '', medFolder: o.medFolder || '', medFolderId: o.medFolderId || '', docFolder: o.docFolder || '', docFolderId: o.docFolderId || '' }); return { folderId: d.folderId, folderName: d.folderName, fileId: d.fileId, fileName: fileName, docOk: !!d.docOk };
+      const d = await driveCall({ action: 'upload', reqId: reqId, setKey: o.setKey || '', folderId: o.folderId || '', folderName: safeName(o.folderName), fileName: fileName, data: dataUrl.split(',')[1], replaceFileId: '', keepSame: true, status: o.status || 'Running', sms: o.sms || '', visaType: o.visaType || '', mime: o.mime || (o.file && o.file.type) || '', subFolder: o.subFolder || '', personFolder: o.personFolder || '', medFolder: o.medFolder || '', medFolderId: o.medFolderId || '', docFolder: o.docFolder || '', docFolderId: o.docFolderId || '' }); if (o.replaceFileId && o.replaceFileId !== d.fileId) queueTrash(o.replaceFileId, d.fileId); return { folderId: d.folderId, folderName: d.folderName, fileId: d.fileId, fileName: fileName, docOk: !!d.docOk };
     }
     function driveExpectedName(a, idx, f) { const nm = safeName(a.name); const core = idx === 0 ? '1 - ' + nm + ' (MAIN BGD)' : nm + ' (BGD)'; const exp = !!(f && expiryRelevant(f) && needsRenewal(a, f)); return (exp ? 'EXPIRED - ' : '') + core + '.pdf'; }
     async function driveSyncSet(f) {
@@ -2008,7 +2025,7 @@
       try {
         const stNow = document.getElementById('isReturned').checked ? 'Returned' : (document.getElementById('isDelivered').checked ? 'Delivered' : 'Running');
         const wasNewMed = !modalMedFolderId; const fakeF = { applicants: [{ name: tempApplicants[0].name }], letterMode: modalLet.mode };
-        const res = await driveUploadApplicant({ setKey: modalKey(), medFolder: tempApplicants[0].name, medFolderId: modalMedFolderId, folderName: tempApplicants[0].name, fileName: letterFileNameFor(fakeF, k), file: file });
+        const res = await driveUploadApplicant({ setKey: modalKey(), medFolder: tempApplicants[0].name, medFolderId: modalMedFolderId, folderName: tempApplicants[0].name, fileName: letterFileNameFor(fakeF, k), file: file, keepSame: true });
         if (wasNewMed) modalMedFolderNew = true;
         modalMedFolderId = res.folderId; modalMedFolderName = res.folderName; modalNewDriveIds.push(res.fileId);
         if (modalLet[k] && modalLet[k].fileId) modalOrphanDriveIds.push(modalLet[k].fileId);
@@ -2122,7 +2139,7 @@
         const stNow = document.getElementById('isReturned').checked ? 'Returned' : (document.getElementById('isDelivered').checked ? 'Delivered' : 'Running');
         const smsNow = ((document.getElementById('smsApp').value || '').trim()) || 'Rtcsms';
           const wasNew = !modalDriveFolderId;
-          const res = await driveUploadApplicant({ setKey: modalKey(), folderId: modalDriveFolderId, folderName: tempApplicants[0].name, idx: idx, name: t0 ? t0.name : '', file: file, status: stNow, sms: smsNow, visaType: document.getElementById('visaType').value });
+          const res = await driveUploadApplicant({ setKey: modalKey(), folderId: modalDriveFolderId, folderName: tempApplicants[0].name, idx: idx, name: t0 ? t0.name : '', file: file, status: stNow, sms: smsNow, visaType: document.getElementById('visaType').value, keepSame: true });
           if (wasNew) { modalFolderNew = true; modalStatusAtCreate = locFor(stNow, smsNow, document.getElementById('visaType').value); }
         modalDriveFolderId = res.folderId; modalDriveFolderName = res.folderName; modalNewDriveIds.push(res.fileId);
         if (t0 && t0.driveFileId) modalOrphanDriveIds.push(t0.driveFileId);
